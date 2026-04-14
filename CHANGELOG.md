@@ -10,7 +10,9 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 
 ## [Unreleased]
 
-Release preparation is in progress for the next small pre-`1.0.0` tag. The current scope is the typed ESL protocol substrate already present in the repository; this changelog intentionally avoids implying `1.0.0` stability or runtime completeness.
+Release preparation is in progress for the next small pre-`1.0.0` tag. The current scope remains the typed ESL protocol substrate already present in the repository; this changelog intentionally avoids implying `1.0.0` stability or runtime completeness.
+
+## [0.3.0] - 2026-04-14
 
 ### Clarified
 
