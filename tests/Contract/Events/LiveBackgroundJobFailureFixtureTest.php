@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Events;
 
+use Apntalk\EslCore\Correlation\ConnectionSessionId;
+use Apntalk\EslCore\Correlation\CorrelationContext;
+use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\EventFactory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Tests\Fixtures\FixtureLoader;
 use PHPUnit\Framework\TestCase;
 
@@ -173,6 +177,22 @@ final class LiveBackgroundJobFailureFixtureTest extends TestCase
         $event = $this->loadTyped();
 
         $this->assertSame('originate', $event->jobCommand());
+    }
+
+    public function test_failure_fixture_correlation_and_replay_metadata_preserve_job_identity(): void
+    {
+        $event = $this->loadTyped();
+        $sessionId = ConnectionSessionId::fromString('56565656-5656-4565-8565-565656565656');
+        $context = new CorrelationContext($sessionId);
+        $metadata = $context->nextMetadataForEvent($event);
+        $envelope = new EventEnvelope($event, $metadata);
+        $replay = ReplayEnvelopeFactory::withSession($sessionId)->fromEventEnvelope($envelope);
+
+        $this->assertSame(self::JOB_UUID, $envelope->jobCorrelation()?->jobUuid());
+        $this->assertSame(self::SEQ, $envelope->metadata()->protocolSequence());
+        $this->assertSame(self::JOB_UUID, $replay->protocolFacts()['job-uuid'] ?? null);
+        $this->assertSame(self::JOB_UUID, $replay->derivedMetadata()['job-correlation.job-uuid'] ?? null);
+        $this->assertSame(self::SEQ, $replay->protocolSequence());
     }
 
     // ---------------------------------------------------------------------------

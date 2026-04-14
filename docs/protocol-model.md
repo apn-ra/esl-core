@@ -13,6 +13,7 @@ ESL messages consist of:
 Header values in the outer ESL frame are NOT URL-encoded.
 Header values in `text/event-plain` event bodies ARE URL-encoded.
 Header values in `text/event-json` are normalized from JSON scalar values and are not URL-decoded.
+Header values in `text/event-xml` are normalized from XML element text and are not URL-decoded.
 
 The current repo evidence for selective typed bridge/playback events is now
 live-backed in both `text/event-plain` and `text/event-json` via curated
@@ -46,7 +47,7 @@ The parser is partial-read safe: bytes may arrive in any chunk sizes.
 | `api/response` | Response to `api` commands |
 | `text/event-plain` | Event in URL-encoded plain text format |
 | `text/event-json` | Event in JSON format |
-| `text/event-xml` | Event in XML format (not yet parsed) |
+| `text/event-xml` | Event in XML format |
 | `text/disconnect-notice` | Server closing connection |
 
 ## Command wire format
@@ -157,6 +158,14 @@ Current JSON normalization intentionally accepts only:
 - optional `_body` string for the event body
 
 This keeps the JSON path deterministic and aligned with the existing normalized event model.
+
+### text/event-xml
+- Has a body of exactly `Content-Length` bytes.
+- Body must decode to an XML document rooted at `<event>`.
+- `<event>` must contain one `<headers>` element whose child elements become normalized event headers.
+- Optional `<body>` becomes the event body.
+- Nested XML elements inside header values are rejected to preserve deterministic, scalar normalization.
+- Current XML support is intentionally narrower and remains provisional until the fixture corpus extends beyond constructed cases.
 
 ## Malformed input behavior
 

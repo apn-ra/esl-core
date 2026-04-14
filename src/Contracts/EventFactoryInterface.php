@@ -12,6 +12,10 @@ use Apntalk\EslCore\Events\NormalizedEvent;
  * Implementations take a NormalizedEvent and return the most specific
  * typed event subtype available. Unknown event names MUST degrade to
  * a RawEvent rather than throwing.
+ *
+ * This contract remains appropriate when a caller already owns a
+ * `NormalizedEvent`. For raw inbound byte ingestion, prefer
+ * `InboundPipelineInterface`.
  */
 interface EventFactoryInterface
 {

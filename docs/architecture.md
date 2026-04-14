@@ -10,6 +10,7 @@
 ┌───────────────────────────────────────────────────────┐
 │  Layer 5: Transport boundary                          │
 │  TransportInterface, InMemoryTransport                │
+│  Internal stream-socket smoke transport               │
 ├───────────────────────────────────────────────────────┤
 │  Layer 4: Replay-safe substrate                       │
 │  ReplayEnvelope, ReplayCapturePolicy,                 │
@@ -17,7 +18,8 @@
 │  ReplayEnvelopeFactory (integrates with Correlation)  │
 ├───────────────────────────────────────────────────────┤
 │  Layer 3: Typed domain + Correlation                  │
-│  Commands, Replies, Events, EventFactory              │
+│  Commands, Replies, Events, EventFactory,             │
+│  InboundPipeline                                      │
 │  ConnectionSessionId, ObservationSequence             │
 │  JobCorrelation, ChannelCorrelation                   │
 │  MessageMetadata, CorrelationContext                  │
@@ -89,17 +91,21 @@ All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
 - `BgapiAcceptedReply`, `ApiReply`, `UnknownReply`
 
 ### Events
-Event parsing: supported event formats (`text/event-plain`, `text/event-json`) → `NormalizedEvent` (via `EventParser`)
+Event parsing: supported event formats (`text/event-plain`, `text/event-json`, provisional `text/event-xml`) → `NormalizedEvent` (via `EventParser`)
 Classification: `NormalizedEvent` → typed event (via `EventClassifier`)
 Composition: `EventFactory` combines both steps.
+Public ingress: `InboundPipeline` composes framing + classification + reply/event decoding for upper layers that should not depend on the provisional concrete parser/classifier classes directly.
 
 - `NormalizedEvent` — normalized header access + raw body, preserving whether the source format was URL-encoded
 - `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)
 - `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, `CustomEvent`
+- `InboundPipeline` — stable byte-oriented facade returning `DecodedInboundMessage`
 
 Key invariants:
 - Unknown events NEVER throw; they produce `RawEvent`
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
+- `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
+- `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 
 ### Correlation
@@ -155,10 +161,12 @@ Owns minimal I/O abstraction for testability and smoke-path use.
 
 - `TransportInterface` — read/write/close
 - `InMemoryTransport` — test double with `enqueueInbound()` / `drainOutbound()`
+- `Internal\Transport\StreamSocketTransport` — internal wrapper used by bounded smoke/integration paths over a real PHP stream/socket resource
 
 Key invariants:
 - Transport does not own reconnect, supervision, or scheduling
 - `InMemoryTransport` is the integration test foundation
+- Stream/socket smoke transport remains explicitly internal and non-primary, but now covers fragmented, coalesced, delayed-body, delayed-completion, and mid-frame-loss scenarios
 - Upper-layer packages (esl-react, laravel-freeswitch-esl) own real transport lifecycle
 
 ---
@@ -171,6 +179,7 @@ Key invariants:
 | `Apntalk\EslCore\Commands` | Public API |
 | `Apntalk\EslCore\Replies` | Public API |
 | `Apntalk\EslCore\Events` | Public API |
+| `Apntalk\EslCore\Inbound` | Public API |
 | `Apntalk\EslCore\Correlation` | Public API |
 | `Apntalk\EslCore\Replay` | Public API (provisional) |
 | `Apntalk\EslCore\Capabilities` | Public API |
@@ -187,15 +196,11 @@ Key invariants:
 
 ```
 Raw bytes (from socket or test transport)
-  → FrameParser.feed()        [Layer 1]
-  → FrameParser.drain() → [Frame, ...]
-  → InboundMessageClassifier.classify(frame) → ClassifiedInboundMessage [Layer 2]
-
-For replies:
-  → ReplyFactory.fromClassified() → typed ReplyInterface [Layer 3]
-
-For events:
-  → EventFactory.fromFrame(frame) → typed EventInterface [Layer 3]
+  → InboundPipeline.push()/drain() [Layer 3 facade]
+    internally:
+      → FrameParser.feed() / drain() [Layer 1]
+      → InboundMessageClassifier.classify(frame) → ClassifiedInboundMessage [Layer 2]
+      → ReplyFactory.fromClassified() or EventParser + EventFactory [Layer 3]
 
 Optionally (correlation):
   → CorrelationContext.nextMetadataForReply/Event() → MessageMetadata [Layer 3]

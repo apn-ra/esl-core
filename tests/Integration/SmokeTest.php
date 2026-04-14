@@ -10,30 +10,21 @@ use Apntalk\EslCore\Correlation\CorrelationContext;
 use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
-use Apntalk\EslCore\Events\EventFactory;
-use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
-use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
-use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Inbound\InboundMessageType;
+use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\AuthAcceptedReply;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
-use Apntalk\EslCore\Replies\ReplyFactory;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class SmokeTest extends TestCase
 {
-    private FrameParser $parser;
-    private InboundMessageClassifier $classifier;
-    private ReplyFactory $replyFactory;
-    private EventFactory $eventFactory;
+    private InboundPipeline $pipeline;
 
     protected function setUp(): void
     {
-        $this->parser = new FrameParser();
-        $this->classifier = new InboundMessageClassifier();
-        $this->replyFactory = new ReplyFactory();
-        $this->eventFactory = new EventFactory();
+        $this->pipeline = new InboundPipeline();
     }
 
     public function test_command_reply_smoke_path_is_coherent(): void
@@ -45,7 +36,9 @@ final class SmokeTest extends TestCase
 
         $this->assertSame("auth ClueCon\n\n", $command->serialize());
 
-        $reply = $this->parseReplyFixture(EslFixtureBuilder::authAccepted(), InboundMessageCategory::AuthAccepted);
+        $message = $this->pipeline->decode(EslFixtureBuilder::authAccepted())[0];
+        $this->assertSame(InboundMessageType::Reply, $message->type());
+        $reply = $message->reply();
         $this->assertInstanceOf(AuthAcceptedReply::class, $reply);
 
         $metadata = $correlation->nextMetadataForReply($reply);
@@ -66,17 +59,18 @@ final class SmokeTest extends TestCase
         $correlation = new CorrelationContext($sessionId);
         $replay = ReplayEnvelopeFactory::withSession($sessionId);
 
-        $reply = $this->parseReplyFixture(
-            EslFixtureBuilder::bgapiAccepted(),
-            InboundMessageCategory::BgapiAccepted
-        );
+        $replyMessage = $this->pipeline->decode(EslFixtureBuilder::bgapiAccepted())[0];
+        $this->assertSame(InboundMessageType::Reply, $replyMessage->type());
+        $reply = $replyMessage->reply();
         $this->assertInstanceOf(BgapiAcceptedReply::class, $reply);
 
         $replyMetadata = $correlation->nextMetadataForReply($reply);
         $replyEnvelope = new ReplyEnvelope($reply, $replyMetadata);
         $replyReplay = $replay->fromReplyEnvelope($replyEnvelope);
 
-        $event = $this->parseEventFixture(EslFixtureBuilder::backgroundJobEvent());
+        $eventMessage = $this->pipeline->decode(EslFixtureBuilder::backgroundJobEvent())[0];
+        $this->assertSame(InboundMessageType::Event, $eventMessage->type());
+        $event = $eventMessage->event();
         $this->assertInstanceOf(BackgroundJobEvent::class, $event);
 
         $eventMetadata = $correlation->nextMetadataForEvent($event);
@@ -93,33 +87,5 @@ final class SmokeTest extends TestCase
         $this->assertSame('BACKGROUND_JOB', $eventReplay->capturedName());
         $this->assertSame($event->jobUuid(), $eventReplay->protocolFacts()['job-uuid']);
         $this->assertSame('2', $eventReplay->derivedMetadata()['observation-sequence']);
-    }
-
-    private function parseReplyFixture(string $fixture, InboundMessageCategory $expectedCategory): \Apntalk\EslCore\Contracts\ReplyInterface
-    {
-        $this->parser->reset();
-        $this->parser->feed($fixture);
-        $frames = $this->parser->drain();
-
-        $this->assertCount(1, $frames);
-
-        $classified = $this->classifier->classify($frames[0]);
-        $this->assertSame($expectedCategory, $classified->category);
-
-        return $this->replyFactory->fromClassified($classified);
-    }
-
-    private function parseEventFixture(string $fixture): \Apntalk\EslCore\Contracts\EventInterface
-    {
-        $this->parser->reset();
-        $this->parser->feed($fixture);
-        $frames = $this->parser->drain();
-
-        $this->assertCount(1, $frames);
-
-        $classified = $this->classifier->classify($frames[0]);
-        $this->assertSame(InboundMessageCategory::EventMessage, $classified->category);
-
-        return $this->eventFactory->fromFrame($frames[0]);
     }
 }

@@ -18,6 +18,10 @@ use Apntalk\EslCore\Protocol\Frame;
  *
  * The parser must be transport-neutral: it does not own I/O, loops, or
  * scheduling. Callers feed bytes and drain frames.
+ *
+ * Upper-layer integrations should prefer `InboundPipelineInterface` for
+ * supported inbound decoding. This lower-level contract remains useful for
+ * internal composition, targeted tests, and narrow advanced integrations.
  */
 interface FrameParserInterface
 {

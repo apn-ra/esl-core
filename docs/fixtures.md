@@ -14,6 +14,7 @@ tests/Fixtures/
 ├── events/                — inbound event frames
 ├── malformed/             — intentionally bad frames for error path tests
 ├── partial/               — truncated frames for partial-read tests
+├── sequences/             — multi-frame inbound byte sequences
 └── replay/                — replay envelope fixtures
 ```
 
@@ -33,6 +34,14 @@ $frame = EslFixtureBuilder::authRequest();
 
 // Build a CHANNEL_CREATE event frame with custom UUID
 $frame = EslFixtureBuilder::channelCreateEvent(uniqueId: 'abc-123');
+
+// Build an XML event fixture
+$frame = EslFixtureBuilder::eventXml(
+    EslFixtureBuilder::eventXmlData([
+        'Event-Name' => 'CHANNEL_CREATE',
+        'Unique-ID' => 'abc-123',
+    ])
+);
 
 // Build any frame from headers + body
 $frame = EslFixtureBuilder::frame(
@@ -66,6 +75,7 @@ See `docs/live-fixture-provenance.md` for the current live-backed capture map.
 | `events/` | `{event-name}-{description}.esl` | Inbound event frames |
 | `malformed/` | `{description}.esl` | Intentionally broken frames |
 | `partial/` | `{description}-partial.bin` | Truncated or fragmented frames |
+| `sequences/` | `{description}.esl` | Multi-frame inbound captures or constructed protocol flows |
 | `replay/` | `{description}.json` | Replay envelope shapes |
 
 ## Fixture provenance
@@ -84,6 +94,9 @@ should record:
 - the controlled scenario that produced it
 - the reason it was promoted
 - the contract test(s) that now pin it
+
+Constructed XML fixtures should explicitly remain labeled as constructed
+protocol corpus rather than implied live captures.
 
 ## Adding new fixtures
 

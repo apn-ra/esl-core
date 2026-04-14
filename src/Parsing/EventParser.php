@@ -10,6 +10,9 @@ use Apntalk\EslCore\Exceptions\MalformedFrameException;
 use Apntalk\EslCore\Exceptions\UnsupportedContentTypeException;
 use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Protocol\HeaderBag;
+use DOMDocument;
+use DOMElement;
+use DOMNode;
 use JsonException;
 
 /**
@@ -35,6 +38,7 @@ final class EventParser implements EventParserInterface
 {
     private const CONTENT_TYPE_EVENT_PLAIN = 'text/event-plain';
     private const CONTENT_TYPE_EVENT_JSON = 'text/event-json';
+    private const CONTENT_TYPE_EVENT_XML = 'text/event-xml';
 
     public function parse(Frame $frame): NormalizedEvent
     {
@@ -43,8 +47,9 @@ final class EventParser implements EventParserInterface
         return match ($contentType) {
             self::CONTENT_TYPE_EVENT_PLAIN => $this->parsePlainEvent($frame),
             self::CONTENT_TYPE_EVENT_JSON => $this->parseJsonEvent($frame),
+            self::CONTENT_TYPE_EVENT_XML => $this->parseXmlEvent($frame),
             default => throw new UnsupportedContentTypeException(
-                "EventParser only handles text/event-plain and text/event-json; got: {$contentType}"
+                "EventParser only handles text/event-plain, text/event-json, and text/event-xml; got: {$contentType}"
             ),
         };
     }
@@ -132,6 +137,106 @@ final class EventParser implements EventParserInterface
         );
     }
 
+    private function parseXmlEvent(Frame $frame): NormalizedEvent
+    {
+        $previous = libxml_use_internal_errors(true);
+        libxml_clear_errors();
+
+        $document = new DOMDocument('1.0', 'UTF-8');
+        $loaded = $document->loadXML($frame->body, LIBXML_NONET | LIBXML_NOBLANKS);
+        $errors = libxml_get_errors();
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        if ($loaded === false || !$document->documentElement instanceof DOMElement) {
+            $message = $errors !== [] ? trim($errors[0]->message) : 'Unknown XML parse failure';
+
+            throw new MalformedFrameException(
+                'Failed to parse event XML: ' . $message
+            );
+        }
+
+        $root = $document->documentElement;
+        if ($root->tagName !== 'event') {
+            throw new MalformedFrameException('Event XML root element must be <event>');
+        }
+
+        $headersElement = null;
+        $bodyElement = null;
+
+        foreach ($root->childNodes as $child) {
+            if (!$child instanceof DOMElement) {
+                continue;
+            }
+
+            if ($child->tagName === 'headers') {
+                if ($headersElement instanceof DOMElement) {
+                    throw new MalformedFrameException('Event XML may contain only one <headers> element');
+                }
+
+                $headersElement = $child;
+                continue;
+            }
+
+            if ($child->tagName === 'body') {
+                if ($bodyElement instanceof DOMElement) {
+                    throw new MalformedFrameException('Event XML may contain only one <body> element');
+                }
+
+                $bodyElement = $child;
+                continue;
+            }
+
+            throw new MalformedFrameException(
+                sprintf('Unsupported Event XML element <%s> under <event>', $child->tagName)
+            );
+        }
+
+        if (!$headersElement instanceof DOMElement) {
+            throw new MalformedFrameException('Event XML must contain a <headers> element');
+        }
+
+        $headers = [];
+
+        foreach ($headersElement->childNodes as $child) {
+            if (!$child instanceof DOMElement) {
+                continue;
+            }
+
+            $this->assertNoElementChildren($child, 'Event XML header');
+
+            $name = trim($child->tagName);
+            if ($name === '') {
+                throw new MalformedFrameException('Event XML header names must be non-empty');
+            }
+
+            $value = $child->textContent;
+            if (str_contains($value, "\r") || str_contains($value, "\n")) {
+                throw new MalformedFrameException(
+                    sprintf('Event XML header "%s" may not contain newlines', $name)
+                );
+            }
+
+            $headers[$name] = $value;
+        }
+
+        $eventHeaders = $this->parseHeaderBlock($this->headerBlockFromMap($headers));
+
+        $eventBody = '';
+        if ($bodyElement instanceof DOMElement) {
+            $this->assertNoElementChildren($bodyElement, 'Event XML body');
+            $eventBody = $bodyElement->textContent;
+        }
+
+        return new NormalizedEvent(
+            outerHeaders: $frame->headers,
+            eventHeaders: $eventHeaders,
+            rawBody: $eventBody,
+            frame: $frame,
+            headersAreUrlEncoded: false,
+        );
+    }
+
     private function parseHeaderBlock(string $eventHeaderBlock): HeaderBag
     {
         try {
@@ -163,5 +268,26 @@ final class EventParser implements EventParserInterface
         }
 
         return implode("\n", $lines);
+    }
+
+    private function assertNoElementChildren(DOMElement $element, string $context): void
+    {
+        foreach ($element->childNodes as $child) {
+            if ($child instanceof DOMElement) {
+                throw new MalformedFrameException(
+                    sprintf('%s <%s> must not contain nested elements', $context, $element->tagName)
+                );
+            }
+
+            if (
+                $child instanceof DOMNode
+                && $child->nodeType === XML_CDATA_SECTION_NODE
+                && str_contains($child->textContent, ']]>')
+            ) {
+                throw new MalformedFrameException(
+                    sprintf('%s <%s> contains invalid CDATA termination', $context, $element->tagName)
+                );
+            }
+        }
     }
 }
