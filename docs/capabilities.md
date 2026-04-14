@@ -24,6 +24,7 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `event-subscription` | stable | EventSubscriptionCommand, FilterCommand, NoEventsCommand |
 | `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values; bridge/playback paths are now backed by curated live plain captures |
 | `event-json-decoding` | stable | EventParser decodes text/event-json into the same NormalizedEvent path; bridge/playback paths are now backed by curated live JSON captures |
+| `event-xml-decoding` | provisional | EventParser decodes bounded `text/event-xml` documents into `NormalizedEvent`; currently backed by constructed fixtures rather than live captures |
 | `normalized-events` | stable | NormalizedEvent, EventClassifier, typed event families; current live-backed bridge/playback evidence covers both plain and json formats |
 | `correlation-metadata` | stable | ConnectionSessionId, ObservationSequence, CorrelationContext, metadata envelopes |
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
@@ -34,6 +35,9 @@ Capabilities are backed by real tests and documentation. A capability is only de
 The live-backed bridge/playback capture evidence comes from non-public operator
 tooling under `tools/smoke/`. That tooling is validation support only and is
 not part of the package API or capability surface.
+The internal stream/socket smoke transport now also validates fragmented,
+coalesced, delayed-body, delayed-completion, and mid-frame-loss byte-stream
+conditions, but that still does not make it a public transport API.
 
 ## Inspecting capabilities at runtime
 

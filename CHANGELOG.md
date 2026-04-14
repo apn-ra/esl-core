@@ -14,6 +14,8 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Added
 
+- Provisional `text/event-xml` normalization support through `EventParser` and the supported `InboundPipeline` facade, backed by constructed fixture coverage and safe typed/fallback behavior.
+- Additional parser and internal stream/socket smoke coverage for coalesced multi-frame reads, delayed body delivery, delayed bgapi completion, and mid-frame connection loss.
 - `src/Inbound/InboundPipeline`, `src/Inbound/DecodedInboundMessage`, `src/Inbound/InboundMessageType`, and `src/Contracts/InboundPipelineInterface` — a stable public inbound decoding facade for raw byte ingestion. Upper layers can now consume auth requests, typed replies, typed events, normalized events, disconnect notices, and safe `RawEvent` / `UnknownReply` fallbacks without composing the provisional parser/classifier internals directly.
 - `src/Internal/Transport/StreamSocketTransport` and `tests/Integration/StreamSocketTransportPipelineTest.php` — bounded internal stream/socket smoke coverage proving the wire model against real PHP stream-socket behavior without widening the supported transport API.
 - `tests/Fixtures/sequences/bgapi-acceptance-and-completion.esl` and `tests/Contract/Inbound/InboundPipelineTest.php` — fixture-backed bgapi acceptance/completion sequence coverage through the new public facade, including replay/correlation assertions for the sensitive Job-UUID path.
@@ -33,6 +35,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- `InboundPipeline` is now the clearly dominant supported upper-layer ingress contract; lower-level parser/classifier contracts remain available but intentionally provisional.
 - `NormalizedEvent` remains a protocol-substrate object rather than an application aggregate: it now exposes explicit source-content-type and URL-encoding invariants while correlation/replay/runtime state stays in separate layers.
 - The supported ingress surface for upper layers is now `Inbound\InboundPipeline`; concrete parser/classifier implementations remain intentionally provisional even though they continue to exist in-repo for low-level testing.
 - Current bridge/playback typed-event coverage is live-backed in both `text/event-plain` and `text/event-json`, but that evidence comes from curated fixtures and non-public smoke tooling rather than from any supported runtime or transport integration surface.

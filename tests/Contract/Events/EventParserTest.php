@@ -173,6 +173,44 @@ final class EventParserTest extends TestCase
         $this->assertSame("+OK json-body\n", $event->body());
     }
 
+    public function test_event_xml_parses_into_normalized_event(): void
+    {
+        $fixture = EslFixtureBuilder::eventXml(
+            EslFixtureBuilder::eventXmlData([
+                'Event-Name' => 'CHANNEL_CREATE',
+                'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+                'Event-Sequence' => 12345,
+                'Channel-Name' => 'sofia/internal/1001@192.168.1.100',
+                'Caller-Caller-ID-Name' => 'User 1001',
+            ])
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertSame('CHANNEL_CREATE', $event->eventName());
+        $this->assertSame('sofia/internal/1001@192.168.1.100', $event->channelName());
+        $this->assertSame('User 1001', $event->callerIdName());
+        $this->assertSame('12345', $event->eventSequence());
+    }
+
+    public function test_event_xml_with_body_preserves_body(): void
+    {
+        $fixture = EslFixtureBuilder::eventXml(
+            EslFixtureBuilder::eventXmlData(
+                [
+                    'Event-Name' => 'BACKGROUND_JOB',
+                    'Job-UUID' => '7f4db0f2-b848-4b0a-b3cf-559bdca96b38',
+                ],
+                "+OK xml-body\n"
+            )
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertTrue($event->hasBody());
+        $this->assertSame("+OK xml-body\n", $event->body());
+    }
+
     public function test_plain_event_reports_source_content_type_and_url_encoding_policy(): void
     {
         $event = $this->parseEvent(EslFixtureBuilder::channelCreateEvent());
@@ -193,6 +231,21 @@ final class EventParserTest extends TestCase
         $event = $this->parseEvent($fixture);
 
         $this->assertSame('text/event-json', $event->sourceContentType());
+        $this->assertFalse($event->headersAreUrlEncoded());
+    }
+
+    public function test_xml_event_reports_source_content_type_and_non_url_encoded_policy(): void
+    {
+        $fixture = EslFixtureBuilder::eventXml(
+            EslFixtureBuilder::eventXmlData([
+                'Event-Name' => 'CHANNEL_CREATE',
+                'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+            ])
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertSame('text/event-xml', $event->sourceContentType());
         $this->assertFalse($event->headersAreUrlEncoded());
     }
 
@@ -298,6 +351,28 @@ final class EventParserTest extends TestCase
         $this->eventParser->parse($frame);
     }
 
+    public function test_parse_throws_for_invalid_event_xml(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(EslFixtureBuilder::eventXml('<event><headers><Event-Name>CHANNEL_CREATE'));
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
+    public function test_parse_throws_for_event_xml_with_nested_header_values(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(
+            EslFixtureBuilder::eventXml(
+                '<event><headers><Event-Name><Nested/></Event-Name></headers></event>'
+            )
+        );
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
     // ---------------------------------------------------------------------------
     // Typed event classification via EventFactory
     // ---------------------------------------------------------------------------
@@ -328,6 +403,21 @@ final class EventParserTest extends TestCase
         $event = $this->typedEvent(
             EslFixtureBuilder::eventJson(
                 EslFixtureBuilder::eventJsonData([
+                    'Event-Name' => 'CHANNEL_CREATE',
+                    'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+                    'Event-Sequence' => 12345,
+                ])
+            )
+        );
+
+        $this->assertInstanceOf(ChannelLifecycleEvent::class, $event);
+    }
+
+    public function test_event_xml_flows_through_event_factory(): void
+    {
+        $event = $this->typedEvent(
+            EslFixtureBuilder::eventXml(
+                EslFixtureBuilder::eventXmlData([
                     'Event-Name' => 'CHANNEL_CREATE',
                     'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
                     'Event-Sequence' => 12345,

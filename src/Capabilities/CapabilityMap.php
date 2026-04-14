@@ -30,6 +30,7 @@ final class CapabilityMap implements CapabilityMapInterface
         'event-subscription'            => FeatureSupportLevel::Stable,
         'event-plain-decoding'          => FeatureSupportLevel::Stable,
         'event-json-decoding'           => FeatureSupportLevel::Stable,
+        'event-xml-decoding'            => FeatureSupportLevel::Provisional,
         'normalized-events'             => FeatureSupportLevel::Stable,
         'correlation-metadata'          => FeatureSupportLevel::Stable,
         'replay-envelope-export'        => FeatureSupportLevel::Provisional,

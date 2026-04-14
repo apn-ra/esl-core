@@ -87,6 +87,7 @@ See [`docs/architecture.md`](docs/architecture.md) for the full architecture des
 ## Quick start
 
 The supported public surface is centered on typed commands, the inbound decoding facade, normalized/typed events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
+For new integrations, start from `InboundPipeline` and treat lower-level parser/classifier composition as an advanced provisional path.
 
 ```php
 use Apntalk\EslCore\Commands\AuthCommand;
@@ -110,21 +111,22 @@ $replay = ReplayEnvelopeFactory::withSession($sessionId);
 ```
 
 If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
-Upper layers should prefer `InboundPipeline` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly.
+Upper layers should prefer `InboundPipeline` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need wire-level control and accept provisional coupling.
 
 ## Current release scope
 
 - Typed commands and replies for auth, command replies, `api`, and `bgapi`
 - Stable inbound byte-stream decoding via `InboundPipeline`
 - Normalized events for `text/event-plain` and `text/event-json`
+- Provisional normalized event decoding for `text/event-xml`
 - Selective typed event families: background job, channel lifecycle, bridge, hangup, playback, and custom events
 - Correlation/session metadata and replay-safe envelopes
 - Minimal in-memory transport and explicit failure taxonomy
 - Internal-only stream/socket smoke-path validation over a real PHP stream resource
 - Fixture-backed behavior, PHPUnit coverage, PHPStan, and capability verification
 
-Deferred from this release:
-- `text/event-xml`
+Still provisional or deferred from this release:
+- live-backed `text/event-xml` evidence beyond constructed fixtures
 - framework/runtime integrations
 - public transport expansion beyond `InMemoryTransport`
 - replay storage, scheduling, or orchestration
@@ -138,6 +140,16 @@ composer smoke
 ```
 
 This smoke path exercises the supported inbound facade together with the typed command/reply and async event pipelines, including correlation/session metadata and replay-envelope creation.
+
+## v0.2 status
+
+The repository is now positioned as **v0.2 release-ready core hardening completed, pending maintainer release decision**.
+That means:
+
+- the supported ingress contract is explicit and documented around `InboundPipeline`
+- XML event decoding exists, but is still declared provisional pending broader evidence
+- stream/socket validation is stronger, but remains internal smoke support only
+- residual pre-1.0 gaps are documented rather than hidden
 
 ---
 

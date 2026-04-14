@@ -162,4 +162,41 @@ final class FrameParserPartialTest extends TestCase
         $this->assertCount(1, $frames);
         $this->assertSame($body, $frames[0]->body);
     }
+
+    public function test_three_coalesced_frames_drain_together_after_single_feed(): void
+    {
+        $full = EslFixtureBuilder::authAccepted()
+            . EslFixtureBuilder::bgapiAccepted()
+            . EslFixtureBuilder::backgroundJobEvent();
+
+        $this->parser->feed($full);
+        $frames = $this->parser->drain();
+
+        $this->assertCount(3, $frames);
+        $this->assertSame('command/reply', $frames[0]->contentType());
+        $this->assertSame('+OK accepted', $frames[0]->replyText());
+        $this->assertSame('command/reply', $frames[1]->contentType());
+        $this->assertSame('text/event-plain', $frames[2]->contentType());
+    }
+
+    public function test_event_body_can_arrive_after_headers_and_inner_event_headers(): void
+    {
+        $result = "+OK delayed-body\n";
+        $full = EslFixtureBuilder::backgroundJobEvent(jobResult: $result);
+        $outerHeaderEnd = strpos($full, "\n\n");
+        $eventBodyStart = strrpos($full, "\n\n") + 2;
+
+        $this->assertNotFalse($outerHeaderEnd);
+        $this->assertNotFalse($eventBodyStart);
+
+        $this->parser->feed(substr($full, 0, $eventBodyStart));
+        $this->assertEmpty($this->parser->drain());
+
+        $this->parser->feed(substr($full, $eventBodyStart));
+        $frames = $this->parser->drain();
+
+        $this->assertCount(1, $frames);
+        $this->assertStringStartsWith('Event-Name: BACKGROUND_JOB', $frames[0]->body);
+        $this->assertSame($result, substr($frames[0]->body, -strlen($result)));
+    }
 }

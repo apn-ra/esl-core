@@ -91,7 +91,7 @@ All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
 - `BgapiAcceptedReply`, `ApiReply`, `UnknownReply`
 
 ### Events
-Event parsing: supported event formats (`text/event-plain`, `text/event-json`) → `NormalizedEvent` (via `EventParser`)
+Event parsing: supported event formats (`text/event-plain`, `text/event-json`, provisional `text/event-xml`) → `NormalizedEvent` (via `EventParser`)
 Classification: `NormalizedEvent` → typed event (via `EventClassifier`)
 Composition: `EventFactory` combines both steps.
 Public ingress: `InboundPipeline` composes framing + classification + reply/event decoding for upper layers that should not depend on the provisional concrete parser/classifier classes directly.
@@ -105,6 +105,7 @@ Key invariants:
 - Unknown events NEVER throw; they produce `RawEvent`
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
+- `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 
 ### Correlation
@@ -165,7 +166,7 @@ Owns minimal I/O abstraction for testability and smoke-path use.
 Key invariants:
 - Transport does not own reconnect, supervision, or scheduling
 - `InMemoryTransport` is the integration test foundation
-- Stream/socket smoke transport remains explicitly internal and non-primary
+- Stream/socket smoke transport remains explicitly internal and non-primary, but now covers fragmented, coalesced, delayed-body, delayed-completion, and mid-frame-loss scenarios
 - Upper-layer packages (esl-react, laravel-freeswitch-esl) own real transport lifecycle
 
 ---

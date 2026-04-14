@@ -112,6 +112,15 @@ final class EslFixtureBuilder
     }
 
     /**
+     * A text/event-xml frame wrapping the given XML payload.
+     */
+    public static function eventXml(string $xml): string
+    {
+        $len = strlen($xml);
+        return "Content-Type: text/event-xml\nContent-Length: {$len}\n\n{$xml}";
+    }
+
+    /**
      * Build event data for a text/event-plain event (URL-encoded header values).
      *
      * @param array<string, string> $headers Header values should be pre-encoded or plain ASCII.
@@ -155,6 +164,37 @@ final class EslFixtureBuilder
         );
 
         return $json;
+    }
+
+    /**
+     * Build a deterministic XML event payload.
+     *
+     * @param array<string, scalar> $headers
+     */
+    public static function eventXmlData(array $headers, string $body = ''): string
+    {
+        $xml = '<?xml version="1.0" encoding="UTF-8"?><event><headers>';
+
+        foreach ($headers as $name => $value) {
+            $xml .= sprintf(
+                '<%1$s>%2$s</%1$s>',
+                $name,
+                htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+            );
+        }
+
+        $xml .= '</headers>';
+
+        if ($body !== '') {
+            $xml .= sprintf(
+                '<body>%s</body>',
+                htmlspecialchars($body, ENT_XML1 | ENT_QUOTES, 'UTF-8')
+            );
+        }
+
+        $xml .= '</event>';
+
+        return $xml;
     }
 
     /**

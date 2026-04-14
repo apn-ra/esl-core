@@ -10,6 +10,7 @@ use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\BridgeEvent;
+use Apntalk\EslCore\Events\ChannelLifecycleEvent;
 use Apntalk\EslCore\Events\PlaybackEvent;
 use Apntalk\EslCore\Events\RawEvent;
 use Apntalk\EslCore\Exceptions\MalformedFrameException;
@@ -148,5 +149,35 @@ final class InboundPipelineTest extends TestCase
         $this->assertSame('CHANNEL_BRIDGE', $bridgeMessages[0]->normalizedEvent()?->eventName());
         $this->assertSame('PLAYBACK_STOP', $playbackMessages[0]->normalizedEvent()?->eventName());
         $this->assertSame('tone_stream://%(250,50,440)', $playbackMessages[0]->normalizedEvent()?->playbackFilePath());
+    }
+
+    public function test_xml_event_decodes_through_public_facade_without_reaching_internal_parsers(): void
+    {
+        $messages = $this->pipeline->decode(
+            EslFixtureBuilder::eventXml(
+                EslFixtureBuilder::eventXmlData([
+                    'Event-Name' => 'CHANNEL_CREATE',
+                    'Unique-ID' => 'abc-xml-123',
+                    'Event-Sequence' => '7001',
+                    'Channel-Name' => 'sofia/internal/1001@192.168.1.100',
+                ])
+            )
+        );
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::Event, $messages[0]->type());
+        $this->assertInstanceOf(ChannelLifecycleEvent::class, $messages[0]->event());
+        $this->assertSame('text/event-xml', $messages[0]->normalizedEvent()?->sourceContentType());
+        $this->assertFalse($messages[0]->normalizedEvent()?->headersAreUrlEncoded() ?? true);
+        $this->assertSame('abc-xml-123', $messages[0]->normalizedEvent()?->uniqueId());
+    }
+
+    public function test_malformed_xml_event_still_fails_explicitly_through_public_facade(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->pipeline->decode(
+            EslFixtureBuilder::eventXml('<event><headers><Event-Name>CHANNEL_CREATE')
+        );
     }
 }

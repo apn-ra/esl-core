@@ -18,6 +18,10 @@ use Apntalk\EslCore\Protocol\Frame;
  *
  * Classification must not fail for unknown content-types; instead it
  * must degrade to Unknown.
+ *
+ * Upper-layer integrations should prefer `InboundPipelineInterface` for the
+ * supported ingress path. This lower-level contract remains provisional and
+ * primarily exists for internal composition and targeted tests.
  */
 interface InboundMessageClassifierInterface
 {

@@ -11,8 +11,13 @@ use Apntalk\EslCore\Protocol\Frame;
 /**
  * Contract for ESL event parsers.
  *
- * Implementations decode a text/event-plain (or similar) frame body
- * into a NormalizedEvent, URL-decoding header values as required.
+ * Implementations decode supported event frame bodies (`text/event-plain`,
+ * `text/event-json`, `text/event-xml`) into a NormalizedEvent, applying
+ * source-format normalization as required.
+ *
+ * Upper-layer integrations should prefer `InboundPipelineInterface` for raw
+ * inbound bytes. This lower-level contract remains useful when callers
+ * intentionally own frame-level ingestion.
  */
 interface EventParserInterface
 {

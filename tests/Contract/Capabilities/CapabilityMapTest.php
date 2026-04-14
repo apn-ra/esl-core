@@ -22,6 +22,7 @@ final class CapabilityMapTest extends TestCase
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::ReplyParsing));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::EventPlainDecoding));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::EventJsonDecoding));
+        $this->assertSame(FeatureSupportLevel::Provisional, $map->supportLevel(Capability::EventXmlDecoding));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::NormalizedEvents));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::CorrelationMetadata));
         $this->assertSame(FeatureSupportLevel::Provisional, $map->supportLevel(Capability::ReplayEnvelopeExport));
@@ -44,6 +45,7 @@ final class CapabilityMapTest extends TestCase
         $all = (new CapabilityMap())->all();
 
         $this->assertArrayHasKey(Capability::EventJsonDecoding->value, $all);
+        $this->assertArrayHasKey(Capability::EventXmlDecoding->value, $all);
         $this->assertArrayHasKey(Capability::CorrelationMetadata->value, $all);
     }
 }
