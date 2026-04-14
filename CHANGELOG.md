@@ -16,6 +16,11 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 - Documented the current `ApiReply::isSuccess()` contract more explicitly: it is a `+OK` body-prefix check, not a generic indicator that every `api/response` body represents success.
 - Promoted authenticated live auth-accept and `api status` captures into test fixtures so reply behavior is pinned by real wire samples.
+- Aligned the public API docs so the minimal `Transport` boundary is documented consistently as public, while clarifying that the current concrete inbound parse/classify path remains a provisional early-adopter integration surface.
+
+### Fixed
+
+- Restored a clean release-check path by removing an unused import in the chaos integration test so `composer check` passes again.
 
 ### Added
 

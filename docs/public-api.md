@@ -16,6 +16,7 @@ A type, interface, class, or constant is part of the public API when it lives in
 | `Apntalk\EslCore\Replay` | Replay envelope and capture contracts |
 | `Apntalk\EslCore\Capabilities` | Capability map and support level declarations |
 | `Apntalk\EslCore\Exceptions` | Exception hierarchy |
+| `Apntalk\EslCore\Transport` | Minimal transport boundary intended for testing and narrow smoke-path use |
 
 ## What is NOT public API
 
@@ -36,6 +37,7 @@ Before `1.0.0`:
 - New public types will be added additively.
 - Breaking changes to public types will be called out explicitly in `CHANGELOG.md`.
 - Consumers depending only on listed public namespaces will receive best-effort compatibility within a minor version series.
+- The current inbound parse/classify path still relies on concrete implementations under `Parsing` and `Internal`; those implementations are fixture-backed but remain provisional and outside the stable public API boundary.
 
 ## Interfaces consumers may depend on
 
@@ -58,6 +60,7 @@ Contracts\TransportInterface
 ```
 
 Current parser and classifier implementations exist in the repository and are fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` remain intentionally outside the supported pre-`1.0.0` public API boundary.
+Careful adopters may compose those implementations directly today for the full inbound pipeline, but they should do so as an early-adopter/provisional integration rather than a stable API commitment.
 
 ## Concrete types consumers may depend on
 
@@ -73,6 +76,10 @@ Selective typed event families currently include `BackgroundJobEvent`, `ChannelL
 
 ### Exceptions
 All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
+
+### Transport
+`TransportInterface` and `InMemoryTransport` are public as the minimal transport boundary for testing and narrow smoke-path use.
+This does not imply reconnect, scheduling, supervision, or broader transport-runtime ownership in core.
 
 The error taxonomy is intentionally layered:
 - `TransportException` covers I/O/connection failures only

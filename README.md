@@ -103,6 +103,7 @@ $replay = ReplayEnvelopeFactory::withSession($sessionId);
 ```
 
 If you need the current low-level parser/classifier implementations directly, they are available in the repository and are fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
+That means careful adopters can compose the full inbound parse/classify pipeline today, but should treat that composition as an early-adopter/provisional path until a later pre-`1.0.0` release hardens the ingress story further.
 
 ## Current release scope
 

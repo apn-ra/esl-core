@@ -43,6 +43,8 @@ Stability is earned incrementally:
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |
 | `Replay\*` envelope shape | Provisional until Phase 8 complete |
+| `TransportInterface`, `Transport\InMemoryTransport` | Stable as the minimal transport boundary for testing and narrow smoke-path use |
+| Concrete inbound parser/classifier implementations (`Parsing\*`, `Internal\Classification\*`) | Provisional and intentionally outside the stable public API boundary |
 | `Internal\*` | Permanently unstable — not covered by SemVer |
 
 ## Adding new protocol fixtures

@@ -17,7 +17,6 @@ use Apntalk\EslCore\Exceptions\TruncatedFrameException;
 use Apntalk\EslCore\Internal\Classification\ClassifiedInboundMessage;
 use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
-use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Protocol\HeaderBag;
