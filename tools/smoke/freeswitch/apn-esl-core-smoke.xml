@@ -1,0 +1,22 @@
+<include>
+  <context name="apn-esl-core-smoke">
+    <extension name="apn-esl-core-events">
+      <condition field="destination_number" expression="^apn-esl-core-events$">
+        <action application="set" data="apn_esl_core_smoke=true"/>
+        <action application="answer"/>
+        <action application="playback" data="tone_stream://%(250,50,440)"/>
+        <action application="bridge" data="{apn_esl_core_smoke=true,originate_timeout=5}loopback/apn-esl-core-peer/apn-esl-core-smoke"/>
+        <action application="hangup" data="NORMAL_CLEARING"/>
+      </condition>
+    </extension>
+
+    <extension name="apn-esl-core-peer">
+      <condition field="destination_number" expression="^apn-esl-core-peer$">
+        <action application="set" data="apn_esl_core_smoke=true"/>
+        <action application="answer"/>
+        <action application="sleep" data="1500"/>
+        <action application="hangup" data="NORMAL_CLEARING"/>
+      </condition>
+    </extension>
+  </context>
+</include>

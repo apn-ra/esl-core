@@ -1,0 +1,22 @@
+Content-Length: 785
+Content-Type: text/event-plain
+
+Event-Name: BACKGROUND_JOB
+Core-UUID: 50cfb839-479a-4c7f-ab0b-5e3d0d4bf6be
+FreeSWITCH-Hostname: pbx01
+FreeSWITCH-Switchname: pbx01
+FreeSWITCH-IPv4: 38.107.174.40
+FreeSWITCH-IPv6: %3A%3A1
+Event-Date-Local: 2026-04-14%2006%3A21%3A39
+Event-Date-GMT: Tue,%2014%20Apr%202026%2006%3A21%3A39%20GMT
+Event-Date-Timestamp: 1776147699779969
+Event-Calling-File: mod_event_socket.c
+Event-Calling-Function: api_exec
+Event-Calling-Line-Number: 1572
+Event-Sequence: 387897
+Job-UUID: 4786f47d-2b41-48e4-813b-380f1e9bf359
+Job-Command: originate
+Job-Command-Arg: %7Borigination_uuid%3D07295f9a-b09f-425e-b9d2-1a0562748035,originate_timeout%3D8,ignore_early_media%3Dtrue,apn_esl_core_smoke%3Dtrue%7Dloopback/apn-esl-core-events/apn-esl-core-smoke%20%26park()
+Content-Length: 26
+
+-ERR NO_ROUTE_DESTINATION

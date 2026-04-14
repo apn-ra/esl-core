@@ -54,6 +54,9 @@ File-based fixtures MUST:
 - Include a correct `Content-Length` where required.
 - Have a comment at the top describing provenance.
 
+Promoted live fixtures should also be listed in a central provenance surface.
+See `docs/live-fixture-provenance.md` for the current live-backed capture map.
+
 ## Naming scheme
 
 | Directory | Pattern | Contents |
@@ -72,6 +75,15 @@ Fixtures should document their origin:
 - `# provenance: constructed` — built from the FreeSWITCH ESL documentation
 - `# provenance: captured` — captured from a live FreeSWITCH connection
 - `# provenance: regression` — created to reproduce a specific bug
+
+For curated live fixtures promoted from `tools/smoke/captures/`, maintainers
+should record:
+
+- the exact quarantined capture filename
+- the capture mode (`plain` or `json`)
+- the controlled scenario that produced it
+- the reason it was promoted
+- the contract test(s) that now pin it
 
 ## Adding new fixtures
 

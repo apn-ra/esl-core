@@ -23,6 +23,7 @@ Use this checklist when cutting the next pre-`1.0.0` release of `apntalk/esl-cor
 - Confirm `README.md` still states clearly what the package is and is not.
 - Confirm `docs/public-api.md` matches the intended supported surface.
 - Confirm `docs/capabilities.md` matches tested behavior.
+- Confirm every newly promoted live fixture has a provenance entry in `docs/live-fixture-provenance.md` and that the listed source capture still exists under `tools/smoke/captures/`.
 - Confirm `docs/replay-primitives.md` and `docs/correlation.md` do not imply a replay runtime.
 - Confirm `CHANGELOG.md` is release-facing and does not overclaim completeness or stability.
 

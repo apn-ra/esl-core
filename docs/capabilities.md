@@ -21,14 +21,18 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `bgapi-command` | stable | BgapiCommand, BgapiAcceptedReply, Job-UUID extraction |
 | `reply-parsing` | stable | All typed reply classes, ReplyFactory, classifier → reply path |
 | `event-subscription` | stable | EventSubscriptionCommand, FilterCommand, NoEventsCommand |
-| `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values |
-| `event-json-decoding` | stable | EventParser decodes text/event-json into the same NormalizedEvent path |
-| `normalized-events` | stable | NormalizedEvent, EventClassifier, typed event families |
+| `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values; bridge/playback paths are now backed by curated live plain captures |
+| `event-json-decoding` | stable | EventParser decodes text/event-json into the same NormalizedEvent path; bridge/playback paths are now backed by curated live JSON captures |
+| `normalized-events` | stable | NormalizedEvent, EventClassifier, typed event families; current live-backed bridge/playback evidence covers both plain and json formats |
 | `correlation-metadata` | stable | ConnectionSessionId, ObservationSequence, CorrelationContext, metadata envelopes |
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
 | `reconstruction-hook-support` | provisional | ReconstructionHookInterface defined; no registry yet |
 | `in-memory-transport` | stable | InMemoryTransport for testing |
 | `fixture-replay-compatibility` | provisional | EslFixtureBuilder produces deterministic frames |
+
+The live-backed bridge/playback capture evidence comes from non-public operator
+tooling under `tools/smoke/`. That tooling is validation support only and is
+not part of the package API or capability surface.
 
 ## Inspecting capabilities at runtime
 

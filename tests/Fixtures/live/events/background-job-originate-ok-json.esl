@@ -1,0 +1,4 @@
+Content-Length: 823
+Content-Type: text/event-json
+
+{"Event-Name":"BACKGROUND_JOB","Core-UUID":"50cfb839-479a-4c7f-ab0b-5e3d0d4bf6be","FreeSWITCH-Hostname":"pbx01","FreeSWITCH-Switchname":"pbx01","FreeSWITCH-IPv4":"38.107.174.40","FreeSWITCH-IPv6":"::1","Event-Date-Local":"2026-04-14 07:08:55","Event-Date-GMT":"Tue, 14 Apr 2026 07:08:55 GMT","Event-Date-Timestamp":"1776150535279952","Event-Calling-File":"mod_event_socket.c","Event-Calling-Function":"api_exec","Event-Calling-Line-Number":"1572","Event-Sequence":"388577","Job-UUID":"1dd29eca-8fed-476a-a9e8-69dc5615f2e2","Job-Command":"originate","Job-Command-Arg":"{origination_uuid=bbc848fb-ad50-4908-9ae4-6b124ca4d3b1,originate_timeout=8,ignore_early_media=true,apn_esl_core_smoke=true}loopback/apn-esl-core-events/apn-esl-core-smoke &park()","Content-Length":"41","_body":"+OK bbc848fb-ad50-4908-9ae4-6b124ca4d3b1\n"}

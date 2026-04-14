@@ -14,6 +14,11 @@ Header values in the outer ESL frame are NOT URL-encoded.
 Header values in `text/event-plain` event bodies ARE URL-encoded.
 Header values in `text/event-json` are normalized from JSON scalar values and are not URL-decoded.
 
+The current repo evidence for selective typed bridge/playback events is now
+live-backed in both `text/event-plain` and `text/event-json` via curated
+fixtures promoted from controlled loopback captures. That live evidence does
+not make the operator tooling part of the package API.
+
 ## Frame parsing
 
 The `FrameParser` accumulates bytes in an internal buffer and processes them as a state machine:
