@@ -12,6 +12,15 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 
 Release preparation is in progress for the next small pre-`1.0.0` tag. The current scope is the typed ESL protocol substrate already present in the repository; this changelog intentionally avoids implying `1.0.0` stability or runtime completeness.
 
+### Clarified
+
+- Documented the current `ApiReply::isSuccess()` contract more explicitly: it is a `+OK` body-prefix check, not a generic indicator that every `api/response` body represents success.
+- Promoted authenticated live auth-accept and `api status` captures into test fixtures so reply behavior is pinned by real wire samples.
+
+### Added
+
+- A deterministic chaos test path covering fragmented delivery, mixed reply/event streams, safe degradation for unknown inputs, explicit malformed/truncated failures, and correlation/replay consistency under noisy session traffic.
+
 ## [0.2.0] - Draft
 
 ### Highlights
@@ -25,6 +34,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Verification
 
+- Added a narrow smoke-test path for the current happy-path command/reply and async event substrate wiring
 - PHPUnit, PHPStan, Composer metadata validation, and coding-standard checks are part of release readiness for this draft release.
 - Capability declarations are verified against the implemented support surfaces.
 
