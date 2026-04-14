@@ -60,6 +60,7 @@ composer require apntalk/esl-core
 This package follows [SemVer](https://semver.org/), but it is still pre-`1.0.0`.
 
 - Public namespaces are documented in [`docs/public-api.md`](docs/public-api.md)
+- The supported inbound decode surface is now `Apntalk\EslCore\Inbound\InboundPipeline`
 - Internal parser/classifier implementations remain intentionally unstable before `1.0.0`
 - Replay envelopes and reconstruction-oriented contracts should be treated as provisional surfaces until `1.0.0`
 
@@ -85,39 +86,47 @@ See [`docs/architecture.md`](docs/architecture.md) for the full architecture des
 
 ## Quick start
 
-The supported public surface is centered on typed commands, events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
+The supported public surface is centered on typed commands, the inbound decoding facade, normalized/typed events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
 
 ```php
 use Apntalk\EslCore\Commands\AuthCommand;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
+use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Transport\InMemoryTransport;
 
 $transport = new InMemoryTransport();
 $transport->write((new AuthCommand('ClueCon'))->serialize());
 
+$inbound = new InboundPipeline();
+$transport->enqueueInbound("Content-Type: auth/request\n\n");
+$messages = $inbound->decode($transport->read(4096) ?? '');
+$messages[0]->isServerAuthRequest(); // true
+
 $sessionId = ConnectionSessionId::generate();
 $correlation = new CorrelationContext($sessionId);
 $replay = ReplayEnvelopeFactory::withSession($sessionId);
 ```
 
-If you need the current low-level parser/classifier implementations directly, they are available in the repository and are fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
-That means careful adopters can compose the full inbound parse/classify pipeline today, but should treat that composition as an early-adopter/provisional path until a later pre-`1.0.0` release hardens the ingress story further.
+If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
+Upper layers should prefer `InboundPipeline` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly.
 
 ## Current release scope
 
 - Typed commands and replies for auth, command replies, `api`, and `bgapi`
+- Stable inbound byte-stream decoding via `InboundPipeline`
 - Normalized events for `text/event-plain` and `text/event-json`
 - Selective typed event families: background job, channel lifecycle, bridge, hangup, playback, and custom events
 - Correlation/session metadata and replay-safe envelopes
 - Minimal in-memory transport and explicit failure taxonomy
+- Internal-only stream/socket smoke-path validation over a real PHP stream resource
 - Fixture-backed behavior, PHPUnit coverage, PHPStan, and capability verification
 
 Deferred from this release:
 - `text/event-xml`
 - framework/runtime integrations
-- transport expansion beyond `InMemoryTransport`
+- public transport expansion beyond `InMemoryTransport`
 - replay storage, scheduling, or orchestration
 
 ## Smoke check
@@ -128,7 +137,7 @@ For a fast confidence pass that the current substrate composes cleanly on its ha
 composer smoke
 ```
 
-This smoke path exercises the existing typed command/reply and async event pipelines, including correlation/session metadata and replay-envelope creation.
+This smoke path exercises the supported inbound facade together with the typed command/reply and async event pipelines, including correlation/session metadata and replay-envelope creation.
 
 ---
 

@@ -12,6 +12,7 @@ A type, interface, class, or constant is part of the public API when it lives in
 | `Apntalk\EslCore\Commands` | Typed command objects |
 | `Apntalk\EslCore\Replies` | Typed reply objects and the ReplyFactory |
 | `Apntalk\EslCore\Events` | Event interfaces, NormalizedEvent, typed event families |
+| `Apntalk\EslCore\Inbound` | Stable inbound decoding facade and decoded-message value objects |
 | `Apntalk\EslCore\Correlation` | Correlation and session metadata primitives |
 | `Apntalk\EslCore\Replay` | Replay envelope and capture contracts |
 | `Apntalk\EslCore\Capabilities` | Capability map and support level declarations |
@@ -37,7 +38,8 @@ Before `1.0.0`:
 - New public types will be added additively.
 - Breaking changes to public types will be called out explicitly in `CHANGELOG.md`.
 - Consumers depending only on listed public namespaces will receive best-effort compatibility within a minor version series.
-- The current inbound parse/classify path still relies on concrete implementations under `Parsing` and `Internal`; those implementations are fixture-backed but remain provisional and outside the stable public API boundary.
+- `Inbound\InboundPipeline` is now the supported public ingress surface for raw inbound bytes. It intentionally hides the current concrete parser/classifier path under `Parsing` and `Internal`.
+- The current concrete inbound parse/classify implementations under `Parsing` and `Internal` remain fixture-backed but provisional and outside the stable public API boundary.
 
 ## Interfaces consumers may depend on
 
@@ -47,6 +49,7 @@ These are the core interfaces intended for consumers and upper-layer packages:
 Contracts\FrameParserInterface
 Contracts\FrameSerializerInterface
 Contracts\CommandInterface
+Contracts\InboundPipelineInterface
 Contracts\ReplyInterface
 Contracts\EventInterface
 Contracts\EventParserInterface
@@ -59,8 +62,8 @@ Contracts\CapabilityMapInterface
 Contracts\TransportInterface
 ```
 
-Current parser and classifier implementations exist in the repository and are fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` remain intentionally outside the supported pre-`1.0.0` public API boundary.
-Careful adopters may compose those implementations directly today for the full inbound pipeline, but they should do so as an early-adopter/provisional integration rather than a stable API commitment.
+Current parser and classifier implementations still exist in the repository and remain fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` stay intentionally outside the supported pre-`1.0.0` public API boundary.
+Upper layers should prefer `Inbound\InboundPipeline` rather than composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly.
 
 ## Concrete types consumers may depend on
 
@@ -72,10 +75,15 @@ All reply classes in `Apntalk\EslCore\Replies\*`, plus `ReplyFactory`, are publi
 
 ### Events
 `NormalizedEvent`, `RawEvent`, and typed event families are public.
+`NormalizedEvent` remains a substrate object only: normalized headers, raw header access, raw body bytes, and source-format invariants. It does not carry correlation/replay/runtime state.
 Selective typed event families currently include `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, and `CustomEvent`.
 Current live-backed evidence covers bridge/playback decoding in both
 `text/event-plain` and `text/event-json`, but the capture helper and PBX setup
 used to obtain that evidence remain non-public validation tooling.
+
+### Inbound
+`Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, and `Inbound\InboundMessageType` are public.
+These types form the supported inbound decoding facade for raw byte ingestion, typed reply/event decoding, normalized-event access, auth-request/disconnect notices, and safe fallback to `RawEvent` / `UnknownReply` where appropriate.
 
 ### Exceptions
 All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
@@ -83,6 +91,7 @@ All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
 ### Transport
 `TransportInterface` and `InMemoryTransport` are public as the minimal transport boundary for testing and narrow smoke-path use.
 This does not imply reconnect, scheduling, supervision, or broader transport-runtime ownership in core.
+The new stream/socket smoke-path transport remains internal-only under `Internal\Transport\*`; it exists to validate realistic byte-stream behavior, not to widen the supported transport API.
 
 The error taxonomy is intentionally layered:
 - `TransportException` covers I/O/connection failures only

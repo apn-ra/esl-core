@@ -38,12 +38,14 @@ Stability is earned incrementally:
 |---|---|
 | `Contracts\*` interfaces | Provisional until fixture-validated |
 | `Commands\*` serialization | Stable after Phase 5 |
+| `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path |
 | `Replies\*` parsing | Stable after Phase 5 |
 | `Events\NormalizedEvent` | Stable after Phase 6 for the currently supported event formats (`text/event-plain`, `text/event-json`) |
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |
 | `Replay\*` envelope shape | Provisional until Phase 8 complete |
 | `TransportInterface`, `Transport\InMemoryTransport` | Stable as the minimal transport boundary for testing and narrow smoke-path use |
+| `Internal\Transport\StreamSocketTransport` | Internal-only smoke-path support; deliberately outside the public API boundary |
 | Concrete inbound parser/classifier implementations (`Parsing\*`, `Internal\Classification\*`) | Provisional and intentionally outside the stable public API boundary |
 | `Internal\*` | Permanently unstable — not covered by SemVer |
 

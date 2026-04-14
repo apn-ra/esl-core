@@ -17,6 +17,7 @@ enum Capability: string
     case Auth              = 'auth';
     case ApiCommand        = 'api-command';
     case BgapiCommand      = 'bgapi-command';
+    case InboundDecodingFacade = 'inbound-decoding-facade';
     case ReplyParsing      = 'reply-parsing';
     case EventSubscription = 'event-subscription';
     case EventPlainDecoding = 'event-plain-decoding';

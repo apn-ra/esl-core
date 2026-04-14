@@ -19,6 +19,7 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `auth` | stable | Auth command, auth/request parsing, AuthAcceptedReply, ErrorReply |
 | `api-command` | stable | ApiCommand serialization, ApiReply parsing |
 | `bgapi-command` | stable | BgapiCommand, BgapiAcceptedReply, Job-UUID extraction |
+| `inbound-decoding-facade` | stable | `InboundPipeline`, `DecodedInboundMessage`, and stable raw-byte ingress without depending on provisional parser/classifier classes directly |
 | `reply-parsing` | stable | All typed reply classes, ReplyFactory, classifier → reply path |
 | `event-subscription` | stable | EventSubscriptionCommand, FilterCommand, NoEventsCommand |
 | `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values; bridge/playback paths are now backed by curated live plain captures |

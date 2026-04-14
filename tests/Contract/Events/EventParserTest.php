@@ -173,6 +173,29 @@ final class EventParserTest extends TestCase
         $this->assertSame("+OK json-body\n", $event->body());
     }
 
+    public function test_plain_event_reports_source_content_type_and_url_encoding_policy(): void
+    {
+        $event = $this->parseEvent(EslFixtureBuilder::channelCreateEvent());
+
+        $this->assertSame('text/event-plain', $event->sourceContentType());
+        $this->assertTrue($event->headersAreUrlEncoded());
+    }
+
+    public function test_json_event_reports_source_content_type_and_non_url_encoded_policy(): void
+    {
+        $fixture = EslFixtureBuilder::eventJson(
+            EslFixtureBuilder::eventJsonData([
+                'Event-Name' => 'CHANNEL_CREATE',
+                'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+            ])
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertSame('text/event-json', $event->sourceContentType());
+        $this->assertFalse($event->headersAreUrlEncoded());
+    }
+
     // ---------------------------------------------------------------------------
     // CHANNEL_HANGUP parsing
     // ---------------------------------------------------------------------------

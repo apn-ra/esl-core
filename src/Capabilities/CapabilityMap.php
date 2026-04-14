@@ -25,6 +25,7 @@ final class CapabilityMap implements CapabilityMapInterface
         'auth'                          => FeatureSupportLevel::Stable,
         'api-command'                   => FeatureSupportLevel::Stable,
         'bgapi-command'                 => FeatureSupportLevel::Stable,
+        'inbound-decoding-facade'       => FeatureSupportLevel::Stable,
         'reply-parsing'                 => FeatureSupportLevel::Stable,
         'event-subscription'            => FeatureSupportLevel::Stable,
         'event-plain-decoding'          => FeatureSupportLevel::Stable,

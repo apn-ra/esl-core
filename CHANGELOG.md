@@ -14,6 +14,10 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Added
 
+- `src/Inbound/InboundPipeline`, `src/Inbound/DecodedInboundMessage`, `src/Inbound/InboundMessageType`, and `src/Contracts/InboundPipelineInterface` — a stable public inbound decoding facade for raw byte ingestion. Upper layers can now consume auth requests, typed replies, typed events, normalized events, disconnect notices, and safe `RawEvent` / `UnknownReply` fallbacks without composing the provisional parser/classifier internals directly.
+- `src/Internal/Transport/StreamSocketTransport` and `tests/Integration/StreamSocketTransportPipelineTest.php` — bounded internal stream/socket smoke coverage proving the wire model against real PHP stream-socket behavior without widening the supported transport API.
+- `tests/Fixtures/sequences/bgapi-acceptance-and-completion.esl` and `tests/Contract/Inbound/InboundPipelineTest.php` — fixture-backed bgapi acceptance/completion sequence coverage through the new public facade, including replay/correlation assertions for the sensitive Job-UUID path.
+
 - `docs/live-fixture-provenance.md` — central provenance record for curated live fixtures promoted from the controlled loopback call-flow captures. Ties each promoted fixture to its exact quarantined source capture, capture mode, promotion reason, and contract test coverage.
 - `tests/Fixtures/live/events/background-job-no-route-destination-plain.esl` — curated live fixture for a `BACKGROUND_JOB` event carrying a `-ERR NO_ROUTE_DESTINATION` failure body. Promoted byte-for-byte from a call-flow validation capture (session `20260414T062140Z`). Documents the observed failure path when FreeSWITCH accepted a bgapi `originate` command but the target dialplan route was not installed on the PBX.
 - `tests/Contract/Events/LiveBackgroundJobFailureFixtureTest` — 15 tests pinning the parse, classify, normalize, and typed-event behavior for the above fixture. Verifies `isSuccess()` is false, the `-ERR NO_ROUTE_DESTINATION\n` body is preserved exactly, and correlation identifiers (`Job-UUID`, `Core-UUID`, `Event-Sequence`) round-trip correctly. No new typed-event expectations; bridge/playback event coverage is deferred pending a successful PBX rerun.
@@ -29,9 +33,11 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- `NormalizedEvent` remains a protocol-substrate object rather than an application aggregate: it now exposes explicit source-content-type and URL-encoding invariants while correlation/replay/runtime state stays in separate layers.
+- The supported ingress surface for upper layers is now `Inbound\InboundPipeline`; concrete parser/classifier implementations remain intentionally provisional even though they continue to exist in-repo for low-level testing.
 - Current bridge/playback typed-event coverage is live-backed in both `text/event-plain` and `text/event-json`, but that evidence comes from curated fixtures and non-public smoke tooling rather than from any supported runtime or transport integration surface.
 
-## [0.3.0] - 2026-04-14
+## [0.2.1] - 2026-04-14
 
 ### Clarified
 

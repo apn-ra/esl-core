@@ -14,6 +14,7 @@ tests/Fixtures/
 ├── events/                — inbound event frames
 ├── malformed/             — intentionally bad frames for error path tests
 ├── partial/               — truncated frames for partial-read tests
+├── sequences/             — multi-frame inbound byte sequences
 └── replay/                — replay envelope fixtures
 ```
 
@@ -66,6 +67,7 @@ See `docs/live-fixture-provenance.md` for the current live-backed capture map.
 | `events/` | `{event-name}-{description}.esl` | Inbound event frames |
 | `malformed/` | `{description}.esl` | Intentionally broken frames |
 | `partial/` | `{description}-partial.bin` | Truncated or fragmented frames |
+| `sequences/` | `{description}.esl` | Multi-frame inbound captures or constructed protocol flows |
 | `replay/` | `{description}.json` | Replay envelope shapes |
 
 ## Fixture provenance

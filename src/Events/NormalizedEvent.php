@@ -18,6 +18,11 @@ use Apntalk\EslCore\Protocol\HeaderBag;
  * payloads are normalized to the same surface without URL-decoding. This class
  * preserves that distinction internally while exposing one normalized API.
  *
+ * `NormalizedEvent` is intentionally a substrate object, not an application
+ * aggregate. It preserves protocol headers, frame/body truth, and source-format
+ * normalization details only. Correlation, replay metadata, and runtime state
+ * live in separate layers.
+ *
  * @api
  */
 final class NormalizedEvent implements EventInterface
@@ -139,6 +144,22 @@ final class NormalizedEvent implements EventInterface
     public function playbackFilePath(): ?string
     {
         return $this->decoded('Playback-File-Path');
+    }
+
+    /**
+     * The original outer ESL event content-type that produced this object.
+     */
+    public function sourceContentType(): ?string
+    {
+        return $this->outerHeaders->get('Content-Type');
+    }
+
+    /**
+     * Whether raw event headers require URL-decoding on read access.
+     */
+    public function headersAreUrlEncoded(): bool
+    {
+        return $this->headersAreUrlEncoded;
     }
 
     // ---------------------------------------------------------------------------

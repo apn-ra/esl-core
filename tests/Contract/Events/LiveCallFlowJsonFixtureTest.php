@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Tests\Contract\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Correlation\ConnectionSessionId;
+use Apntalk\EslCore\Correlation\CorrelationContext;
+use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\BridgeEvent;
 use Apntalk\EslCore\Events\EventFactory;
@@ -15,6 +18,7 @@ use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Protocol\Frame;
+use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Tests\Fixtures\FixtureLoader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -32,6 +36,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class LiveCallFlowJsonFixtureTest extends TestCase
 {
+    private const SESSION_ID = '99999999-9999-4999-8999-999999999999';
     private const CHANNEL_UUID = '03938b92-baa4-49b6-bab2-63b599403395';
     private const PEER_UUID = 'cbb0a495-37ec-49b7-9198-35f5d1fe2505';
     private const CORE_UUID = '50cfb839-479a-4c7f-ab0b-5e3d0d4bf6be';
@@ -160,6 +165,22 @@ final class LiveCallFlowJsonFixtureTest extends TestCase
         $this->assertSame(self::JOB_UUID, $event->jobUuid());
         $this->assertSame('originate', $event->jobCommand());
         $this->assertSame("+OK " . self::ORIGINATING_UUID . "\n", $event->result());
+    }
+
+    public function test_background_job_json_fixture_correlation_and_replay_metadata_remain_protocol_truthful(): void
+    {
+        $event = $this->loadTypedBackgroundJob('live/events/background-job-originate-ok-json.esl');
+        $sessionId = ConnectionSessionId::fromString(self::SESSION_ID);
+        $correlation = new CorrelationContext($sessionId);
+        $metadata = $correlation->nextMetadataForEvent($event);
+        $envelope = new EventEnvelope($event, $metadata);
+        $replay = ReplayEnvelopeFactory::withSession($sessionId)->fromEventEnvelope($envelope);
+
+        $this->assertSame(self::JOB_UUID, $envelope->jobCorrelation()?->jobUuid());
+        $this->assertSame('388577', $envelope->metadata()->protocolSequence());
+        $this->assertSame(self::JOB_UUID, $replay->protocolFacts()['job-uuid'] ?? null);
+        $this->assertSame(self::JOB_UUID, $replay->derivedMetadata()['job-correlation.job-uuid'] ?? null);
+        $this->assertSame('388577', $replay->protocolSequence());
     }
 
     private function loadFrame(string $fixture): Frame

@@ -1,0 +1,22 @@
+Content-Type: command/reply
+Reply-Text: +OK Job-UUID: 7f4db0f2-b848-4b0a-b3cf-559bdca96b38
+
+Content-Type: text/event-plain
+Content-Length: 509
+
+Event-Name: BACKGROUND_JOB
+Core-UUID: 8c0e1d84-c82f-11e6-8842-3bf20b4ac4f6
+FreeSWITCH-Hostname: pbx01
+FreeSWITCH-IPv4: 192.168.1.100
+Event-Date-Local: 2016-12-22%2010%3A30%3A01
+Event-Date-GMT: Thu%2C%2022%20Dec%202016%2015%3A30%3A01%20GMT
+Event-Date-Timestamp: 1482422201000000
+Event-Calling-File: mod_event_socket.c
+Event-Calling-Function: api_exec
+Event-Calling-Line-Number: 2012
+Event-Sequence: 12346
+Job-UUID: 7f4db0f2-b848-4b0a-b3cf-559bdca96b38
+Job-Command: status
+Content-Length: 18
+
+-ERR no reply yet

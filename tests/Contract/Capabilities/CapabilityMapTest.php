@@ -18,6 +18,7 @@ final class CapabilityMapTest extends TestCase
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::Auth));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::ApiCommand));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::BgapiCommand));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::InboundDecodingFacade));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::ReplyParsing));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::EventPlainDecoding));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::EventJsonDecoding));
