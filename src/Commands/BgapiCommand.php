@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Apntalk\EslCore\Commands;
+
+use Apntalk\EslCore\Contracts\CommandInterface;
+
+/**
+ * ESL bgapi command — asynchronous background API call.
+ *
+ * FreeSWITCH immediately replies with a command/reply containing a Job-UUID.
+ * The actual command result arrives later as a BACKGROUND_JOB event.
+ *
+ * Wire format: "bgapi <command>[ <args>]\n\n"
+ *
+ * The bgapi acceptance reply (Job-UUID) is NOT the command result.
+ * The result arrives as a BACKGROUND_JOB event correlated by Job-UUID.
+ */
+final class BgapiCommand implements CommandInterface
+{
+    public function __construct(
+        private readonly string $command,
+        private readonly string $args = '',
+    ) {}
+
+    public function command(): string
+    {
+        return $this->command;
+    }
+
+    public function args(): string
+    {
+        return $this->args;
+    }
+
+    public function serialize(): string
+    {
+        if ($this->args !== '') {
+            return "bgapi {$this->command} {$this->args}\n\n";
+        }
+
+        return "bgapi {$this->command}\n\n";
+    }
+}

@@ -1,0 +1,61 @@
+# Stability Policy
+
+## Versioning
+
+This package follows [Semantic Versioning](https://semver.org/).
+
+- **MAJOR** version bump: breaking changes to the public API
+- **MINOR** version bump: new features, possibly breaking changes to provisional/internal surfaces
+- **PATCH** version bump: bug fixes, no API changes
+
+## Pre-1.0 behavior
+
+Before `1.0.0`, the following rules apply:
+
+- Minor version bumps (`0.x.0`) may introduce breaking changes to **internal** and **provisional** surfaces without deprecation notice.
+- Minor version bumps will NOT break types in the documented public namespaces without a note in `CHANGELOG.md`.
+- Patch versions are strictly backwards-compatible bug fixes.
+
+## 1.0.0 release criteria
+
+`1.0.0` will be tagged only when ALL of the following conditions are met:
+
+1. Fixture coverage is comprehensive for: framing, parsing, classification, typed commands/replies, normalized event decoding, replay envelope shape.
+2. The public interface signatures have been validated against real FreeSWITCH captures.
+3. The replay envelope shape is stable and documented.
+4. Upper-layer packages (`apntalk/esl-react`, `apntalk/laravel-freeswitch-esl`) have been exercised against the core.
+5. The `CHANGELOG.md` accurately reflects all breaking changes since `0.1.0`.
+
+## What "stable" means in this package
+
+Stable means: **behavioral guarantees backed by fixtures**.
+
+A stable interface in this package is not merely "the method signature won't change." It means the behavior under protocol inputs is deterministic, tested, and documented.
+
+Stability is earned incrementally:
+
+| Surface | Stability status |
+|---|---|
+| `Contracts\*` interfaces | Provisional until fixture-validated |
+| `Commands\*` serialization | Stable after Phase 5 |
+| `Replies\*` parsing | Stable after Phase 5 |
+| `Events\NormalizedEvent` | Stable after Phase 6 |
+| `Replay\*` envelope shape | Provisional until Phase 8 complete |
+| `Internal\*` | Permanently unstable — not covered by SemVer |
+
+## Adding new protocol fixtures
+
+New ESL behavior must not be merged to public APIs without:
+
+1. A fixture demonstrating the real protocol behavior
+2. A test that exercises the fixture through the relevant layer
+3. A CHANGELOG entry if it changes observable behavior
+
+## Adding new public types
+
+Before adding a new type to a public namespace:
+
+1. Verify the protocol behavior is grounded in fixtures or documentation
+2. Confirm it does not duplicate an existing type
+3. Mark it provisional in its docblock if the signature may need revision
+4. Add it to this document's stability table above

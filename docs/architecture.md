@@ -1,0 +1,209 @@
+# Architecture
+
+`apntalk/esl-core` is organized in five layers. Each layer has a clear responsibility boundary. Higher layers consume lower layers; no layer reaches backwards.
+
+---
+
+## Layer overview
+
+```
+┌───────────────────────────────────────────────────────┐
+│  Layer 5: Transport boundary                          │
+│  TransportInterface, InMemoryTransport                │
+├───────────────────────────────────────────────────────┤
+│  Layer 4: Replay-safe substrate                       │
+│  ReplayEnvelope, ReplayCapturePolicy,                 │
+│  ReplayCaptureSinkInterface, ReconstructionHookInterface │
+│  ReplayEnvelopeFactory (integrates with Correlation)  │
+├───────────────────────────────────────────────────────┤
+│  Layer 3: Typed domain + Correlation                  │
+│  Commands, Replies, Events, EventFactory              │
+│  ConnectionSessionId, ObservationSequence             │
+│  JobCorrelation, ChannelCorrelation                   │
+│  MessageMetadata, CorrelationContext                  │
+│  EventEnvelope, ReplyEnvelope                         │
+├───────────────────────────────────────────────────────┤
+│  Layer 2: Message classification                      │
+│  InboundMessageClassifier, MessageType,               │
+│  InboundMessageCategory, ClassifiedInboundMessage     │
+├───────────────────────────────────────────────────────┤
+│  Layer 1: Wire                                        │
+│  HeaderBag, Frame, FrameParser, CommandSerializer     │
+└───────────────────────────────────────────────────────┘
+```
+
+---
+
+## Layer 1 — Wire layer
+
+**Location:** `src/Protocol/`, `src/Parsing/`, `src/Serialization/`
+
+Owns bytes. Knows nothing about protocol semantics beyond structure.
+
+- `HeaderBag` — immutable, case-insensitive header store
+- `Frame` — a parsed ESL frame (headers + raw body bytes)
+- `FrameParser` — incremental stateful parser; handles partial reads
+- `CommandSerializer` — serializes `CommandInterface` → wire bytes
+
+Key invariants:
+- `FrameParser` is transport-neutral: it does not own I/O
+- `HeaderBag` stores raw (URL-encoded) values
+- `Frame` makes no semantic interpretation of the body
+
+---
+
+## Layer 2 — Message classification layer
+
+**Location:** `src/Internal/Classification/`, `src/Protocol/MessageType.php`
+
+Owns protocol meaning. Answers: what category of message is this?
+
+- `MessageType` — backed enum mapping Content-Type strings to categories
+- `InboundMessageClassifier` — classifies a `Frame` → `ClassifiedInboundMessage`
+- `InboundMessageCategory` — enum of semantic categories (AuthRequest, AuthAccepted, BgapiAccepted, etc.)
+- `ClassifiedInboundMessage` — carries the original Frame + its classification
+
+Key invariants:
+- Classification is deterministic: same frame → same category
+- Unknown content-types degrade to `Unknown` (never throw)
+- The bgapi acceptance reply is classified distinctly from ordinary command replies
+- Auth failure vs command error cannot be distinguished at this layer (session state required)
+
+---
+
+## Layer 3 — Typed domain layer
+
+**Location:** `src/Commands/`, `src/Replies/`, `src/Events/`, `src/Correlation/`
+
+Owns typed domain objects. Bridges classification and application code.
+
+### Commands
+All implement `CommandInterface`. Serialization is on the command itself:
+- `AuthCommand`, `ApiCommand`, `BgapiCommand`
+- `EventSubscriptionCommand`, `FilterCommand`, `NoEventsCommand`, `ExitCommand`
+- `RawCommand` (escape hatch — must end with `\n\n`)
+
+### Replies
+All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
+- `AuthAcceptedReply`, `CommandReply`, `ErrorReply`
+- `BgapiAcceptedReply`, `ApiReply`, `UnknownReply`
+
+### Events
+Event parsing: `text/event-plain` → `NormalizedEvent` (via `EventParser`)
+Classification: `NormalizedEvent` → typed event (via `EventClassifier`)
+Composition: `EventFactory` combines both steps.
+
+- `NormalizedEvent` — URL-decoded header access + raw body
+- `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)
+- `BackgroundJobEvent`, `ChannelLifecycleEvent`, `HangupEvent`, `CustomEvent`
+
+Key invariants:
+- Unknown events NEVER throw; they produce `RawEvent`
+- `NormalizedEvent.header()` always URL-decodes; `.rawHeader()` returns encoded value
+- `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
+
+### Correlation
+**Location:** `src/Correlation/`
+
+Provides session identity and correlation metadata primitives for inbound protocol objects.
+See `docs/correlation.md` for the full model.
+
+- `ConnectionSessionId` — immutable session identity (UUID v4, one per connection)
+- `ObservationSequence` — deterministic 1-based observation ordering within a session
+- `JobCorrelation` — links `BgapiAcceptedReply` to a later `BackgroundJobEvent` by Job-UUID
+- `ChannelCorrelation` — channel-oriented correlation; partial correlation modeled explicitly
+- `MessageMetadata` — composite metadata for one observed protocol object
+- `CorrelationContext` — stateful per-session factory that assigns sequences and extracts correlation
+- `EventEnvelope` — typed event + `MessageMetadata`
+- `ReplyEnvelope` — typed reply + `MessageMetadata`
+
+Key invariants:
+- `CorrelationContext` is stateful; one instance per connection
+- Partial channel correlation (missing fields) is represented honestly, never faked
+- `ConnectionSessionId` is NOT a FreeSWITCH protocol identifier
+- `ObservationSequence` is NOT the FreeSWITCH `Event-Sequence` header
+
+---
+
+## Layer 4 — Replay-safe substrate layer
+
+**Location:** `src/Replay/`
+
+Owns replay primitives. Does NOT own a replay runtime.
+
+- `ReplayEnvelope` — carries capture metadata + raw payload for reconstruction
+- `ReplayEnvelopeFactory` — produces envelopes from replies/events directly or from correlation envelopes when session/observation metadata already exists
+- `ReplayCapturePolicy` — controls which objects are captured
+- `ReplayCaptureSinkInterface` — destination for captured envelopes (implemented by upper layers)
+- `ReconstructionHookInterface` — called during replay to reconstruct state (implemented by upper layers)
+
+Key invariants:
+- `ReplayEnvelope` is deterministic and serializable
+- The factory preserves `CorrelationContext` session/observation metadata when built from `ReplyEnvelope` / `EventEnvelope`
+- The factory only generates its own monotonic sequence + wall clock when no correlation metadata is supplied
+- No durable storage, scheduling, or worker lifecycle in this layer
+- `ReplayEnvelopeFactory::withSession(ConnectionSessionId)` binds a factory to a session identity
+  shared with `CorrelationContext`, allowing upper layers to use both substrates on the same session
+
+---
+
+## Layer 5 — Transport boundary
+
+**Location:** `src/Transport/`
+
+Owns minimal I/O abstraction for testability and smoke-path use.
+
+- `TransportInterface` — read/write/close
+- `InMemoryTransport` — test double with `enqueueInbound()` / `drainOutbound()`
+
+Key invariants:
+- Transport does not own reconnect, supervision, or scheduling
+- `InMemoryTransport` is the integration test foundation
+- Upper-layer packages (esl-react, laravel-freeswitch-esl) own real transport lifecycle
+
+---
+
+## Namespace policy
+
+| Namespace | Status |
+|---|---|
+| `Apntalk\EslCore\Contracts` | Public API |
+| `Apntalk\EslCore\Commands` | Public API |
+| `Apntalk\EslCore\Replies` | Public API |
+| `Apntalk\EslCore\Events` | Public API |
+| `Apntalk\EslCore\Correlation` | Public API |
+| `Apntalk\EslCore\Replay` | Public API (provisional) |
+| `Apntalk\EslCore\Capabilities` | Public API |
+| `Apntalk\EslCore\Exceptions` | Public API |
+| `Apntalk\EslCore\Transport` | Public API |
+| `Apntalk\EslCore\Protocol` | Internal (wire primitives) |
+| `Apntalk\EslCore\Parsing` | Internal |
+| `Apntalk\EslCore\Serialization` | Internal |
+| `Apntalk\EslCore\Internal` | Permanently unstable |
+
+---
+
+## Data flow — typical inbound path
+
+```
+Raw bytes (from socket or test transport)
+  → FrameParser.feed()        [Layer 1]
+  → FrameParser.drain() → [Frame, ...]
+  → InboundMessageClassifier.classify(frame) → ClassifiedInboundMessage [Layer 2]
+
+For replies:
+  → ReplyFactory.fromClassified() → typed ReplyInterface [Layer 3]
+
+For events:
+  → EventFactory.fromFrame(frame) → typed EventInterface [Layer 3]
+
+Optionally (correlation):
+  → CorrelationContext.nextMetadataForReply/Event() → MessageMetadata [Layer 3]
+  → new ReplyEnvelope(reply, metadata)               [Layer 3]
+  → new EventEnvelope(event, metadata)               [Layer 3]
+
+Optionally (replay capture):
+  → ReplayEnvelopeFactory.fromReplyEnvelope() / fromEventEnvelope() → ReplayEnvelope [Layer 4]
+    or ReplayEnvelopeFactory.fromReply() / fromEvent() when correlation metadata is not available
+  → ReplayCaptureSinkInterface.capture(envelope)     [upper layer storage]
+```

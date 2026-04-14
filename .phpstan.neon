@@ -1,0 +1,11 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        - src/Internal
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+
+includes:
+    - phpstan-baseline.neon
