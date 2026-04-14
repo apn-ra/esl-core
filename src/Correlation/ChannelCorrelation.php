@@ -23,6 +23,8 @@ use Apntalk\EslCore\Events\NormalizedEvent;
  * - Session IDs (those are in ConnectionSessionId)
  * - Job UUIDs (those are in JobCorrelation)
  * - Core UUIDs (FreeSWITCH process identifier, rarely needed for correlation)
+ * - Caller ID name/number (display metadata; access via NormalizedEvent or typed event at handler time)
+ * - Channel state (transient — changes throughout call lifetime; track in upper-layer state machine keyed by uniqueId)
  *
  * @api
  */

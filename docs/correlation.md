@@ -114,6 +114,8 @@ $corr->matches($uuid);  // uniqueId matches given string (false if null)
 $corr->equals($other);  // all three fields equal
 ```
 
+**Intentional exclusions:** Caller ID name/number and channel state are not part of `ChannelCorrelation`. Caller ID is display metadata consumed at handler time via `NormalizedEvent` or the typed event. Channel state is transient — it changes throughout the call and must be tracked in an upper-layer state machine, not captured as a correlation snapshot.
+
 ---
 
 ## Composite types

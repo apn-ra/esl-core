@@ -19,6 +19,7 @@ use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\AuthAcceptedReply;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
+use Apntalk\EslCore\Replies\ErrorReply;
 use Apntalk\EslCore\Replies\UnknownReply;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use Apntalk\EslCore\Tests\Fixtures\FixtureLoader;
@@ -112,6 +113,30 @@ final class InboundPipelineTest extends TestCase
         $this->assertInstanceOf(RawEvent::class, $messages[0]->event());
         $this->assertSame('UNRECOGNIZED_APPLICATION_EVENT', $messages[0]->normalizedEvent()?->eventName());
         $this->assertSame('abc-123', $messages[0]->normalizedEvent()?->uniqueId());
+    }
+
+    public function test_auth_rejection_arrives_as_error_reply_through_public_facade(): void
+    {
+        // The classifier cannot distinguish auth -ERR from command -ERR alone;
+        // it correctly maps both to CommandError, which the factory resolves to ErrorReply.
+        // Upper layers (esl-react) use session state to determine the -ERR context.
+        $messages = $this->pipeline->decode(EslFixtureBuilder::authRejected());
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
+        $this->assertInstanceOf(ErrorReply::class, $messages[0]->reply());
+        $this->assertFalse($messages[0]->reply()?->isSuccess());
+    }
+
+    public function test_disconnect_notice_is_decoded_through_public_facade(): void
+    {
+        $messages = $this->pipeline->decode(EslFixtureBuilder::disconnectNotice());
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::DisconnectNotice, $messages[0]->type());
+        $this->assertTrue($messages[0]->isDisconnectNotice());
+        $this->assertNull($messages[0]->reply());
+        $this->assertNull($messages[0]->event());
     }
 
     public function test_unknown_content_type_degrades_to_unknown_reply_wrapper(): void
