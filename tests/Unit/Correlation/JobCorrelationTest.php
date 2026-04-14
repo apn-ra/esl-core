@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Tests\Unit\Correlation;
 
 use Apntalk\EslCore\Correlation\JobCorrelation;
-use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Exceptions\UnexpectedReplyException;
+use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
 use Apntalk\EslCore\Replies\ReplyFactory;

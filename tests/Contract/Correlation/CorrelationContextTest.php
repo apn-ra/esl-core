@@ -4,20 +4,18 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Correlation;
 
-use Apntalk\EslCore\Correlation\ChannelCorrelation;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
 use Apntalk\EslCore\Correlation\EventEnvelope;
-use Apntalk\EslCore\Correlation\JobCorrelation;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\EventFactory;
-use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
+use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
 use Apntalk\EslCore\Replies\ReplyFactory;
-use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 

@@ -13,7 +13,7 @@ This package follows [Semantic Versioning](https://semver.org/).
 Before `1.0.0`, the following rules apply:
 
 - Minor version bumps (`0.x.0`) may introduce breaking changes to **internal** and **provisional** surfaces without deprecation notice.
-- Minor version bumps will NOT break types in the documented public namespaces without a note in `CHANGELOG.md`.
+- Minor version bumps may still adjust documented public surfaces when fixture-backed protocol behavior or boundary discipline requires it, but those changes must be called out explicitly in `CHANGELOG.md`.
 - Patch versions are strictly backwards-compatible bug fixes.
 
 ## 1.0.0 release criteria
@@ -39,7 +39,9 @@ Stability is earned incrementally:
 | `Contracts\*` interfaces | Provisional until fixture-validated |
 | `Commands\*` serialization | Stable after Phase 5 |
 | `Replies\*` parsing | Stable after Phase 5 |
-| `Events\NormalizedEvent` | Stable after Phase 6 |
+| `Events\NormalizedEvent` | Stable after Phase 6 for the currently supported event formats (`text/event-plain`, `text/event-json`) |
+| `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
+| `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |
 | `Replay\*` envelope shape | Provisional until Phase 8 complete |
 | `Internal\*` | Permanently unstable — not covered by SemVer |
 

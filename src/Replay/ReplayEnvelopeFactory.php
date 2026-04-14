@@ -13,6 +13,7 @@ use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\NormalizedEvent;
 use Apntalk\EslCore\Exceptions\ReplayConsistencyException;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
+use ReflectionObject;
 
 /**
  * Produces ReplayEnvelope instances from typed protocol objects.
@@ -87,42 +88,42 @@ final class ReplayEnvelopeFactory
         $jobUuid = $reply instanceof BgapiAcceptedReply ? $reply->jobUuid() : null;
 
         return new ReplayEnvelope(
-            capturedType:      'reply',
-            capturedName:      $name,
-            sessionId:         $this->resolveSessionId($metadata),
-            captureSequence:   $this->resolveCaptureSequence($metadata),
-            capturedAtMicros:  $this->resolveCapturedAtMicros($metadata),
-            protocolSequence:  null,
-            rawPayload:        $this->replyPayload($reply),
+            capturedType: 'reply',
+            capturedName: $name,
+            sessionId: $this->resolveSessionId($metadata),
+            captureSequence: $this->resolveCaptureSequence($metadata),
+            capturedAtMicros: $this->resolveCapturedAtMicros($metadata),
+            protocolSequence: null,
+            rawPayload: $this->replyPayload($reply),
             classifierContext: [
                 'content-type' => $frame->contentType() ?? '',
                 'reply-text'   => $frame->replyText() ?? '',
             ],
-            protocolFacts:     $this->filterFacts([
+            protocolFacts: $this->filterFacts([
                 'content-type' => $frame->contentType() ?? '',
                 'reply-text'   => $frame->replyText() ?? '',
                 'job-uuid'     => $jobUuid ?? '',
             ]),
-            derivedMetadata:   $this->derivedMetadata($metadata),
+            derivedMetadata: $this->derivedMetadata($metadata),
         );
     }
 
     private function buildEventEnvelope(NormalizedEvent $event, ?MessageMetadata $metadata): ReplayEnvelope
     {
         return new ReplayEnvelope(
-            capturedType:      'event',
-            capturedName:      $event->eventName(),
-            sessionId:         $this->resolveSessionId($metadata),
-            captureSequence:   $this->resolveCaptureSequence($metadata),
-            capturedAtMicros:  $this->resolveCapturedAtMicros($metadata),
-            protocolSequence:  $event->eventSequence(),
-            rawPayload:        $event->frame->body,
+            capturedType: 'event',
+            capturedName: $event->eventName(),
+            sessionId: $this->resolveSessionId($metadata),
+            captureSequence: $this->resolveCaptureSequence($metadata),
+            capturedAtMicros: $this->resolveCapturedAtMicros($metadata),
+            protocolSequence: $event->eventSequence(),
+            rawPayload: $event->frame->body,
             classifierContext: [
                 'content-type' => $event->outerHeaders->get('Content-Type') ?? '',
                 'event-name'   => $event->eventName(),
                 'unique-id'    => $event->uniqueId() ?? '',
             ],
-            protocolFacts:     $this->filterFacts([
+            protocolFacts: $this->filterFacts([
                 'content-type'         => $event->outerHeaders->get('Content-Type') ?? '',
                 'event-name'           => $event->eventName(),
                 'event-sequence'       => $event->eventSequence() ?? '',
@@ -131,7 +132,7 @@ final class ReplayEnvelopeFactory
                 'unique-id'            => $event->uniqueId() ?? '',
                 'job-uuid'             => $event->jobUuid() ?? '',
             ]),
-            derivedMetadata:   $this->derivedMetadata($metadata),
+            derivedMetadata: $this->derivedMetadata($metadata),
         );
     }
 
@@ -143,24 +144,24 @@ final class ReplayEnvelopeFactory
         }
 
         return new ReplayEnvelope(
-            capturedType:      'event',
-            capturedName:      $event->eventName(),
-            sessionId:         $this->resolveSessionId($metadata),
-            captureSequence:   $this->resolveCaptureSequence($metadata),
-            capturedAtMicros:  $this->resolveCapturedAtMicros($metadata),
-            protocolSequence:  $event->eventSequence(),
-            rawPayload:        '',
+            capturedType: 'event',
+            capturedName: $event->eventName(),
+            sessionId: $this->resolveSessionId($metadata),
+            captureSequence: $this->resolveCaptureSequence($metadata),
+            capturedAtMicros: $this->resolveCapturedAtMicros($metadata),
+            protocolSequence: $event->eventSequence(),
+            rawPayload: '',
             classifierContext: [
                 'event-name' => $event->eventName(),
             ],
-            protocolFacts:     $this->filterFacts([
+            protocolFacts: $this->filterFacts([
                 'event-name'     => $event->eventName(),
                 'event-sequence' => $event->eventSequence() ?? '',
                 'unique-id'      => $event->uniqueId() ?? '',
                 'job-uuid'       => $event->jobUuid() ?? '',
                 'core-uuid'      => $event->coreUuid() ?? '',
             ]),
-            derivedMetadata:   $this->derivedMetadata($metadata),
+            derivedMetadata: $this->derivedMetadata($metadata),
         );
     }
 
@@ -176,7 +177,7 @@ final class ReplayEnvelopeFactory
 
     private function extractNormalized(EventInterface $event): ?NormalizedEvent
     {
-        $prop = new \ReflectionObject($event);
+        $prop = new ReflectionObject($event);
         if ($prop->hasProperty('normalized')) {
             $p = $prop->getProperty('normalized');
             $value = $p->getValue($event);
@@ -244,7 +245,7 @@ final class ReplayEnvelopeFactory
     {
         return array_filter(
             $facts,
-            static fn (string $value): bool => $value !== ''
+            static fn(string $value): bool => $value !== ''
         );
     }
 

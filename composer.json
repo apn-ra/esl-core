@@ -34,10 +34,10 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "phpunit --no-coverage",
         "analyse": "phpstan analyse",
         "cs-fix": "php-cs-fixer fix",
-        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-check": "php-cs-fixer fix --dry-run --diff --sequential",
         "check": [
             "@cs-check",
             "@analyse",

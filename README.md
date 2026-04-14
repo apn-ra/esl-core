@@ -1,6 +1,6 @@
 # apntalk/esl-core
 
-**Framework-agnostic, transport-neutral, typed FreeSWITCH ESL protocol library for PHP with replay-safe protocol primitives.**
+**Framework-agnostic, transport-neutral, typed FreeSWITCH ESL protocol substrate for PHP with replay-safe primitives.**
 
 ---
 
@@ -13,7 +13,7 @@ It provides:
 - A truthful ESL wire model (framing, parsing, serialization)
 - Deterministic message classification (auth, command replies, events, bgapi)
 - Typed command and reply objects
-- A normalized event model with safe degradation for unknown event types
+- A normalized event model with selective typed event families and safe degradation for unknown event types
 - Correlation and session metadata primitives
 - Replay-safe protocol envelopes and reconstruction-oriented hook contracts
 - Capability declaration of supported surfaces
@@ -57,7 +57,11 @@ composer require apntalk/esl-core
 
 ## Stability
 
-This package follows [SemVer](https://semver.org/). Before `1.0.0`, minor versions may introduce breaking changes in provisional (internal) surfaces. The public API boundary is documented in [`docs/public-api.md`](docs/public-api.md).
+This package follows [SemVer](https://semver.org/), but it is still pre-`1.0.0`.
+
+- Public namespaces are documented in [`docs/public-api.md`](docs/public-api.md)
+- Internal parser/classifier implementations remain intentionally unstable before `1.0.0`
+- Replay envelopes and reconstruction-oriented contracts should be treated as provisional surfaces until `1.0.0`
 
 See [`docs/stability-policy.md`](docs/stability-policy.md) for full details.
 
@@ -79,28 +83,41 @@ See [`docs/architecture.md`](docs/architecture.md) for the full architecture des
 
 ---
 
-## Quick example
+## Quick start
+
+The supported public surface is centered on typed commands, events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
 
 ```php
-use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Commands\AuthCommand;
-use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
-use Apntalk\EslCore\Replies\ReplyFactory;
+use Apntalk\EslCore\Correlation\ConnectionSessionId;
+use Apntalk\EslCore\Correlation\CorrelationContext;
+use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
+use Apntalk\EslCore\Transport\InMemoryTransport;
 
-// Parse incoming bytes
-$parser = new FrameParser();
-$parser->feed($incomingBytes);
+$transport = new InMemoryTransport();
+$transport->write((new AuthCommand('ClueCon'))->serialize());
 
-foreach ($parser->drain() as $frame) {
-    $classified = (new InboundMessageClassifier())->classify($frame);
-    $reply = (new ReplyFactory())->fromClassified($classified);
-    // $reply is typed: AuthAcceptedReply, CommandReply, ErrorReply, etc.
-}
-
-// Serialize outgoing command
-$command = new AuthCommand('ClueCon');
-$wireBytes = $command->serialize(); // "auth ClueCon\n\n"
+$sessionId = ConnectionSessionId::generate();
+$correlation = new CorrelationContext($sessionId);
+$replay = ReplayEnvelopeFactory::withSession($sessionId);
 ```
+
+If you need the current low-level parser/classifier implementations directly, they are available in the repository and are fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
+
+## Current release scope
+
+- Typed commands and replies for auth, command replies, `api`, and `bgapi`
+- Normalized events for `text/event-plain` and `text/event-json`
+- Selective typed event families: background job, channel lifecycle, bridge, hangup, playback, and custom events
+- Correlation/session metadata and replay-safe envelopes
+- Minimal in-memory transport and explicit failure taxonomy
+- Fixture-backed behavior, PHPUnit coverage, PHPStan, and capability verification
+
+Deferred from this release:
+- `text/event-xml`
+- framework/runtime integrations
+- transport expansion beyond `InMemoryTransport`
+- replay storage, scheduling, or orchestration
 
 ---
 
@@ -114,6 +131,7 @@ $wireBytes = $command->serialize(); // "auth ClueCon\n\n"
 - [`docs/public-api.md`](docs/public-api.md)
 - [`docs/stability-policy.md`](docs/stability-policy.md)
 - [`docs/capabilities.md`](docs/capabilities.md)
+- [`docs/release-checklist.md`](docs/release-checklist.md)
 
 ---
 

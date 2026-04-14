@@ -14,9 +14,9 @@ use Apntalk\EslCore\Exceptions\ReplayConsistencyException;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
 use Apntalk\EslCore\Replies\ReplyFactory;
-use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 

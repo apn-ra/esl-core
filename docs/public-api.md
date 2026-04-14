@@ -57,6 +57,8 @@ Contracts\CapabilityMapInterface
 Contracts\TransportInterface
 ```
 
+Current parser and classifier implementations exist in the repository and are fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` remain intentionally outside the supported pre-`1.0.0` public API boundary.
+
 ## Concrete types consumers may depend on
 
 ### Commands

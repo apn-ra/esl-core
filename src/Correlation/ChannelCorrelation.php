@@ -40,8 +40,8 @@ final class ChannelCorrelation
     public static function fromNormalizedEvent(NormalizedEvent $event): self
     {
         return new self(
-            uniqueId:      $event->uniqueId(),
-            channelName:   $event->channelName(),
+            uniqueId: $event->uniqueId(),
+            channelName: $event->channelName(),
             callDirection: $event->callDirection(),
         );
     }
@@ -54,8 +54,8 @@ final class ChannelCorrelation
     public static function fromEvent(EventInterface $event): self
     {
         return new self(
-            uniqueId:      $event->uniqueId(),
-            channelName:   null,
+            uniqueId: $event->uniqueId(),
+            channelName: null,
             callDirection: null,
         );
     }
@@ -68,8 +68,8 @@ final class ChannelCorrelation
     public static function fromUniqueId(string $uniqueId): self
     {
         return new self(
-            uniqueId:      $uniqueId,
-            channelName:   null,
+            uniqueId: $uniqueId,
+            channelName: null,
             callDirection: null,
         );
     }
@@ -147,7 +147,7 @@ final class ChannelCorrelation
             $this->uniqueId,
             $this->channelName,
             $this->callDirection,
-        ], fn (?string $v) => $v !== null);
+        ], fn(?string $v) => $v !== null);
 
         return count($present) > 0 && count($present) < 3;
     }

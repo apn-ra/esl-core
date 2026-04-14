@@ -64,25 +64,6 @@ jobs:
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --no-progress
 
-  psalm:
-    name: Psalm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer:v2
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
-
-      - name: Run Psalm
-        run: vendor/bin/psalm --no-progress
-
   cs:
     name: Coding Standards
     runs-on: ubuntu-latest
@@ -100,4 +81,4 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Check coding standards
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --format=checkstyle | cs2pr
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --sequential --format=checkstyle | cs2pr

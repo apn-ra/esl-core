@@ -114,8 +114,8 @@ final class EslFixtureBuilder
     /**
      * Build event data for a text/event-plain event (URL-encoded header values).
      *
-     * @param array<string, string> $headers  Header values should be pre-encoded or plain ASCII.
-     * @param string                $body     Optional event body (appended after \n).
+     * @param array<string, string> $headers Header values should be pre-encoded or plain ASCII.
+     * @param string $body Optional event body (appended after \n).
      */
     public static function eventData(array $headers, string $body = ''): string
     {

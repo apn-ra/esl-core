@@ -155,7 +155,7 @@ final class ChannelCorrelationTest extends TestCase
     private function parseChannelCreate(): \Apntalk\EslCore\Events\NormalizedEvent
     {
         $parser      = new FrameParser();
-        $eventParser = new \Apntalk\EslCore\Parsing\EventParser();
+        $eventParser = new EventParser();
 
         $parser->feed(EslFixtureBuilder::channelCreateEvent(self::UNIQUE_ID));
         $frames = $parser->drain();

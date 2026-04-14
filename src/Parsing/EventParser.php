@@ -10,6 +10,7 @@ use Apntalk\EslCore\Exceptions\MalformedFrameException;
 use Apntalk\EslCore\Exceptions\UnsupportedContentTypeException;
 use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Protocol\HeaderBag;
+use JsonException;
 
 /**
  * Parses supported ESL event frames into NormalizedEvent objects.
@@ -67,8 +68,8 @@ final class EventParser implements EventParserInterface
         return new NormalizedEvent(
             outerHeaders: $frame->headers,
             eventHeaders: $eventHeaders,
-            rawBody:      $eventBody,
-            frame:        $frame,
+            rawBody: $eventBody,
+            frame: $frame,
         );
     }
 
@@ -76,7 +77,7 @@ final class EventParser implements EventParserInterface
     {
         try {
             $decoded = json_decode($frame->body, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
+        } catch (JsonException $e) {
             throw new MalformedFrameException(
                 'Failed to parse event JSON: ' . $e->getMessage(),
                 previous: $e,
@@ -125,8 +126,8 @@ final class EventParser implements EventParserInterface
         return new NormalizedEvent(
             outerHeaders: $frame->headers,
             eventHeaders: $eventHeaders,
-            rawBody:      $eventBody,
-            frame:        $frame,
+            rawBody: $eventBody,
+            frame: $frame,
             headersAreUrlEncoded: false,
         );
     }

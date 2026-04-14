@@ -8,6 +8,7 @@ use Apntalk\EslCore\Contracts\EventInterface;
 use Apntalk\EslCore\Contracts\ReplyInterface;
 use Apntalk\EslCore\Events\NormalizedEvent;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
+use ReflectionObject;
 
 /**
  * Stateful per-session correlation context.
@@ -67,12 +68,12 @@ final class CorrelationContext
         }
 
         return new MessageMetadata(
-            sessionId:           $this->sessionId,
+            sessionId: $this->sessionId,
             observationSequence: $seq,
-            observedAtMicros:    $this->nowMicros(),
-            jobCorrelation:      $jobCorrelation,
-            channelCorrelation:  null,
-            protocolSequence:    null,
+            observedAtMicros: $this->nowMicros(),
+            jobCorrelation: $jobCorrelation,
+            channelCorrelation: null,
+            protocolSequence: null,
         );
     }
 
@@ -93,12 +94,12 @@ final class CorrelationContext
         $jobCorrelation     = $this->extractJobCorrelation($event);
 
         return new MessageMetadata(
-            sessionId:           $this->sessionId,
+            sessionId: $this->sessionId,
             observationSequence: $seq,
-            observedAtMicros:    $this->nowMicros(),
-            jobCorrelation:      $jobCorrelation,
-            channelCorrelation:  $channelCorrelation,
-            protocolSequence:    $event->eventSequence(),
+            observedAtMicros: $this->nowMicros(),
+            jobCorrelation: $jobCorrelation,
+            channelCorrelation: $channelCorrelation,
+            protocolSequence: $event->eventSequence(),
         );
     }
 
@@ -160,7 +161,7 @@ final class CorrelationContext
 
     private function extractNormalizedFromTyped(EventInterface $event): ?NormalizedEvent
     {
-        $ref = new \ReflectionObject($event);
+        $ref = new ReflectionObject($event);
         if ($ref->hasProperty('normalized')) {
             $prop  = $ref->getProperty('normalized');
             $value = $prop->getValue($event);
