@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Tests\Contract\Events;
 
 use Apntalk\EslCore\Events\BackgroundJobEvent;
+use Apntalk\EslCore\Events\BridgeEvent;
 use Apntalk\EslCore\Events\ChannelLifecycleEvent;
 use Apntalk\EslCore\Events\EventFactory;
 use Apntalk\EslCore\Events\HangupEvent;
 use Apntalk\EslCore\Events\NormalizedEvent;
+use Apntalk\EslCore\Events\PlaybackEvent;
 use Apntalk\EslCore\Events\RawEvent;
+use Apntalk\EslCore\Exceptions\MalformedFrameException;
 use Apntalk\EslCore\Exceptions\ParseException;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
@@ -132,6 +135,44 @@ final class EventParserTest extends TestCase
         $this->assertSame($result, $event->body());
     }
 
+    public function test_event_json_parses_into_normalized_event(): void
+    {
+        $fixture = EslFixtureBuilder::eventJson(
+            EslFixtureBuilder::eventJsonData([
+                'Event-Name' => 'CHANNEL_CREATE',
+                'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+                'Event-Sequence' => 12345,
+                'Channel-Name' => 'sofia/internal/1001@192.168.1.100',
+                'Caller-Caller-ID-Name' => 'User 1001',
+            ])
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertSame('CHANNEL_CREATE', $event->eventName());
+        $this->assertSame('sofia/internal/1001@192.168.1.100', $event->channelName());
+        $this->assertSame('User 1001', $event->callerIdName());
+        $this->assertSame('12345', $event->eventSequence());
+    }
+
+    public function test_event_json_with_body_preserves_body(): void
+    {
+        $fixture = EslFixtureBuilder::eventJson(
+            EslFixtureBuilder::eventJsonData(
+                [
+                    'Event-Name' => 'BACKGROUND_JOB',
+                    'Job-UUID' => '7f4db0f2-b848-4b0a-b3cf-559bdca96b38',
+                ],
+                "+OK json-body\n"
+            )
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertTrue($event->hasBody());
+        $this->assertSame("+OK json-body\n", $event->body());
+    }
+
     // ---------------------------------------------------------------------------
     // CHANNEL_HANGUP parsing
     // ---------------------------------------------------------------------------
@@ -214,6 +255,26 @@ final class EventParserTest extends TestCase
         $this->eventParser->parse($frame);
     }
 
+    public function test_parse_throws_for_invalid_event_json(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(EslFixtureBuilder::eventJson('{"Event-Name":'));
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
+    public function test_parse_throws_for_event_json_with_nested_header_values(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(
+            EslFixtureBuilder::eventJson('{"Event-Name":"CHANNEL_CREATE","Nested":{"x":"y"}}')
+        );
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
     // ---------------------------------------------------------------------------
     // Typed event classification via EventFactory
     // ---------------------------------------------------------------------------
@@ -237,6 +298,49 @@ final class EventParserTest extends TestCase
         $event = $this->typedEvent(EslFixtureBuilder::backgroundJobEvent());
 
         $this->assertInstanceOf(BackgroundJobEvent::class, $event);
+    }
+
+    public function test_event_json_flows_through_event_factory(): void
+    {
+        $event = $this->typedEvent(
+            EslFixtureBuilder::eventJson(
+                EslFixtureBuilder::eventJsonData([
+                    'Event-Name' => 'CHANNEL_CREATE',
+                    'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+                    'Event-Sequence' => 12345,
+                ])
+            )
+        );
+
+        $this->assertInstanceOf(ChannelLifecycleEvent::class, $event);
+    }
+
+    public function test_channel_bridge_becomes_bridge_event(): void
+    {
+        $event = $this->typedEvent(EslFixtureBuilder::bridgeEvent());
+
+        $this->assertInstanceOf(BridgeEvent::class, $event);
+    }
+
+    public function test_channel_unbridge_becomes_bridge_event(): void
+    {
+        $event = $this->typedEvent(EslFixtureBuilder::bridgeEvent('CHANNEL_UNBRIDGE'));
+
+        $this->assertInstanceOf(BridgeEvent::class, $event);
+    }
+
+    public function test_playback_start_becomes_playback_event(): void
+    {
+        $event = $this->typedEvent(EslFixtureBuilder::playbackEvent());
+
+        $this->assertInstanceOf(PlaybackEvent::class, $event);
+    }
+
+    public function test_playback_stop_becomes_playback_event(): void
+    {
+        $event = $this->typedEvent(EslFixtureBuilder::playbackEvent('PLAYBACK_STOP'));
+
+        $this->assertInstanceOf(PlaybackEvent::class, $event);
     }
 
     public function test_unknown_event_degrades_to_raw_event(): void
@@ -290,6 +394,24 @@ final class EventParserTest extends TestCase
         $event = $this->typedEvent(EslFixtureBuilder::hangupEvent(hangupCause: 'NORMAL_CLEARING'));
 
         $this->assertSame('NORMAL_CLEARING', $event->hangupCause());
+    }
+
+    public function test_bridge_event_exposes_other_leg_correlation_fields(): void
+    {
+        /** @var BridgeEvent $event */
+        $event = $this->typedEvent(EslFixtureBuilder::bridgeEvent());
+
+        $this->assertSame('b4fbde13-9c33-45d7-a1e4-e6517eb8de91', $event->otherLegUniqueId());
+        $this->assertSame('sofia/internal/1002@192.168.1.100', $event->otherLegChannelName());
+    }
+
+    public function test_playback_event_exposes_protocol_native_playback_fields(): void
+    {
+        /** @var PlaybackEvent $event */
+        $event = $this->typedEvent(EslFixtureBuilder::playbackEvent());
+
+        $this->assertSame('c8dc43f6-5aa9-46b0-8ef2-14610d46a4d0', $event->playbackUuid());
+        $this->assertSame('/tmp/demo.wav', $event->playbackFilePath());
     }
 
     // ---------------------------------------------------------------------------

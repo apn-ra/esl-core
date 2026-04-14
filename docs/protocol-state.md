@@ -95,6 +95,10 @@ Reply-Text: +OK event listener enabled plain
 Before this exchange, no `text/event-plain` frames will arrive. The session-state
 manager in the upper layer must track whether event subscription is active.
 
+If the client subscribes with JSON format, `text/event-json` frames may arrive
+instead. `esl-core` normalizes `text/event-plain` and `text/event-json` through
+the same `EventParser` → `NormalizedEvent` → `EventFactory` flow.
+
 ---
 
 ## Disconnect sequence

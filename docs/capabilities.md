@@ -22,8 +22,9 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `reply-parsing` | stable | All typed reply classes, ReplyFactory, classifier → reply path |
 | `event-subscription` | stable | EventSubscriptionCommand, FilterCommand, NoEventsCommand |
 | `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values |
+| `event-json-decoding` | stable | EventParser decodes text/event-json into the same NormalizedEvent path |
 | `normalized-events` | stable | NormalizedEvent, EventClassifier, typed event families |
-| `correlation-metadata` | unsupported | Phase 7 not yet implemented |
+| `correlation-metadata` | stable | ConnectionSessionId, ObservationSequence, CorrelationContext, metadata envelopes |
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
 | `reconstruction-hook-support` | provisional | ReconstructionHookInterface defined; no registry yet |
 | `in-memory-transport` | stable | InMemoryTransport for testing |
@@ -39,7 +40,7 @@ use Apntalk\EslCore\Capabilities\FeatureSupportLevel;
 $map = new CapabilityMap();
 
 $map->supports(Capability::Auth);              // true
-$map->supports(Capability::CorrelationMetadata); // false
+$map->supports(Capability::CorrelationMetadata); // true
 
 $map->supportLevel(Capability::ReplayEnvelopeExport); // FeatureSupportLevel::Provisional
 ```

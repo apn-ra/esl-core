@@ -17,6 +17,12 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 - `tests/Contract/Replay/ReplayEnvelopeFactoryTest` — replay-envelope preservation of session/observation/correlation metadata
 - `tests/Contract/Exceptions/ErrorTaxonomyTest` — distinct malformed/truncated/unsupported/reply-shape/transport failure coverage
 
+**Selective event-model expansion**
+- `Events\BridgeEvent` — typed family for `CHANNEL_BRIDGE` / `CHANNEL_UNBRIDGE`
+- `Events\PlaybackEvent` — typed family for `PLAYBACK_START` / `PLAYBACK_STOP`
+- `text/event-json` normalization support through the existing `EventParser` → `NormalizedEvent` → `EventFactory` path
+- `tests/Contract/Capabilities/CapabilityMapTest` — verifies capability declarations against implemented support surfaces
+
 ### Changed
 
 **Replay-envelope tightening**
@@ -29,6 +35,13 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 - `FrameParser::finish()` now distinguishes buffered partial input from malformed input at end-of-input
 - `EventParser` now throws `UnsupportedContentTypeException` for unsupported event content types and `MalformedFrameException` for malformed event bodies
 - Typed reply constructors now throw `UnexpectedReplyException` when the supplied frame does not match the required protocol shape
+
+**Capability declarations**
+- `correlation-metadata` is now declared as implemented and stable
+- Added `event-json-decoding` to reflect tested JSON event normalization support
+
+**Static analysis**
+- Removed deprecated PHPStan config usage and kept analysis clean with the current codebase
 
 ### Added
 
@@ -103,7 +116,7 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 - `README.md`, `docs/architecture.md`, `docs/protocol-model.md`, `docs/protocol-state.md`, `docs/fixtures.md`, `docs/replay-primitives.md`, `docs/public-api.md`, `docs/stability-policy.md`, `docs/capabilities.md`, `docs/correlation.md`
 
 ### Test coverage
-- 232 tests, 552 assertions — all passing
+- 246 tests, 604 assertions — all passing
 - `tests/Unit/Protocol/HeaderBagTest` — 18 tests
 - `tests/Unit/Protocol/FrameTest` — 8 tests
 - `tests/Contract/Parsing/FrameParserTest` — 17 tests
@@ -112,7 +125,7 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 - `tests/Contract/Classification/InboundMessageClassifierTest` — 16 tests
 - `tests/Unit/Commands/CommandSerializationTest` — 22 tests
 - `tests/Contract/Replies/ReplyFactoryTest` — 20 tests
-- `tests/Contract/Events/EventParserTest` — 31 tests
+- `tests/Contract/Events/EventParserTest` — 41 tests
 - `tests/Unit/Correlation/ConnectionSessionIdTest` — 8 tests
 - `tests/Unit/Correlation/ObservationSequenceTest` — 16 tests
 - `tests/Unit/Correlation/JobCorrelationTest` — 8 tests
@@ -120,9 +133,8 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 - `tests/Contract/Correlation/CorrelationContextTest` — 26 tests
 - `tests/Contract/Replay/ReplayEnvelopeFactoryTest` — 3 tests
 - `tests/Contract/Exceptions/ErrorTaxonomyTest` — 6 tests
+- `tests/Contract/Capabilities/CapabilityMapTest` — 3 tests
 - `tests/Integration/InMemoryTransportPipelineTest` — 5 tests
 
 ### Not yet implemented
-- Phase 9: CapabilityMap tests
-- `text/event-json` and `text/event-xml` event parsing (EventParser covers plain only)
-- `CHANNEL_BRIDGE`/`CHANNEL_UNBRIDGE` → `BridgeEvent`, `PLAYBACK_START`/`PLAYBACK_STOP` → `PlaybackEvent`
+- `text/event-xml` event parsing

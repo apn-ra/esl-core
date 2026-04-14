@@ -12,6 +12,7 @@ ESL messages consist of:
 
 Header values in the outer ESL frame are NOT URL-encoded.
 Header values in `text/event-plain` event bodies ARE URL-encoded.
+Header values in `text/event-json` are normalized from JSON scalar values and are not URL-decoded.
 
 ## Frame parsing
 
@@ -39,7 +40,7 @@ The parser is partial-read safe: bytes may arrive in any chunk sizes.
 | `command/reply` | Response to client commands |
 | `api/response` | Response to `api` commands |
 | `text/event-plain` | Event in URL-encoded plain text format |
-| `text/event-json` | Event in JSON format (not yet parsed) |
+| `text/event-json` | Event in JSON format |
 | `text/event-xml` | Event in XML format (not yet parsed) |
 | `text/disconnect-notice` | Server closing connection |
 
@@ -75,6 +76,13 @@ Carries a `Reply-Text` header:
 - Has a body of exactly `Content-Length` bytes.
 - Body is itself a set of URL-encoded header lines (`Key: Value\n`), terminated by `\n\n`.
 - The event may have its own body (for `BACKGROUND_JOB` etc.); if so, the event headers include a `Content-Length` header and the body follows after `\n\n`.
+
+### text/event-json
+- Has a body of exactly `Content-Length` bytes.
+- Body must decode to a JSON object.
+- Top-level scalar entries are normalized into event headers.
+- Optional `_body` is treated as the event body.
+- Nested objects, arrays, null header values, or invalid JSON fail deterministically.
 
 ## Event body structure (text/event-plain)
 
@@ -123,7 +131,7 @@ The result event is correlated to the bgapi command via `Job-UUID`.
 `BgapiAcceptedReply.jobUuid()` provides the correlation key.
 `BackgroundJobEvent.jobUuid()` provides the matching value.
 
-## URL encoding in text/event-plain
+## URL encoding and JSON normalization
 
 Header values in `text/event-plain` bodies are percent-encoded. Common encodings:
 - `%20` = space
@@ -134,13 +142,22 @@ Header values in `text/event-plain` bodies are percent-encoded. Common encodings
 `NormalizedEvent.header()` and all named accessors (`.channelName()`, `.callerIdName()`, etc.) automatically decode these values.
 `NormalizedEvent.rawHeader()` returns the raw encoded value for diagnostics.
 
+For `text/event-json`, top-level scalar JSON values are normalized directly and are not URL-decoded.
+Current JSON normalization intentionally accepts only:
+- scalar top-level header values
+- optional `_body` string for the event body
+
+This keeps the JSON path deterministic and aligned with the existing normalized event model.
+
 ## Malformed input behavior
 
 | Condition | Behavior |
 |---|---|
-| Header line with no colon separator | `ParseException` |
-| Non-numeric `Content-Length` | `ParseException` |
+| Header line with no colon separator | `MalformedFrameException` |
+| Non-numeric `Content-Length` | `MalformedFrameException` |
 | Incomplete body (truncated) | No frame emitted; buffered |
 | Unknown `Content-Type` | `ClassifiedInboundMessage.category == Unknown` |
+| Unsupported event parser content type | `UnsupportedContentTypeException` |
+| Invalid `text/event-json` payload | `MalformedFrameException` |
 | Event with unknown name | `RawEvent` (no exception) |
 | Empty event body | `NormalizedEvent.hasBody() == false` |

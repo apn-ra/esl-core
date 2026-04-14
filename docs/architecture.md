@@ -89,17 +89,17 @@ All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
 - `BgapiAcceptedReply`, `ApiReply`, `UnknownReply`
 
 ### Events
-Event parsing: `text/event-plain` → `NormalizedEvent` (via `EventParser`)
+Event parsing: supported event formats (`text/event-plain`, `text/event-json`) → `NormalizedEvent` (via `EventParser`)
 Classification: `NormalizedEvent` → typed event (via `EventClassifier`)
 Composition: `EventFactory` combines both steps.
 
-- `NormalizedEvent` — URL-decoded header access + raw body
+- `NormalizedEvent` — normalized header access + raw body, preserving whether the source format was URL-encoded
 - `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)
-- `BackgroundJobEvent`, `ChannelLifecycleEvent`, `HangupEvent`, `CustomEvent`
+- `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, `CustomEvent`
 
 Key invariants:
 - Unknown events NEVER throw; they produce `RawEvent`
-- `NormalizedEvent.header()` always URL-decodes; `.rawHeader()` returns encoded value
+- `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 
 ### Correlation

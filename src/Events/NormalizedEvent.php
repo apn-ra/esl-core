@@ -9,13 +9,14 @@ use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Protocol\HeaderBag;
 
 /**
- * A normalized ESL event parsed from a text/event-plain frame.
+ * A normalized ESL event parsed from a supported ESL event frame.
  *
  * Provides URL-decoded access to event headers. Raw (encoded) values are
  * accessible via rawHeader() for diagnostic use.
  *
- * Header values in text/event-plain are URL-encoded by FreeSWITCH. This
- * class decodes them transparently in all normalized accessors.
+ * Header values in text/event-plain are URL-encoded by FreeSWITCH. JSON event
+ * payloads are normalized to the same surface without URL-decoding. This class
+ * preserves that distinction internally while exposing one normalized API.
  *
  * @api
  */
@@ -30,6 +31,8 @@ final class NormalizedEvent implements EventInterface
         public readonly string $rawBody,
         /** The original frame this event was parsed from. */
         public readonly Frame $frame,
+        /** Whether event header values should be URL-decoded on access. */
+        private readonly bool $headersAreUrlEncoded = true,
     ) {}
 
     // ---------------------------------------------------------------------------
@@ -118,6 +121,26 @@ final class NormalizedEvent implements EventInterface
         return $this->decoded('Job-Command');
     }
 
+    public function otherLegUniqueId(): ?string
+    {
+        return $this->decoded('Other-Leg-Unique-ID');
+    }
+
+    public function otherLegChannelName(): ?string
+    {
+        return $this->decoded('Other-Leg-Channel-Name');
+    }
+
+    public function playbackUuid(): ?string
+    {
+        return $this->decoded('Playback-UUID');
+    }
+
+    public function playbackFilePath(): ?string
+    {
+        return $this->decoded('Playback-File-Path');
+    }
+
     // ---------------------------------------------------------------------------
     // Generic decoded header access
     // ---------------------------------------------------------------------------
@@ -126,7 +149,7 @@ final class NormalizedEvent implements EventInterface
      * Get a decoded header value by name.
      *
      * Returns null if the header is not present.
-     * URL-decodes the value as required for text/event-plain headers.
+     * URL-decodes the value when the source format requires it.
      */
     public function header(string $name): ?string
     {
@@ -166,6 +189,10 @@ final class NormalizedEvent implements EventInterface
     private function decoded(string $name): ?string
     {
         $raw = $this->eventHeaders->get($name);
-        return $raw !== null ? urldecode($raw) : null;
+        if ($raw === null) {
+            return null;
+        }
+
+        return $this->headersAreUrlEncoded ? urldecode($raw) : $raw;
     }
 }

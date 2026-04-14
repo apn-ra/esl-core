@@ -20,6 +20,7 @@ enum Capability: string
     case ReplyParsing      = 'reply-parsing';
     case EventSubscription = 'event-subscription';
     case EventPlainDecoding = 'event-plain-decoding';
+    case EventJsonDecoding = 'event-json-decoding';
     case NormalizedEvents  = 'normalized-events';
     case CorrelationMetadata = 'correlation-metadata';
     case ReplayEnvelopeExport = 'replay-envelope-export';

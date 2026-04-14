@@ -28,8 +28,9 @@ final class CapabilityMap implements CapabilityMapInterface
         'reply-parsing'                 => FeatureSupportLevel::Stable,
         'event-subscription'            => FeatureSupportLevel::Stable,
         'event-plain-decoding'          => FeatureSupportLevel::Stable,
+        'event-json-decoding'           => FeatureSupportLevel::Stable,
         'normalized-events'             => FeatureSupportLevel::Stable,
-        'correlation-metadata'          => FeatureSupportLevel::Unsupported, // Phase 7 pending
+        'correlation-metadata'          => FeatureSupportLevel::Stable,
         'replay-envelope-export'        => FeatureSupportLevel::Provisional,
         'reconstruction-hook-support'   => FeatureSupportLevel::Provisional,
         'in-memory-transport'           => FeatureSupportLevel::Stable,

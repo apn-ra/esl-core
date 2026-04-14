@@ -103,6 +103,15 @@ final class EslFixtureBuilder
     }
 
     /**
+     * A text/event-json frame wrapping the given JSON payload.
+     */
+    public static function eventJson(string $json): string
+    {
+        $len = strlen($json);
+        return "Content-Type: text/event-json\nContent-Length: {$len}\n\n{$json}";
+    }
+
+    /**
      * Build event data for a text/event-plain event (URL-encoded header values).
      *
      * @param array<string, string> $headers  Header values should be pre-encoded or plain ASCII.
@@ -126,6 +135,26 @@ final class EslFixtureBuilder
         }
 
         return $block;
+    }
+
+    /**
+     * Build a deterministic JSON event payload.
+     *
+     * @param array<string, scalar> $headers
+     */
+    public static function eventJsonData(array $headers, string $body = ''): string
+    {
+        $payload = $headers;
+        if ($body !== '') {
+            $payload['_body'] = $body;
+        }
+
+        $json = json_encode(
+            $payload,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+
+        return $json;
     }
 
     /**
@@ -212,6 +241,49 @@ final class EslFixtureBuilder
             'Unique-ID'                 => $uniqueId,
             'Call-Direction'            => 'inbound',
             'Hangup-Cause'              => $hangupCause,
+        ]);
+
+        return self::eventPlain($eventData);
+    }
+
+    /**
+     * A complete CHANNEL_BRIDGE or CHANNEL_UNBRIDGE event frame.
+     */
+    public static function bridgeEvent(
+        string $eventName = 'CHANNEL_BRIDGE',
+        string $uniqueId = 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+        string $otherLegUniqueId = 'b4fbde13-9c33-45d7-a1e4-e6517eb8de91',
+    ): string {
+        $eventData = self::eventData([
+            'Event-Name' => $eventName,
+            'Core-UUID' => '8c0e1d84-c82f-11e6-8842-3bf20b4ac4f6',
+            'Event-Sequence' => '12347',
+            'Unique-ID' => $uniqueId,
+            'Channel-Name' => 'sofia/internal/1001%40192.168.1.100',
+            'Other-Leg-Unique-ID' => $otherLegUniqueId,
+            'Other-Leg-Channel-Name' => 'sofia/internal/1002%40192.168.1.100',
+        ]);
+
+        return self::eventPlain($eventData);
+    }
+
+    /**
+     * A complete PLAYBACK_START or PLAYBACK_STOP event frame.
+     */
+    public static function playbackEvent(
+        string $eventName = 'PLAYBACK_START',
+        string $uniqueId = 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+        string $playbackUuid = 'c8dc43f6-5aa9-46b0-8ef2-14610d46a4d0',
+        string $playbackFilePath = '/tmp/demo.wav',
+    ): string {
+        $eventData = self::eventData([
+            'Event-Name' => $eventName,
+            'Core-UUID' => '8c0e1d84-c82f-11e6-8842-3bf20b4ac4f6',
+            'Event-Sequence' => '12348',
+            'Unique-ID' => $uniqueId,
+            'Channel-Name' => 'sofia/internal/1001%40192.168.1.100',
+            'Playback-UUID' => $playbackUuid,
+            'Playback-File-Path' => str_replace('@', '%40', $playbackFilePath),
         ]);
 
         return self::eventPlain($eventData);

@@ -67,6 +67,7 @@ All reply classes in `Apntalk\EslCore\Replies\*`, plus `ReplyFactory`, are publi
 
 ### Events
 `NormalizedEvent`, `RawEvent`, and typed event families are public.
+Selective typed event families currently include `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, and `CustomEvent`.
 
 ### Exceptions
 All exception classes in `Apntalk\EslCore\Exceptions\*` are public.

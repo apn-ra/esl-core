@@ -11,7 +11,7 @@ use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Protocol\Frame;
 
 /**
- * Produces typed EventInterface instances from text/event-plain frames.
+ * Produces typed EventInterface instances from supported ESL event frames.
  *
  * Combines EventParser (frame → NormalizedEvent) with EventClassifier
  * (NormalizedEvent → typed EventInterface).
@@ -32,7 +32,7 @@ final class EventFactory implements EventFactoryInterface
     }
 
     /**
-     * Parse a text/event-plain frame and return a typed event.
+     * Parse a supported event frame and return a typed event.
      */
     public function fromFrame(Frame $frame): EventInterface
     {
