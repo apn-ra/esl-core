@@ -119,6 +119,16 @@ Deferred from this release:
 - transport expansion beyond `InMemoryTransport`
 - replay storage, scheduling, or orchestration
 
+## Smoke check
+
+For a fast confidence pass that the current substrate composes cleanly on its happy paths, run:
+
+```bash
+composer smoke
+```
+
+This smoke path exercises the existing typed command/reply and async event pipelines, including correlation/session metadata and replay-envelope creation.
+
 ---
 
 ## Documentation

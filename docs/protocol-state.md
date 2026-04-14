@@ -56,6 +56,12 @@ fail explicitly on structurally incompatible shapes:
 - `AuthAcceptedReply` requires `Reply-Text: +OK accepted`
 - `ApiReply` requires `Content-Type: api/response`
 
+`ApiReply::isSuccess()` is intentionally narrow. It only returns `true` when the
+response body begins with `+OK`. Some FreeSWITCH API commands instead return raw
+operational text on success. Those still produce a valid `ApiReply`, but callers
+must inspect `body()` or `trimmedBody()` rather than treating `isSuccess()` as a
+universal API-success indicator.
+
 Those failures are `UnexpectedReplyException`, which remains distinct from
 transport failures and parse failures.
 

@@ -70,7 +70,11 @@ Carries a `Reply-Text` header:
 ### api/response
 - Has a body of exactly `Content-Length` bytes.
 - Body is the raw API command output.
-- Success/failure determined by parsing the body ("+OK ...", "-ERR ...", or arbitrary).
+- `ApiReply::isSuccess()` is a narrow body-prefix check:
+  - `+OK ...` => `true`
+  - `-ERR ...` => `false`
+  - arbitrary non-prefixed output => `false`
+- That means a command like `api status` may return healthy operational text while `ApiReply::isSuccess()` remains `false`. Callers that care about command-specific semantics must inspect the raw body.
 
 ### text/event-plain
 - Has a body of exactly `Content-Length` bytes.

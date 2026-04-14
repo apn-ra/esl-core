@@ -1,0 +1,11 @@
+Content-Type: api/response
+Content-Length: 371
+
+UP 0 years, 37 days, 22 hours, 3 minutes, 49 seconds, 21 milliseconds, 412 microseconds
+FreeSWITCH (Version 1.10.11-release git f24064f 2023-12-22 18:08:31Z 64bit) is ready
+0 session(s) since startup
+0 session(s) - peak 0, last 5min 0 
+0 session(s) per Sec out of max 30, peak 0, last 5min 0 
+1000 session(s) max
+min idle cpu 0.00/98.97
+Current Stack Size/Max 240K/8192K

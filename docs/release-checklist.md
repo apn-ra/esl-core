@@ -11,6 +11,7 @@ Use this checklist when cutting the next pre-`1.0.0` release of `apntalk/esl-cor
 
 ## Verification
 
+- Run `composer smoke`
 - Run `composer validate --strict`
 - Run `composer check`
 - Run `./vendor/bin/phpstan analyse --no-progress`
