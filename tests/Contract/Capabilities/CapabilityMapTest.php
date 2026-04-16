@@ -28,6 +28,8 @@ final class CapabilityMapTest extends TestCase
         $this->assertSame(FeatureSupportLevel::Provisional, $map->supportLevel(Capability::ReplayEnvelopeExport));
         $this->assertSame(FeatureSupportLevel::Provisional, $map->supportLevel(Capability::ReconstructionHookSupport));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::InMemoryTransport));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::SocketTransportConstruction));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::InboundConnectionBootstrap));
     }
 
     public function test_supports_returns_false_only_for_unsupported_capabilities(): void
@@ -47,5 +49,7 @@ final class CapabilityMapTest extends TestCase
         $this->assertArrayHasKey(Capability::EventJsonDecoding->value, $all);
         $this->assertArrayHasKey(Capability::EventXmlDecoding->value, $all);
         $this->assertArrayHasKey(Capability::CorrelationMetadata->value, $all);
+        $this->assertArrayHasKey(Capability::SocketTransportConstruction->value, $all);
+        $this->assertArrayHasKey(Capability::InboundConnectionBootstrap->value, $all);
     }
 }

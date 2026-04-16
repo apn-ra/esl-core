@@ -30,6 +30,8 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
 | `reconstruction-hook-support` | provisional | ReconstructionHookInterface defined; no registry yet |
 | `in-memory-transport` | stable | InMemoryTransport for testing |
+| `socket-transport-construction` | stable | `TransportFactoryInterface`, `SocketEndpoint`, and `SocketTransportFactory` provide the supported public seam for endpoint-based connect or wrapping accepted PHP stream resources |
+| `inbound-connection-bootstrap` | stable | `InboundConnectionFactoryInterface`, `PreparedInboundConnection`, and `InboundConnectionFactory` provide the supported public seam for preparing one accepted inbound stream into transport + pipeline + correlation context |
 | `fixture-replay-compatibility` | provisional | EslFixtureBuilder produces deterministic frames |
 
 The live-backed bridge/playback capture evidence comes from non-public operator

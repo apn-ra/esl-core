@@ -36,6 +36,8 @@ final class CapabilityMap implements CapabilityMapInterface
         'replay-envelope-export'        => FeatureSupportLevel::Provisional,
         'reconstruction-hook-support'   => FeatureSupportLevel::Provisional,
         'in-memory-transport'           => FeatureSupportLevel::Stable,
+        'socket-transport-construction' => FeatureSupportLevel::Stable,
+        'inbound-connection-bootstrap'  => FeatureSupportLevel::Stable,
         'fixture-replay-compatibility'  => FeatureSupportLevel::Provisional,
     ];
 

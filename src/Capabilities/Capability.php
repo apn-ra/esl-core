@@ -28,5 +28,7 @@ enum Capability: string
     case ReplayEnvelopeExport = 'replay-envelope-export';
     case ReconstructionHookSupport = 'reconstruction-hook-support';
     case InMemoryTransport = 'in-memory-transport';
+    case SocketTransportConstruction = 'socket-transport-construction';
+    case InboundConnectionBootstrap = 'inbound-connection-bootstrap';
     case FixtureReplayCompatibility = 'fixture-replay-compatibility';
 }

@@ -100,12 +100,15 @@ Public ingress: `InboundPipeline` composes framing + classification + reply/even
 - `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)
 - `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, `CustomEvent`
 - `InboundPipeline` — stable byte-oriented facade returning `DecodedInboundMessage`
+- `PreparedInboundConnection` — stable bundle for one accepted-stream bootstrap
+- `InboundConnectionFactory` — supported public seam for preparing one accepted stream into transport + pipeline + correlation context
 
 Key invariants:
 - Unknown events NEVER throw; they produce `RawEvent`
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
 - `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
+- `InboundConnectionFactory` prepares one accepted stream but does not own listener loops, session supervision, or transport lifecycle beyond bootstrap
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 
 ### Correlation
@@ -155,17 +158,20 @@ Key invariants:
 
 ## Layer 5 — Transport boundary
 
-**Location:** `src/Transport/`
+**Location:** `src/Transport/`, `src/Internal/Transport/`
 
 Owns minimal I/O abstraction for testability and smoke-path use.
 
 - `TransportInterface` — read/write/close
 - `InMemoryTransport` — test double with `enqueueInbound()` / `drainOutbound()`
+- `SocketEndpoint` — minimal public endpoint/config value object for socket construction
+- `SocketTransportFactory` — stable public seam for connecting or wrapping accepted streams
 - `Internal\Transport\StreamSocketTransport` — internal wrapper used by bounded smoke/integration paths over a real PHP stream/socket resource
 
 Key invariants:
 - Transport does not own reconnect, supervision, or scheduling
 - `InMemoryTransport` is the integration test foundation
+- `SocketTransportFactory` is the supported upstream construction seam for downstream packages that need a real byte-stream transport without depending on `Internal\Transport\*`
 - Stream/socket smoke transport remains explicitly internal and non-primary, but now covers fragmented, coalesced, delayed-body, delayed-completion, and mid-frame-loss scenarios
 - Upper-layer packages (esl-react, laravel-freeswitch-esl) own real transport lifecycle
 
@@ -211,4 +217,15 @@ Optionally (replay capture):
   → ReplayEnvelopeFactory.fromReplyEnvelope() / fromEventEnvelope() → ReplayEnvelope [Layer 4]
     or ReplayEnvelopeFactory.fromReply() / fromEvent() when correlation metadata is not available
   → ReplayCaptureSinkInterface.capture(envelope)     [upper layer storage]
+```
+
+Accepted-stream bootstrap can now be expressed through one supported public seam:
+
+```
+Accepted PHP stream
+  → InboundConnectionFactory.prepareAcceptedStream()
+    → PreparedInboundConnection
+      → transport(): TransportInterface
+      → pipeline(): InboundPipelineInterface
+      → correlationContext(): CorrelationContext
 ```

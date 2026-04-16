@@ -93,9 +93,12 @@ For new integrations, start from `InboundPipeline` and treat lower-level parser/
 use Apntalk\EslCore\Commands\AuthCommand;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
+use Apntalk\EslCore\Inbound\InboundConnectionFactory;
 use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Transport\InMemoryTransport;
+use Apntalk\EslCore\Transport\SocketEndpoint;
+use Apntalk\EslCore\Transport\SocketTransportFactory;
 
 $transport = new InMemoryTransport();
 $transport->write((new AuthCommand('ClueCon'))->serialize());
@@ -108,6 +111,13 @@ $messages[0]->isServerAuthRequest(); // true
 $sessionId = ConnectionSessionId::generate();
 $correlation = new CorrelationContext($sessionId);
 $replay = ReplayEnvelopeFactory::withSession($sessionId);
+
+$socketFactory = new SocketTransportFactory();
+$transport = $socketFactory->connect(SocketEndpoint::tcp('127.0.0.1', 8021));
+
+$acceptedFactory = new InboundConnectionFactory();
+$prepared = $acceptedFactory->prepareAcceptedStream($acceptedPhpStream);
+$prepared->pipeline()->push($prepared->transport()->read(4096) ?? '');
 ```
 
 If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
@@ -117,18 +127,20 @@ Upper layers should prefer `InboundPipeline` instead of composing `FrameParser`,
 
 - Typed commands and replies for auth, command replies, `api`, and `bgapi`
 - Stable inbound byte-stream decoding via `InboundPipeline`
+- Stable accepted-stream inbound bootstrap via `InboundConnectionFactory` + `PreparedInboundConnection`
 - Normalized events for `text/event-plain` and `text/event-json`
 - Provisional normalized event decoding for `text/event-xml`
 - Selective typed event families: background job, channel lifecycle, bridge, hangup, playback, and custom events
 - Correlation/session metadata and replay-safe envelopes
 - Minimal in-memory transport and explicit failure taxonomy
+- Stable public socket transport construction via `SocketEndpoint` + `SocketTransportFactory`
 - Internal-only stream/socket smoke-path validation over a real PHP stream resource
 - Fixture-backed behavior, PHPUnit coverage, PHPStan, and capability verification
 
 Still provisional or deferred from this release:
 - live-backed `text/event-xml` evidence beyond constructed fixtures
 - framework/runtime integrations
-- public transport expansion beyond `InMemoryTransport`
+- broader transport runtime expansion beyond the minimal socket construction seam
 - replay storage, scheduling, or orchestration
 
 ## Smoke check

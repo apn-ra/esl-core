@@ -39,13 +39,14 @@ Stability is earned incrementally:
 | `Contracts\*` interfaces | Provisional until fixture-validated |
 | `Commands\*` serialization | Stable after Phase 5 |
 | `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path |
+| `Contracts\InboundConnectionFactoryInterface`, `Inbound\PreparedInboundConnection`, `Inbound\InboundConnectionFactory` | Stable as the supported accepted-stream/bootstrap seam for one inbound connection |
 | `Replies\*` parsing | Stable after Phase 5 |
 | `Events\NormalizedEvent` | Stable for current substrate invariants; format coverage is stable for `text/event-plain` / `text/event-json` and provisional for `text/event-xml` |
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Capability::EventXmlDecoding` / XML normalized event decoding | Provisional pending broader evidence than the current constructed-fixture corpus |
 | `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |
 | `Replay\*` envelope shape | Provisional until Phase 8 complete |
-| `TransportInterface`, `Transport\InMemoryTransport` | Stable as the minimal transport boundary for testing and narrow smoke-path use |
+| `TransportInterface`, `Contracts\TransportFactoryInterface`, `Transport\InMemoryTransport`, `Transport\SocketEndpoint`, `Transport\SocketTransportFactory` | Stable as the minimal transport boundary and supported transport-construction seam for testing, endpoint-based connect, and wrapping accepted PHP stream resources |
 | `Internal\Transport\StreamSocketTransport` | Internal-only smoke-path support; deliberately outside the public API boundary |
 | Concrete inbound parser/classifier implementations (`Parsing\*`, `Internal\Classification\*`) | Provisional and intentionally outside the stable public API boundary; upper layers should not treat them as the primary ingress contract |
 | `Internal\*` | Permanently unstable — not covered by SemVer |

@@ -52,6 +52,7 @@ These are the core interfaces intended for consumers and upper-layer packages:
 
 ```
 Contracts\CommandInterface
+Contracts\InboundConnectionFactoryInterface
 Contracts\InboundPipelineInterface
 Contracts\ReplyInterface
 Contracts\EventInterface
@@ -61,6 +62,7 @@ Contracts\ReplayCaptureSinkInterface
 Contracts\ReconstructionHookInterface
 Contracts\CapabilityMapInterface
 Contracts\TransportInterface
+Contracts\TransportFactoryInterface
 ```
 
 Lower-level ingress-adjacent contracts such as `FrameParserInterface`,
@@ -89,15 +91,17 @@ used to obtain that evidence remain non-public validation tooling.
 it has broader evidence than the current constructed fixture corpus.
 
 ### Inbound
-`Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, and `Inbound\InboundMessageType` are public.
+`Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, `Inbound\InboundMessageType`, `Inbound\PreparedInboundConnection`, and `Inbound\InboundConnectionFactory` are public.
 These types form the supported inbound decoding facade for raw byte ingestion, typed reply/event decoding, normalized-event access, auth-request/disconnect notices, and safe fallback to `RawEvent` / `UnknownReply` where appropriate.
+`InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`.
 For release-boundary purposes, this is the dominant supported ingress contract.
 
 ### Exceptions
 All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
 
 ### Transport
-`TransportInterface` and `InMemoryTransport` are public as the minimal transport boundary for testing and narrow smoke-path use.
+`TransportInterface`, `TransportFactoryInterface`, `InMemoryTransport`, `SocketEndpoint`, and `SocketTransportFactory` are public as the minimal transport boundary for testing and narrow smoke-path use.
+`SocketTransportFactory` is the supported public construction seam for real byte-stream transports. It can either connect from a `SocketEndpoint` or wrap an already accepted PHP stream resource while still returning only `TransportInterface`.
 This does not imply reconnect, scheduling, supervision, or broader transport-runtime ownership in core.
 The new stream/socket smoke-path transport remains internal-only under `Internal\Transport\*`; it exists to validate realistic byte-stream behavior, not to widen the supported transport API.
 

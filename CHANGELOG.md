@@ -14,6 +14,8 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Added
 
+- `src/Contracts/InboundConnectionFactoryInterface.php`, `src/Inbound/PreparedInboundConnection.php`, and `src/Inbound/InboundConnectionFactory.php` — a stable public accepted-stream/bootstrap seam for downstream packages that need to prepare one inbound connection as transport + pipeline + correlation context without ad hoc assembly.
+- `src/Contracts/TransportFactoryInterface.php`, `src/Transport/SocketEndpoint.php`, and `src/Transport/SocketTransportFactory.php` — a stable public transport-construction seam for downstream packages that need to connect from endpoint/config inputs or wrap an already accepted PHP stream without depending on `Internal\Transport\StreamSocketTransport`.
 - Provisional `text/event-xml` normalization support through `EventParser` and the supported `InboundPipeline` facade, backed by constructed fixture coverage and safe typed/fallback behavior.
 - Additional parser and internal stream/socket smoke coverage for coalesced multi-frame reads, delayed body delivery, delayed bgapi completion, and mid-frame connection loss.
 - `src/Inbound/InboundPipeline`, `src/Inbound/DecodedInboundMessage`, `src/Inbound/InboundMessageType`, and `src/Contracts/InboundPipelineInterface` — a stable public inbound decoding facade for raw byte ingestion. Upper layers can now consume auth requests, typed replies, typed events, normalized events, disconnect notices, and safe `RawEvent` / `UnknownReply` fallbacks without composing the provisional parser/classifier internals directly.
@@ -33,6 +35,8 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- The supported public inbound story now includes accepted-stream bootstrap: `InboundConnectionFactoryInterface`, `PreparedInboundConnection`, and `InboundConnectionFactory` are public, while listener ownership, read loops, and session supervision remain outside core.
+- The supported public transport boundary now includes a construction seam: `TransportFactoryInterface`, `SocketEndpoint`, and `SocketTransportFactory` are public, while `Internal\Transport\StreamSocketTransport` remains an implementation detail behind that seam.
 - `ChannelCorrelation` boundary extended in docblock and `docs/correlation.md`: caller ID name/number and channel state are intentionally excluded. Caller ID is display metadata accessed at handler time via `NormalizedEvent` or the typed event. Channel state is a transient snapshot that changes throughout the call and must be maintained in an upper-layer state machine keyed by `uniqueId()`, not captured in the correlation primitive. No code changes were required.
 
 ### Added (tooling-only, not public API)
