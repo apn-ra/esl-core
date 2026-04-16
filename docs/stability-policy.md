@@ -41,8 +41,10 @@ Stability is earned incrementally:
 | `Commands\*` serialization | Stable after Phase 5 |
 | `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path; `InboundPipeline::withDefaults()` is the preferred stable construction path, while direct constructor injection remains an advanced public seam without an active soft deprecation |
 | `Contracts\InboundConnectionFactoryInterface`, `Inbound\PreparedInboundConnection`, `Inbound\InboundConnectionFactory` | Stable as the supported accepted-stream/bootstrap seam for one inbound connection |
-| `Replies\*` parsing | Stable after Phase 5; `ReplyFactory` remains public as an advanced frame/classifier-owned composition bridge, while `InboundPipeline` is the preferred upper-layer decode seam |
+| `Contracts\ClassifiedMessageInterface` | Stable as the additive public read-only contract for advanced classified-message access; the current internal carrier implements it, while `InboundMessageClassifierInterface` itself remains provisional |
+| `Replies\*` parsing | Stable after Phase 5; `ReplyFactory::fromFrame()` is the explicit advanced frame-owned reply bridge, `fromClassification()` is the additive public classified-message bridge, while `fromClassified()` remains a lower-level classified-message path and `InboundPipeline` is the preferred upper-layer decode seam |
 | `Events\NormalizedEvent` | Stable for current substrate invariants; format coverage is stable for `text/event-plain` / `text/event-json` and provisional for `text/event-xml` |
+| `Contracts\ProvidesNormalizedSubstrateInterface` | Stable as an additive explicit substrate-access contract for `NormalizedEvent` and the built-in typed event wrappers; preferred byte-ingress access still comes from `DecodedInboundMessage::normalizedEvent()` |
 | `Events\EventFactory`, `Events\EventClassifier` | Stable as advanced event-composition bridges for callers that already own a frame or normalized event, but not the preferred byte-ingress seam |
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Capability::EventXmlDecoding` / XML normalized event decoding | Provisional pending broader evidence than the current constructed-fixture corpus |

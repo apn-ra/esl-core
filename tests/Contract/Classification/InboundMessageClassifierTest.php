@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Classification;
 
+use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
 use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\FrameParser;
@@ -45,6 +46,7 @@ final class InboundMessageClassifierTest extends TestCase
     {
         $classified = $this->classify(EslFixtureBuilder::authRequest());
 
+        $this->assertInstanceOf(ClassifiedMessageInterface::class, $classified);
         $this->assertSame(InboundMessageCategory::ServerAuthRequest, $classified->category);
         $this->assertTrue($classified->isAuthRequest());
     }
@@ -192,5 +194,16 @@ final class InboundMessageClassifierTest extends TestCase
 
         $this->assertSame('command/reply', $classified->frame->contentType());
         $this->assertSame('+OK accepted', $classified->frame->replyText());
+        $this->assertSame($classified->frame, $classified->frame());
+    }
+
+    public function test_classified_message_contract_can_be_used_without_internal_properties(): void
+    {
+        $classified = $this->classify(EslFixtureBuilder::apiResponse("+OK\n"));
+
+        $this->assertInstanceOf(ClassifiedMessageInterface::class, $classified);
+        $this->assertTrue($classified->isApiResponse());
+        $this->assertFalse($classified->isEvent());
+        $this->assertSame('api/response', $classified->frame()->contentType());
     }
 }

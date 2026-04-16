@@ -8,6 +8,7 @@ use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
 use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\BridgeEvent;
 use Apntalk\EslCore\Events\ChannelLifecycleEvent;
@@ -175,6 +176,16 @@ final class InboundPipelineTest extends TestCase
         $this->assertSame('CHANNEL_BRIDGE', $bridgeMessages[0]->normalizedEvent()?->eventName());
         $this->assertSame('PLAYBACK_STOP', $playbackMessages[0]->normalizedEvent()?->eventName());
         $this->assertSame('tone_stream://%(250,50,440)', $playbackMessages[0]->normalizedEvent()?->playbackFilePath());
+    }
+
+    public function test_typed_event_and_preferred_ingress_facade_share_same_normalized_substrate_instance(): void
+    {
+        $messages = $this->pipeline->decode(FixtureLoader::loadFrame('live/events/channel-bridge-loopback-plain.esl'));
+
+        $this->assertCount(1, $messages);
+        $this->assertInstanceOf(BridgeEvent::class, $messages[0]->event());
+        $this->assertInstanceOf(ProvidesNormalizedSubstrateInterface::class, $messages[0]->event());
+        $this->assertSame($messages[0]->normalizedEvent(), $messages[0]->event()?->normalized());
     }
 
     public function test_xml_event_decodes_through_public_facade_without_reaching_internal_parsers(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Protocol\HeaderBag;
 
@@ -25,7 +26,7 @@ use Apntalk\EslCore\Protocol\HeaderBag;
  *
  * @api
  */
-final class NormalizedEvent implements EventInterface
+final class NormalizedEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         /** The outer frame headers (Content-Type, Content-Length). */
@@ -193,6 +194,14 @@ final class NormalizedEvent implements EventInterface
     public function body(): string
     {
         return $this->rawBody;
+    }
+
+    /**
+     * Return this event as the normalized substrate object.
+     */
+    public function normalized(): self
+    {
+        return $this;
     }
 
     /**

@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Typed event for CHANNEL_HANGUP and CHANNEL_HANGUP_COMPLETE.
  *
  * @api
  */
-final class HangupEvent implements EventInterface
+final class HangupEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,
@@ -50,5 +51,10 @@ final class HangupEvent implements EventInterface
     public function channelName(): ?string
     {
         return $this->normalized->channelName();
+    }
+
+    public function normalized(): NormalizedEvent
+    {
+        return $this->normalized;
     }
 }

@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Typed event for PLAYBACK_START and PLAYBACK_STOP.
  *
  * @api
  */
-final class PlaybackEvent implements EventInterface
+final class PlaybackEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,
@@ -55,5 +56,10 @@ final class PlaybackEvent implements EventInterface
     public function playbackFilePath(): ?string
     {
         return $this->normalized->playbackFilePath();
+    }
+
+    public function normalized(): NormalizedEvent
+    {
+        return $this->normalized;
     }
 }

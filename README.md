@@ -98,7 +98,7 @@ For packages such as `apntalk/laravel-freeswitch-esl`, the supported integration
 |---|---|---|
 | Open a client connection from host/port settings | `SocketTransportFactory::connect()` + `InboundPipeline::withDefaults()` | reconnect/backoff, read loops, auth/session policy, event subscription policy |
 | Bootstrap one already-accepted inbound stream | `InboundConnectionFactory::prepareAcceptedStream()` | listener ownership, accept loops, per-session supervision |
-| Compose directly from frames / normalized events | `ReplyFactory`, `EventFactory`, `EventClassifier`, lower-level contracts | byte-ingress defaults, stable constructor ergonomics, protection from provisional coupling |
+| Compose directly from frames / normalized events | `ReplyFactory::fromFrame()`, `EventFactory`, `EventClassifier`, lower-level contracts | byte-ingress defaults, stable constructor ergonomics, protection from provisional coupling |
 
 Use `CorrelationContext` after decode when your upper layer needs per-session ordering or derived job/channel correlation. Use `ReplayEnvelopeFactory` only for replay-safe capture/export hooks; storage, scheduling, and replay execution stay in upper layers.
 
@@ -163,7 +163,7 @@ Upper layers should prefer `InboundPipeline::withDefaults()` instead of composin
 | Posture | What to build on first |
 |---|---|
 | Preferred public seams | `InboundPipeline::withDefaults()`, `SocketTransportFactory`, `InboundConnectionFactory`, typed commands/replies/events, `CorrelationContext`, `ReplayEnvelopeFactory` |
-| Advanced public seams | `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, lower-level `Contracts\*` parser/classifier interfaces |
+| Advanced public seams | `InboundPipeline::__construct(...)`, `ReplyFactory::fromFrame()`, `ReplyFactory::fromClassification()`, `ReplyFactory::fromClassified()`, `EventFactory`, `EventClassifier`, `Contracts\ClassifiedMessageInterface`, `Contracts\ProvidesNormalizedSubstrateInterface`, lower-level `Contracts\*` parser/classifier interfaces |
 | Internal or provisional implementation details | `Parsing\*`, `Internal\*`, most of `Protocol\*` other than `Frame` and `HeaderBag` |
 
 ## Current release scope

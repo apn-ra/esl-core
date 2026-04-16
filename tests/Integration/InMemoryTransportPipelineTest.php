@@ -101,6 +101,20 @@ final class InMemoryTransportPipelineTest extends TestCase
         $this->assertSame('1', $replayEnvelope->derivedMetadata()['observation-sequence']);
     }
 
+    public function test_reply_factory_from_frame_matches_existing_low_level_reply_path(): void
+    {
+        $this->transport->enqueueInbound(EslFixtureBuilder::bgapiAccepted(self::JOB_UUID));
+
+        $classified = $this->consumeClassified();
+        $fromClassified = $this->replyFactory->fromClassified($classified);
+        $fromFrame = $this->replyFactory->fromFrame($classified->frame, $this->classifier);
+
+        $this->assertInstanceOf(BgapiAcceptedReply::class, $fromClassified);
+        $this->assertInstanceOf(BgapiAcceptedReply::class, $fromFrame);
+        $this->assertSame($fromClassified::class, $fromFrame::class);
+        $this->assertSame($fromClassified->frame()->replyText(), $fromFrame->frame()->replyText());
+    }
+
     public function test_bgapi_acceptance_and_background_job_flow_preserve_shared_correlation(): void
     {
         $this->transport->enqueueInbound(EslFixtureBuilder::bgapiAccepted(self::JOB_UUID));

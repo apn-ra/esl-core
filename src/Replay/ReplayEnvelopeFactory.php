@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Replay;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Contracts\ReplyInterface;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\EventEnvelope;
@@ -177,6 +178,10 @@ final class ReplayEnvelopeFactory
 
     private function extractNormalized(EventInterface $event): ?NormalizedEvent
     {
+        if ($event instanceof ProvidesNormalizedSubstrateInterface) {
+            return $event->normalized();
+        }
+
         $prop = new ReflectionObject($event);
         if ($prop->hasProperty('normalized')) {
             $p = $prop->getProperty('normalized');

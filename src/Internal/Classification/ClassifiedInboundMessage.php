@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Internal\Classification;
 
+use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
 use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Protocol\MessageType;
 
@@ -16,7 +17,7 @@ use Apntalk\EslCore\Protocol\MessageType;
  *
  * @internal Not part of the public API.
  */
-final class ClassifiedInboundMessage
+final class ClassifiedInboundMessage implements ClassifiedMessageInterface
 {
     public function __construct(
         public readonly InboundMessageCategory $category,
@@ -72,5 +73,10 @@ final class ClassifiedInboundMessage
     public function isUnknown(): bool
     {
         return $this->category === InboundMessageCategory::Unknown;
+    }
+
+    public function frame(): Frame
+    {
+        return $this->frame;
     }
 }

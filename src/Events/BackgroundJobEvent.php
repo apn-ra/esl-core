@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Typed event for BACKGROUND_JOB completions.
@@ -15,7 +16,7 @@ use Apntalk\EslCore\Contracts\EventInterface;
  *
  * @api
  */
-final class BackgroundJobEvent implements EventInterface
+final class BackgroundJobEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,
@@ -71,5 +72,10 @@ final class BackgroundJobEvent implements EventInterface
     public function isSuccess(): bool
     {
         return str_starts_with(ltrim($this->result()), '+OK');
+    }
+
+    public function normalized(): NormalizedEvent
+    {
+        return $this->normalized;
     }
 }

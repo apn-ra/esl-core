@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Correlation;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Contracts\ReplyInterface;
 use Apntalk\EslCore\Events\NormalizedEvent;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
@@ -138,7 +139,14 @@ final class CorrelationContext
             return $correlation->isEmpty() ? null : $correlation;
         }
 
-        // Extract NormalizedEvent from typed wrappers that expose it via a property
+        // Prefer the explicit substrate contract when the typed event provides it.
+        if ($event instanceof ProvidesNormalizedSubstrateInterface) {
+            $correlation = ChannelCorrelation::fromNormalizedEvent($event->normalized());
+            return $correlation->isEmpty() ? null : $correlation;
+        }
+
+        // Legacy compatibility fallback for custom/older wrappers that still only
+        // expose a public "normalized" property without the explicit contract.
         $normalized = $this->extractNormalizedFromTyped($event);
         if ($normalized !== null) {
             $correlation = ChannelCorrelation::fromNormalizedEvent($normalized);

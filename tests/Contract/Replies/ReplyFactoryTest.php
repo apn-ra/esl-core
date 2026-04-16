@@ -225,6 +225,71 @@ final class ReplyFactoryTest extends TestCase
     }
 
     // ---------------------------------------------------------------------------
+    // Additive frame-owned helper path
+    // ---------------------------------------------------------------------------
+
+    public function test_from_frame_produces_same_typed_reply_as_from_classified_for_auth_accept(): void
+    {
+        $fromFrame = $this->replyFromFrame(EslFixtureBuilder::authAccepted());
+        $fromClassified = $this->reply(EslFixtureBuilder::authAccepted());
+
+        $this->assertInstanceOf(AuthAcceptedReply::class, $fromFrame);
+        $this->assertSame($fromClassified::class, $fromFrame::class);
+        $this->assertSame($fromClassified->frame()->replyText(), $fromFrame->frame()->replyText());
+    }
+
+    public function test_from_frame_produces_bgapi_accepted_reply_without_exposing_classified_message(): void
+    {
+        $jobUuid = '7f4db0f2-b848-4b0a-b3cf-559bdca96b38';
+        $reply = $this->replyFromFrame(EslFixtureBuilder::bgapiAccepted($jobUuid));
+
+        $this->assertInstanceOf(BgapiAcceptedReply::class, $reply);
+        $this->assertSame($jobUuid, $reply->jobUuid());
+    }
+
+    public function test_from_frame_produces_error_reply_for_command_error(): void
+    {
+        $reply = $this->replyFromFrame(EslFixtureBuilder::commandReplyErr('command not found'));
+
+        $this->assertInstanceOf(ErrorReply::class, $reply);
+        $this->assertSame('command not found', $reply->reason());
+    }
+
+    public function test_from_frame_produces_api_reply(): void
+    {
+        $reply = $this->replyFromFrame(EslFixtureBuilder::apiResponse("+OK status\n"));
+
+        $this->assertInstanceOf(ApiReply::class, $reply);
+        $this->assertSame("+OK status\n", $reply->body());
+    }
+
+    public function test_from_frame_degrades_disconnect_notice_to_unknown_reply(): void
+    {
+        $reply = $this->replyFromFrame(
+            EslFixtureBuilder::frame(['Content-Type' => 'text/disconnect-notice'])
+        );
+
+        $this->assertInstanceOf(UnknownReply::class, $reply);
+        $this->assertSame('text/disconnect-notice', $reply->contentType());
+    }
+
+    public function test_from_classification_produces_same_typed_reply_as_from_classified(): void
+    {
+        $this->parser->reset();
+        $this->parser->feed(EslFixtureBuilder::bgapiAccepted());
+        $frames = $this->parser->drain();
+        $this->assertCount(1, $frames);
+
+        $classified = $this->classifier->classify($frames[0]);
+        $fromClassification = $this->factory->fromClassification($classified);
+        $fromClassified = $this->factory->fromClassified($classified);
+
+        $this->assertInstanceOf(BgapiAcceptedReply::class, $fromClassification);
+        $this->assertSame($fromClassified::class, $fromClassification::class);
+        $this->assertSame($fromClassified->frame()->replyText(), $fromClassification->frame()->replyText());
+    }
+
+    // ---------------------------------------------------------------------------
     // Frame preserved on all replies
     // ---------------------------------------------------------------------------
 
@@ -240,5 +305,15 @@ final class ReplyFactoryTest extends TestCase
         $reply = $this->reply(EslFixtureBuilder::commandReplyErr('test'));
 
         $this->assertSame('command/reply', $reply->frame()->contentType());
+    }
+
+    private function replyFromFrame(string $fixture): \Apntalk\EslCore\Contracts\ReplyInterface
+    {
+        $this->parser->reset();
+        $this->parser->feed($fixture);
+        $frames = $this->parser->drain();
+        $this->assertCount(1, $frames);
+
+        return $this->factory->fromFrame($frames[0], $this->classifier);
     }
 }

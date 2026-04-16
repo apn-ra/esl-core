@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Safe degradation event for unknown or unsupported event types.
@@ -17,7 +18,7 @@ use Apntalk\EslCore\Contracts\EventInterface;
  *
  * @api
  */
-final class RawEvent implements EventInterface
+final class RawEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,

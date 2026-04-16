@@ -96,6 +96,13 @@ All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
 
 `ReplyFactory` remains a public lower-level bridge for callers that already own
 frame/classifier composition, but it is not the preferred raw-byte ingress path.
+`ReplyFactory::fromFrame()` is the explicit advanced reply bridge for callers
+that already own a `Frame` and want typed reply construction without carrying
+the internal classified-message value object themselves.
+`Contracts\ClassifiedMessageInterface` is the additive public contract for
+callers that already own a classified message and want to stay off the current
+internal carrier type; `ReplyFactory::fromClassification()` consumes that
+contract directly.
 `InboundPipeline::withDefaults()` is the preferred public ingress construction
 path for upper layers.
 
@@ -109,6 +116,9 @@ Public ingress: `InboundPipeline` composes framing + classification + reply/even
 callers that already own a `Frame` or `NormalizedEvent`, but they are not the
 preferred raw-byte ingress path. `InboundPipeline::withDefaults()` remains the
 dominant supported byte-ingress construction path for upper layers.
+When a caller already owns a built-in typed event and needs the underlying
+normalized substrate, `Contracts\ProvidesNormalizedSubstrateInterface` is the
+explicit contract for that access instead of relying on property inspection.
 
 - `NormalizedEvent` — normalized header access + raw body, preserving whether the source format was URL-encoded
 - `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)

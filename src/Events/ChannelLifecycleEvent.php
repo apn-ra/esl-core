@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Typed event for channel lifecycle transitions.
@@ -14,7 +15,7 @@ use Apntalk\EslCore\Contracts\EventInterface;
  *
  * @api
  */
-final class ChannelLifecycleEvent implements EventInterface
+final class ChannelLifecycleEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,
@@ -68,5 +69,10 @@ final class ChannelLifecycleEvent implements EventInterface
     public function callerIdNumber(): ?string
     {
         return $this->normalized->callerIdNumber();
+    }
+
+    public function normalized(): NormalizedEvent
+    {
+        return $this->normalized;
     }
 }

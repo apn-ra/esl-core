@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Typed event for CUSTOM events.
@@ -14,7 +15,7 @@ use Apntalk\EslCore\Contracts\EventInterface;
  *
  * @api
  */
-final class CustomEvent implements EventInterface
+final class CustomEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,
@@ -52,5 +53,10 @@ final class CustomEvent implements EventInterface
     public function subclass(): ?string
     {
         return $this->normalized->eventSubclass();
+    }
+
+    public function normalized(): NormalizedEvent
+    {
+        return $this->normalized;
     }
 }

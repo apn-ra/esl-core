@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Events;
 
 use Apntalk\EslCore\Contracts\EventInterface;
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 
 /**
  * Typed event for CHANNEL_BRIDGE and CHANNEL_UNBRIDGE.
  *
  * @api
  */
-final class BridgeEvent implements EventInterface
+final class BridgeEvent implements EventInterface, ProvidesNormalizedSubstrateInterface
 {
     public function __construct(
         public readonly NormalizedEvent $normalized,
@@ -55,5 +56,10 @@ final class BridgeEvent implements EventInterface
     public function otherLegChannelName(): ?string
     {
         return $this->normalized->otherLegChannelName();
+    }
+
+    public function normalized(): NormalizedEvent
+    {
+        return $this->normalized;
     }
 }
