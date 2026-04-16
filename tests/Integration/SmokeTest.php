@@ -24,7 +24,7 @@ final class SmokeTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pipeline = new InboundPipeline();
+        $this->pipeline = InboundPipeline::withDefaults();
     }
 
     public function test_command_reply_smoke_path_is_coherent(): void

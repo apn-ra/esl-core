@@ -38,7 +38,7 @@ Stability is earned incrementally:
 |---|---|
 | `Contracts\*` interfaces | Provisional until fixture-validated |
 | `Commands\*` serialization | Stable after Phase 5 |
-| `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path |
+| `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path; `InboundPipeline::withDefaults()` is the preferred stable construction path |
 | `Contracts\InboundConnectionFactoryInterface`, `Inbound\PreparedInboundConnection`, `Inbound\InboundConnectionFactory` | Stable as the supported accepted-stream/bootstrap seam for one inbound connection |
 | `Replies\*` parsing | Stable after Phase 5 |
 | `Events\NormalizedEvent` | Stable for current substrate invariants; format coverage is stable for `text/event-plain` / `text/event-json` and provisional for `text/event-xml` |

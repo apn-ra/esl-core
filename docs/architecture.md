@@ -99,7 +99,7 @@ Public ingress: `InboundPipeline` composes framing + classification + reply/even
 - `NormalizedEvent` — normalized header access + raw body, preserving whether the source format was URL-encoded
 - `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)
 - `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, `CustomEvent`
-- `InboundPipeline` — stable byte-oriented facade returning `DecodedInboundMessage`
+- `InboundPipeline` — stable byte-oriented facade returning `DecodedInboundMessage`; prefer `InboundPipeline::withDefaults()` for the supported default construction path
 - `PreparedInboundConnection` — stable bundle for one accepted-stream bootstrap
 - `InboundConnectionFactory` — supported public seam for preparing one accepted stream into transport + pipeline + correlation context
 
@@ -108,6 +108,7 @@ Key invariants:
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
 - `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
+- `InboundPipeline::withDefaults()` is the preferred stable ingress construction path; direct constructor collaborator injection remains an advanced composition path
 - `InboundConnectionFactory` prepares one accepted stream but does not own listener loops, session supervision, or transport lifecycle beyond bootstrap
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 
@@ -229,3 +230,8 @@ Accepted PHP stream
       → pipeline(): InboundPipelineInterface
       → correlationContext(): CorrelationContext
 ```
+
+If no explicit `ConnectionSessionId` is supplied at bootstrap time, `InboundConnectionFactory`
+generates one and binds it to the returned `CorrelationContext`. The seam still stops at
+preparation: the caller owns accept loops, read loops, replay bootstrap, and higher-level
+session/runtime policy.

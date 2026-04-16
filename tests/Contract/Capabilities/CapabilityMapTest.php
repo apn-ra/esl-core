@@ -52,4 +52,18 @@ final class CapabilityMapTest extends TestCase
         $this->assertArrayHasKey(Capability::SocketTransportConstruction->value, $all);
         $this->assertArrayHasKey(Capability::InboundConnectionBootstrap->value, $all);
     }
+
+    public function test_declared_capability_map_is_exhaustive_for_all_enum_cases(): void
+    {
+        $declared = array_keys((new CapabilityMap())->all());
+        $expected = array_map(
+            static fn(Capability $capability): string => $capability->value,
+            Capability::cases(),
+        );
+
+        sort($declared);
+        sort($expected);
+
+        $this->assertSame($expected, $declared);
+    }
 }

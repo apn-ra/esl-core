@@ -93,7 +93,8 @@ it has broader evidence than the current constructed fixture corpus.
 ### Inbound
 `Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, `Inbound\InboundMessageType`, `Inbound\PreparedInboundConnection`, and `Inbound\InboundConnectionFactory` are public.
 These types form the supported inbound decoding facade for raw byte ingestion, typed reply/event decoding, normalized-event access, auth-request/disconnect notices, and safe fallback to `RawEvent` / `UnknownReply` where appropriate.
-`InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`.
+`InboundPipeline::withDefaults()` is the preferred stable construction path for that facade. Direct constructor collaborator injection remains available for advanced composition, but it is not the preferred public ingress path before `1.0.0`.
+`InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`. If no `ConnectionSessionId` is supplied, the factory generates one for the connection.
 For release-boundary purposes, this is the dominant supported ingress contract.
 
 ### Exceptions
@@ -101,7 +102,7 @@ All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
 
 ### Transport
 `TransportInterface`, `TransportFactoryInterface`, `InMemoryTransport`, `SocketEndpoint`, and `SocketTransportFactory` are public as the minimal transport boundary for testing and narrow smoke-path use.
-`SocketTransportFactory` is the supported public construction seam for real byte-stream transports. It can either connect from a `SocketEndpoint` or wrap an already accepted PHP stream resource while still returning only `TransportInterface`.
+`SocketTransportFactory` is the supported public construction seam for real byte-stream transports. It can either connect from a `SocketEndpoint` or wrap an already-open PHP stream resource while still returning only `TransportInterface`. Invalid or closed stream inputs fail with `TransportException`.
 This does not imply reconnect, scheduling, supervision, or broader transport-runtime ownership in core.
 The new stream/socket smoke-path transport remains internal-only under `Internal\Transport\*`; it exists to validate realistic byte-stream behavior, not to widen the supported transport API.
 

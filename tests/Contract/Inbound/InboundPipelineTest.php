@@ -14,6 +14,7 @@ use Apntalk\EslCore\Events\ChannelLifecycleEvent;
 use Apntalk\EslCore\Events\PlaybackEvent;
 use Apntalk\EslCore\Events\RawEvent;
 use Apntalk\EslCore\Exceptions\MalformedFrameException;
+use Apntalk\EslCore\Exceptions\TruncatedFrameException;
 use Apntalk\EslCore\Inbound\InboundMessageType;
 use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
@@ -31,7 +32,7 @@ final class InboundPipelineTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pipeline = new InboundPipeline();
+        $this->pipeline = InboundPipeline::withDefaults();
     }
 
     public function test_decode_auth_request_exposes_stable_notice_without_internal_classifier_types(): void
@@ -204,5 +205,25 @@ final class InboundPipelineTest extends TestCase
         $this->pipeline->decode(
             EslFixtureBuilder::eventXml('<event><headers><Event-Name>CHANNEL_CREATE')
         );
+    }
+
+    public function test_finish_fails_when_public_facade_ends_mid_frame(): void
+    {
+        $frame = EslFixtureBuilder::backgroundJobEvent(jobResult: "+OK delayed body\n");
+        $this->pipeline->push(substr($frame, 0, strlen($frame) - 4));
+
+        $this->expectException(TruncatedFrameException::class);
+
+        $this->pipeline->finish();
+    }
+
+    public function test_named_default_construction_path_returns_supported_public_facade(): void
+    {
+        $pipeline = InboundPipeline::withDefaults();
+        $messages = $pipeline->decode(EslFixtureBuilder::authAccepted());
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
+        $this->assertInstanceOf(AuthAcceptedReply::class, $messages[0]->reply());
     }
 }

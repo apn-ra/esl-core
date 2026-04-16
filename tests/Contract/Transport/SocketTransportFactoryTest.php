@@ -9,6 +9,7 @@ use Apntalk\EslCore\Contracts\TransportInterface;
 use Apntalk\EslCore\Exceptions\TransportException;
 use Apntalk\EslCore\Transport\SocketEndpoint;
 use Apntalk\EslCore\Transport\SocketTransportFactory;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class SocketTransportFactoryTest extends TestCase
@@ -98,6 +99,25 @@ final class SocketTransportFactoryTest extends TestCase
         $this->assertFalse($transport->isConnected());
     }
 
+    public function test_from_stream_throws_transport_exception_for_non_resource_input(): void
+    {
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('valid stream resource');
+
+        $this->factory->fromStream('not-a-stream');
+    }
+
+    public function test_from_stream_throws_transport_exception_for_closed_stream_resource(): void
+    {
+        [$transportSide, $this->socketPairPeer] = $this->socketPair();
+        fclose($transportSide);
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('valid stream resource');
+
+        $this->factory->fromStream($transportSide);
+    }
+
     public function test_connect_throws_transport_exception_when_connection_cannot_be_opened(): void
     {
         $this->expectException(TransportException::class);
@@ -118,6 +138,38 @@ final class SocketTransportFactoryTest extends TestCase
         $this->assertSame(5.5, $endpoint->timeoutSeconds());
         $this->assertSame(['socket' => ['so_reuseport' => true]], $endpoint->contextOptions());
         $this->assertSame(STREAM_CLIENT_CONNECT, $endpoint->flags());
+    }
+
+    public function test_socket_endpoint_rejects_empty_address(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('address must not be empty');
+
+        new SocketEndpoint('');
+    }
+
+    public function test_socket_endpoint_rejects_non_positive_timeout(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('timeout must be greater than zero');
+
+        new SocketEndpoint('tcp://127.0.0.1:8021', 0.0);
+    }
+
+    public function test_socket_endpoint_tcp_rejects_empty_host(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('host must not be empty');
+
+        SocketEndpoint::tcp('', 8021);
+    }
+
+    public function test_socket_endpoint_tcp_rejects_out_of_range_port(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('port must be between 1 and 65535');
+
+        SocketEndpoint::tcp('127.0.0.1', 70000);
     }
 
     /**

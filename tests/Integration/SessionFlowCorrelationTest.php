@@ -13,7 +13,6 @@ use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\ChannelLifecycleEvent;
 use Apntalk\EslCore\Events\HangupEvent;
-use Apntalk\EslCore\Inbound\DecodedInboundMessage;
 use Apntalk\EslCore\Inbound\InboundMessageType;
 use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replies\AuthAcceptedReply;
@@ -41,7 +40,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_full_session_sequence_observation_numbers_are_monotonically_correct(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         // Feed all five frames at once — validates that the pipeline handles
@@ -77,7 +76,7 @@ final class SessionFlowCorrelationTest extends TestCase
     public function test_full_session_sequence_session_id_is_consistent_across_all_observations(): void
     {
         $sessionId = ConnectionSessionId::fromString(self::SESSION_ID);
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
         $context   = new CorrelationContext($sessionId);
 
         $pipeline->push(
@@ -113,7 +112,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_full_session_sequence_typed_decoding_is_correct_for_each_step(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
 
         $pipeline->push(
             EslFixtureBuilder::authAccepted() .
@@ -150,7 +149,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_channel_create_event_carries_channel_correlation_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::channelCreateEvent(self::CHANNEL_UUID));
@@ -168,7 +167,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_hangup_event_carries_channel_correlation_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(
@@ -191,7 +190,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_background_job_event_carries_job_correlation_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::backgroundJobEvent(self::JOB_UUID));
@@ -212,7 +211,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_auth_accepted_reply_carries_no_correlation_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::authAccepted());
@@ -227,7 +226,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_subscription_accepted_reply_carries_no_correlation_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::commandReplyOk('+OK Events Enabled'));
@@ -245,7 +244,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_channel_event_protocol_sequence_is_preserved_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::channelCreateEvent(self::CHANNEL_UUID));
@@ -258,7 +257,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_background_job_event_protocol_sequence_is_preserved_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::backgroundJobEvent(self::JOB_UUID));
@@ -271,7 +270,7 @@ final class SessionFlowCorrelationTest extends TestCase
 
     public function test_replies_carry_null_protocol_sequence(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $context  = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         $messages = $pipeline->decode(EslFixtureBuilder::authAccepted());
@@ -289,7 +288,7 @@ final class SessionFlowCorrelationTest extends TestCase
     public function test_session_flow_read_from_transport_produces_same_result_as_direct_push(): void
     {
         $transport = new InMemoryTransport();
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
         $context   = new CorrelationContext(ConnectionSessionId::fromString(self::SESSION_ID));
 
         // Enqueue the session frames into the transport as a single block

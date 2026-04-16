@@ -33,7 +33,7 @@ final class InboundConnectionFactory implements InboundConnectionFactoryInterfac
 
         return new PreparedInboundConnection(
             $transportFactory->fromStream($stream),
-            new InboundPipeline(),
+            InboundPipeline::withDefaults(),
             new CorrelationContext($sessionId),
         );
     }

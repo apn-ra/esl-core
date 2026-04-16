@@ -41,7 +41,7 @@ final class StreamSocketTransportPipelineTest extends TestCase
         [$this->transportSide, $this->peerSide] = $this->socketPair();
 
         $transport = new StreamSocketTransport($this->transportSide);
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $fixture = FixtureLoader::load('sequences/bgapi-acceptance-and-completion.esl');
 
         foreach ([17, 29, strlen($fixture) - 46] as $length) {
@@ -81,7 +81,7 @@ final class StreamSocketTransportPipelineTest extends TestCase
         [$this->transportSide, $this->peerSide] = $this->socketPair();
 
         $transport = new StreamSocketTransport($this->transportSide);
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $stream = EslFixtureBuilder::authAccepted()
             . EslFixtureBuilder::eventPlain(EslFixtureBuilder::eventData(['Event-Name' => 'UNEXPECTED_THING']))
             . EslFixtureBuilder::backgroundJobEvent();
@@ -115,7 +115,7 @@ final class StreamSocketTransportPipelineTest extends TestCase
         stream_set_blocking($this->transportSide, false);
 
         $transport = new StreamSocketTransport($this->transportSide);
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $frame = EslFixtureBuilder::apiResponse("+OK delayed body\n");
         $headerEnd = strpos($frame, "\n\n") + 2;
 
@@ -142,7 +142,7 @@ final class StreamSocketTransportPipelineTest extends TestCase
         stream_set_blocking($this->transportSide, false);
 
         $transport = new StreamSocketTransport($this->transportSide);
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
 
         fwrite($this->peerSide, EslFixtureBuilder::bgapiAccepted());
 
@@ -171,7 +171,7 @@ final class StreamSocketTransportPipelineTest extends TestCase
         [$this->transportSide, $this->peerSide] = $this->socketPair();
 
         $transport = new StreamSocketTransport($this->transportSide);
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
         $frame = EslFixtureBuilder::backgroundJobEvent(jobResult: "+OK delayed body\n");
 
         fwrite($this->peerSide, substr($frame, 0, strlen($frame) - 5));

@@ -14,6 +14,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Added
 
+- `InboundPipeline::withDefaults()` — a stable named construction path for the supported ingress facade, reducing the need for downstream packages to couple to concrete parser/classifier collaborator types through the public constructor.
 - `src/Contracts/InboundConnectionFactoryInterface.php`, `src/Inbound/PreparedInboundConnection.php`, and `src/Inbound/InboundConnectionFactory.php` — a stable public accepted-stream/bootstrap seam for downstream packages that need to prepare one inbound connection as transport + pipeline + correlation context without ad hoc assembly.
 - `src/Contracts/TransportFactoryInterface.php`, `src/Transport/SocketEndpoint.php`, and `src/Transport/SocketTransportFactory.php` — a stable public transport-construction seam for downstream packages that need to connect from endpoint/config inputs or wrap an already accepted PHP stream without depending on `Internal\Transport\StreamSocketTransport`.
 - Provisional `text/event-xml` normalization support through `EventParser` and the supported `InboundPipeline` facade, backed by constructed fixture coverage and safe typed/fallback behavior.
@@ -35,6 +36,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- `InboundPipeline::withDefaults()` is now the preferred public ingress construction path. Direct constructor collaborator injection remains available for advanced composition, but it is no longer the recommended downstream entry point.
 - The supported public inbound story now includes accepted-stream bootstrap: `InboundConnectionFactoryInterface`, `PreparedInboundConnection`, and `InboundConnectionFactory` are public, while listener ownership, read loops, and session supervision remain outside core.
 - The supported public transport boundary now includes a construction seam: `TransportFactoryInterface`, `SocketEndpoint`, and `SocketTransportFactory` are public, while `Internal\Transport\StreamSocketTransport` remains an implementation detail behind that seam.
 - `ChannelCorrelation` boundary extended in docblock and `docs/correlation.md`: caller ID name/number and channel state are intentionally excluded. Caller ID is display metadata accessed at handler time via `NormalizedEvent` or the typed event. Channel state is a transient snapshot that changes throughout the call and must be maintained in an upper-layer state machine keyed by `uniqueId()`, not captured in the correlation primitive. No code changes were required.

@@ -32,6 +32,24 @@ final class InboundPipeline implements InboundPipelineInterface
     private readonly EventFactoryInterface $eventFactory;
     private readonly ReplyFactory $replyFactory;
 
+    /**
+     * Stable public default-construction path for the supported ingress facade.
+     *
+     * Prefer this named constructor when you want the standard fixture-backed
+     * parser/classifier/event/reply pipeline without coupling to collaborator
+     * implementation details.
+     */
+    public static function withDefaults(): self
+    {
+        return new self();
+    }
+
+    /**
+     * Advanced composition path for callers intentionally overriding the
+     * current parser/classifier/event/reply collaborators.
+     *
+     * For the stable public ingress construction path, prefer withDefaults().
+     */
     public function __construct(
         ?FrameParser $frameParser = null,
         ?InboundMessageClassifier $classifier = null,

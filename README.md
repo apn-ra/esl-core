@@ -87,7 +87,7 @@ See [`docs/architecture.md`](docs/architecture.md) for the full architecture des
 ## Quick start
 
 The supported public surface is centered on typed commands, the inbound decoding facade, normalized/typed events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
-For new integrations, start from `InboundPipeline` and treat lower-level parser/classifier composition as an advanced provisional path.
+For new integrations, start from `InboundPipeline::withDefaults()` for raw byte decoding, `SocketTransportFactory` for endpoint/stream transport construction, and `InboundConnectionFactory` when a listener/runtime has already accepted a stream and needs one supported bootstrap bundle.
 
 ```php
 use Apntalk\EslCore\Commands\AuthCommand;
@@ -103,7 +103,7 @@ use Apntalk\EslCore\Transport\SocketTransportFactory;
 $transport = new InMemoryTransport();
 $transport->write((new AuthCommand('ClueCon'))->serialize());
 
-$inbound = new InboundPipeline();
+$inbound = InboundPipeline::withDefaults();
 $transport->enqueueInbound("Content-Type: auth/request\n\n");
 $messages = $inbound->decode($transport->read(4096) ?? '');
 $messages[0]->isServerAuthRequest(); // true
@@ -115,13 +115,16 @@ $replay = ReplayEnvelopeFactory::withSession($sessionId);
 $socketFactory = new SocketTransportFactory();
 $transport = $socketFactory->connect(SocketEndpoint::tcp('127.0.0.1', 8021));
 
+[$acceptedPhpStream] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
 $acceptedFactory = new InboundConnectionFactory();
 $prepared = $acceptedFactory->prepareAcceptedStream($acceptedPhpStream);
 $prepared->pipeline()->push($prepared->transport()->read(4096) ?? '');
 ```
 
+In production, `$acceptedPhpStream` is provided by your listener/runtime layer after accept. If `prepareAcceptedStream()` is called without a `ConnectionSessionId`, core generates one for that connection and binds it to the returned `CorrelationContext`. That bootstrap step still does not imply listener ownership, a read loop, replay bootstrap integration, or any higher-level session supervision.
+
 If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
-Upper layers should prefer `InboundPipeline` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need wire-level control and accept provisional coupling.
+Upper layers should prefer `InboundPipeline::withDefaults()` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need wire-level control and accept provisional coupling.
 
 ## Current release scope
 

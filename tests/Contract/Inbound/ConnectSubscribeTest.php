@@ -116,7 +116,7 @@ final class ConnectSubscribeTest extends TestCase
 
     public function test_auth_request_frame_decodes_to_server_auth_request_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
 
         $messages = $pipeline->decode(EslFixtureBuilder::authRequest());
 
@@ -127,7 +127,7 @@ final class ConnectSubscribeTest extends TestCase
 
     public function test_auth_accepted_frame_decodes_to_typed_reply_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
 
         $messages = $pipeline->decode(EslFixtureBuilder::authAccepted());
 
@@ -139,7 +139,7 @@ final class ConnectSubscribeTest extends TestCase
 
     public function test_subscription_accepted_frame_decodes_to_command_reply_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
 
         // FreeSWITCH acknowledges event subscriptions with +OK Events Enabled
         $messages = $pipeline->decode(EslFixtureBuilder::commandReplyOk('+OK Events Enabled'));
@@ -153,7 +153,7 @@ final class ConnectSubscribeTest extends TestCase
 
     public function test_auth_rejection_decodes_to_error_reply_through_pipeline(): void
     {
-        $pipeline = new InboundPipeline();
+        $pipeline = InboundPipeline::withDefaults();
 
         $messages = $pipeline->decode(EslFixtureBuilder::authRejected());
 
@@ -170,7 +170,7 @@ final class ConnectSubscribeTest extends TestCase
     public function test_auth_handshake_sequence_through_transport_and_pipeline(): void
     {
         $transport = new InMemoryTransport();
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
 
         // Step 1: Server sends auth/request
         $transport->enqueueInbound(EslFixtureBuilder::authRequest());
@@ -196,7 +196,7 @@ final class ConnectSubscribeTest extends TestCase
     public function test_auth_rejection_is_observable_through_transport_and_pipeline(): void
     {
         $transport = new InMemoryTransport();
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
 
         // Server sends auth/request, client sends auth
         $transport->enqueueInbound(EslFixtureBuilder::authRequest());
@@ -223,7 +223,7 @@ final class ConnectSubscribeTest extends TestCase
     public function test_full_connect_and_subscribe_sequence_through_transport_and_pipeline(): void
     {
         $transport = new InMemoryTransport();
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
 
         // ── auth phase ────────────────────────────────────────────────────────
         $transport->enqueueInbound(EslFixtureBuilder::authRequest());
@@ -259,7 +259,7 @@ final class ConnectSubscribeTest extends TestCase
     public function test_json_subscribe_sequence_is_parallel_to_plain(): void
     {
         $transport = new InMemoryTransport();
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
 
         // Auth phase (abbreviated — pin the different subscription wire bytes)
         $transport->enqueueInbound(EslFixtureBuilder::authRequest());
@@ -288,7 +288,7 @@ final class ConnectSubscribeTest extends TestCase
     public function test_noevents_and_resubscribe_sequence_through_transport_and_pipeline(): void
     {
         $transport = new InMemoryTransport();
-        $pipeline  = new InboundPipeline();
+        $pipeline  = InboundPipeline::withDefaults();
 
         // Abbreviated auth phase
         $transport->enqueueInbound(EslFixtureBuilder::authRequest());

@@ -6,10 +6,12 @@ namespace Apntalk\EslCore\Tests\Contract\Inbound;
 
 use Apntalk\EslCore\Contracts\InboundConnectionFactoryInterface;
 use Apntalk\EslCore\Contracts\InboundPipelineInterface;
+use Apntalk\EslCore\Contracts\TransportFactoryInterface;
 use Apntalk\EslCore\Contracts\TransportInterface;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
+use Apntalk\EslCore\Exceptions\TransportException;
 use Apntalk\EslCore\Inbound\InboundConnectionFactory;
 use Apntalk\EslCore\Inbound\InboundMessageType;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
@@ -62,6 +64,44 @@ final class InboundConnectionFactoryTest extends TestCase
 
         $this->assertNotSame('', $prepared->sessionId()->toString());
         $this->assertTrue($prepared->correlationContext()->sessionId()->equals($prepared->sessionId()));
+    }
+
+    public function test_prepare_accepted_stream_throws_transport_exception_for_invalid_stream_input(): void
+    {
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('valid stream resource');
+
+        $this->factory->prepareAcceptedStream('not-a-stream');
+    }
+
+    public function test_prepare_accepted_stream_propagates_custom_transport_factory_and_preserves_session_id(): void
+    {
+        [$this->transportSide, $this->peerSide] = $this->socketPair();
+
+        $delegate = new class implements TransportFactoryInterface {
+            public $capturedStream = null;
+
+            public function connect(\Apntalk\EslCore\Transport\SocketEndpoint $endpoint): TransportInterface
+            {
+                throw new LogicException('connect() should not be called for accepted-stream bootstrap.');
+            }
+
+            public function fromStream($stream): TransportInterface
+            {
+                $this->capturedStream = $stream;
+
+                return new \Apntalk\EslCore\Transport\InMemoryTransport();
+            }
+        };
+
+        $factory = new InboundConnectionFactory($delegate);
+        $sessionId = ConnectionSessionId::fromString('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
+
+        $prepared = $factory->prepareAcceptedStream($this->transportSide, $sessionId);
+
+        $this->assertSame($this->transportSide, $delegate->capturedStream);
+        $this->assertInstanceOf(\Apntalk\EslCore\Transport\InMemoryTransport::class, $prepared->transport());
+        $this->assertTrue($prepared->sessionId()->equals($sessionId));
     }
 
     public function test_prepared_connection_reads_decodes_and_assigns_metadata_without_ad_hoc_assembly(): void
