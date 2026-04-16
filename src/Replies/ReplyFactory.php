@@ -8,7 +8,6 @@ use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
 use Apntalk\EslCore\Contracts\InboundMessageClassifierInterface;
 use Apntalk\EslCore\Contracts\ReplyInterface;
 use Apntalk\EslCore\Internal\Classification\ClassifiedInboundMessage;
-use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Protocol\Frame;
 

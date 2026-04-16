@@ -22,6 +22,11 @@ use Apntalk\EslCore\Protocol\Frame;
  * Upper-layer integrations should prefer `InboundPipelineInterface` for the
  * supported ingress path. This lower-level contract remains provisional and
  * primarily exists for internal composition and targeted tests.
+ *
+ * The concrete return type remains the current internal classified-message
+ * carrier for compatibility in this release line. Advanced callers that want
+ * to stay on a public read-only contract should treat the result as
+ * `ClassifiedMessageInterface` or prefer `InboundPipelineInterface`.
  */
 interface InboundMessageClassifierInterface
 {

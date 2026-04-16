@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Replies;
 
+use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Replies\ApiReply;
 use Apntalk\EslCore\Replies\AuthAcceptedReply;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
@@ -289,6 +291,73 @@ final class ReplyFactoryTest extends TestCase
         $this->assertSame($fromClassified->frame()->replyText(), $fromClassification->frame()->replyText());
     }
 
+    public function test_from_classification_accepts_public_classified_message_contract_without_internal_carrier(): void
+    {
+        $classified = new class ($this->frame(EslFixtureBuilder::apiResponse("+OK status\n"))) implements ClassifiedMessageInterface {
+            public function __construct(private readonly Frame $frame) {}
+
+            public function frame(): Frame
+            {
+                return $this->frame;
+            }
+
+            public function isAuthRequest(): bool
+            {
+                return false;
+            }
+
+            public function isAuthAccepted(): bool
+            {
+                return false;
+            }
+
+            public function isAuthRejected(): bool
+            {
+                return false;
+            }
+
+            public function isBgapiAccepted(): bool
+            {
+                return false;
+            }
+
+            public function isCommandAccepted(): bool
+            {
+                return false;
+            }
+
+            public function isCommandError(): bool
+            {
+                return false;
+            }
+
+            public function isApiResponse(): bool
+            {
+                return true;
+            }
+
+            public function isEvent(): bool
+            {
+                return false;
+            }
+
+            public function isDisconnectNotice(): bool
+            {
+                return false;
+            }
+
+            public function isUnknown(): bool
+            {
+                return false;
+            }
+        };
+
+        $reply = $this->factory->fromClassification($classified);
+
+        $this->assertInstanceOf(ApiReply::class, $reply);
+        $this->assertSame("+OK status\n", $reply->body());
+    }
+
     // ---------------------------------------------------------------------------
     // Frame preserved on all replies
     // ---------------------------------------------------------------------------
@@ -309,11 +378,16 @@ final class ReplyFactoryTest extends TestCase
 
     private function replyFromFrame(string $fixture): \Apntalk\EslCore\Contracts\ReplyInterface
     {
+        return $this->factory->fromFrame($this->frame($fixture), $this->classifier);
+    }
+
+    private function frame(string $fixture): Frame
+    {
         $this->parser->reset();
         $this->parser->feed($fixture);
         $frames = $this->parser->drain();
         $this->assertCount(1, $frames);
 
-        return $this->factory->fromFrame($frames[0], $this->classifier);
+        return $frames[0];
     }
 }

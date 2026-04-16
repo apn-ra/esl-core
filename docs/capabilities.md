@@ -8,7 +8,7 @@ Capabilities are backed by real tests and documentation. A capability is only de
 
 | Level | Meaning |
 |---|---|
-| `stable` | Implemented, fixture-backed, API is stable |
+| `stable` | Implemented, fixture-backed, and stable at the documented supported seams |
 | `provisional` | Implemented but signature or behavior may change before 1.0 |
 | `unsupported` | Not yet implemented |
 
@@ -20,12 +20,12 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `api-command` | stable | ApiCommand serialization, ApiReply parsing |
 | `bgapi-command` | stable | BgapiCommand, BgapiAcceptedReply, Job-UUID extraction |
 | `inbound-decoding-facade` | stable | `InboundPipeline`, `DecodedInboundMessage`, and the preferred stable raw-byte ingress path without depending on provisional parser/classifier classes directly |
-| `reply-parsing` | stable | Typed reply classes are stable; `ReplyFactory` remains a public advanced bridge for frame/classifier-owned composition rather than the preferred upper-layer ingress path |
+| `reply-parsing` | stable | Typed reply classes are stable; `ReplyFactory` remains a public advanced bridge for frame/classifier-owned composition rather than the preferred upper-layer ingress path. `fromFrame()` and `fromClassification()` are the explicit advanced public bridges, while `fromClassified()` remains available for the older lower-level path |
 | `event-subscription` | stable | EventSubscriptionCommand, FilterCommand, NoEventsCommand |
 | `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values; bridge/playback paths are now backed by curated live plain captures |
 | `event-json-decoding` | stable | EventParser decodes text/event-json into the same NormalizedEvent path; bridge/playback paths are now backed by curated live JSON captures |
 | `event-xml-decoding` | provisional | EventParser decodes bounded `text/event-xml` documents into `NormalizedEvent`; currently backed by constructed fixtures rather than live captures |
-| `normalized-events` | stable | NormalizedEvent, EventClassifier, EventFactory, and typed event families are stable for current selective decoding coverage; `EventFactory` / `EventClassifier` remain advanced public composition bridges rather than the preferred byte-ingress seam |
+| `normalized-events` | stable | NormalizedEvent, `ProvidesNormalizedSubstrateInterface`, EventClassifier, EventFactory, and typed event families are stable for current selective decoding coverage; `EventFactory` / `EventClassifier` remain advanced public composition bridges rather than the preferred byte-ingress seam |
 | `correlation-metadata` | stable | ConnectionSessionId, ObservationSequence, CorrelationContext, metadata envelopes |
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
 | `reconstruction-hook-support` | provisional | ReconstructionHookInterface defined; no registry yet |
@@ -49,6 +49,10 @@ advanced public seams rather than the default downstream integration path.
 For byte ingress and accepted-stream bootstrap, prefer `InboundPipeline`,
 `SocketTransportFactory`, and `InboundConnectionFactory` even when lower-level
 factories or contracts remain public.
+The same distinction applies to classified-message access: the public
+read-only `ClassifiedMessageInterface` is available for advanced composition,
+but `InboundMessageClassifierInterface` itself still remains a provisional
+producer-side seam in this release line.
 
 ## Inspecting capabilities at runtime
 

@@ -36,6 +36,7 @@ Use this checklist when cutting the next pre-`1.0.0` release of `apntalk/esl-cor
 
 ## Post-tag sanity
 
-- Verify CI passes on the tagged commit.
+- Verify CI passes on the release commit or release PR under the currently configured workflow triggers.
+- If tag-triggered CI is later configured, verify it also passes on the tag.
 - Verify Packagist or the chosen distribution channel sees the new tag.
 - Capture any intentionally deferred items for the next pre-`1.0.0` planning pass.

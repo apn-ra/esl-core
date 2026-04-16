@@ -208,7 +208,7 @@ $replayFactory = ReplayEnvelopeFactory::withSession($sessionId);
 // Parse → classify → reply or event → wrap
 
 // Reply path:
-$reply         = $replyFactory->fromClassified($classified);
+$reply         = $replyFactory->fromClassification($classified);
 $replyMetadata = $context->nextMetadataForReply($reply);
 $replyEnvelope = new ReplyEnvelope($reply, $replyMetadata);
 

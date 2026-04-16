@@ -37,7 +37,8 @@ Stability is earned incrementally:
 | Surface | Stability status |
 |---|---|
 | `Contracts\InboundPipelineInterface`, `Contracts\InboundConnectionFactoryInterface`, `Contracts\TransportFactoryInterface` | Stable for the currently documented ingress/bootstrap/transport seams |
-| Low-level ingress composition contracts (`FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface`) | Provisional and intended for advanced fixture-backed composition, not the default downstream ingress path |
+| `Contracts\FrameSerializerInterface` | Stable as an advanced serializer contract, but `CommandInterface::serialize()` remains the preferred command-output path and `Serialization\CommandSerializer` remains internal |
+| Low-level ingress composition contracts (`FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface`) | Provisional and intended for advanced fixture-backed composition, not the default downstream ingress path; `InboundMessageClassifierInterface` still returns the current internal carrier for compatibility, so treat `ClassifiedMessageInterface` plus `ReplyFactory::fromClassification()` as the staged public bridge rather than a hardened producer-side contract |
 | `Commands\*` serialization | Stable after Phase 5 |
 | `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path; `InboundPipeline::withDefaults()` is the preferred stable construction path, while direct constructor injection remains an advanced public seam without an active soft deprecation |
 | `Contracts\InboundConnectionFactoryInterface`, `Inbound\PreparedInboundConnection`, `Inbound\InboundConnectionFactory` | Stable as the supported accepted-stream/bootstrap seam for one inbound connection |

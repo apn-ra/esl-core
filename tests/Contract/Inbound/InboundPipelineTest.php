@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Inbound;
 
+use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
 use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
-use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
 use Apntalk\EslCore\Events\BridgeEvent;
 use Apntalk\EslCore\Events\ChannelLifecycleEvent;

@@ -9,7 +9,8 @@
 ```
 ┌───────────────────────────────────────────────────────┐
 │  Layer 5: Transport boundary                          │
-│  TransportInterface, InMemoryTransport                │
+│  TransportInterface, InMemoryTransport,               │
+│  SocketEndpoint, SocketTransportFactory               │
 │  Internal stream-socket smoke transport               │
 ├───────────────────────────────────────────────────────┤
 │  Layer 4: Replay-safe substrate                       │
@@ -19,7 +20,7 @@
 ├───────────────────────────────────────────────────────┤
 │  Layer 3: Typed domain + Correlation                  │
 │  Commands, Replies, Events, EventFactory,             │
-│  InboundPipeline                                      │
+│  InboundPipeline, InboundConnectionFactory            │
 │  ConnectionSessionId, ObservationSequence             │
 │  JobCorrelation, ChannelCorrelation                   │
 │  MessageMetadata, CorrelationContext                  │
@@ -30,7 +31,7 @@
 │  InboundMessageCategory, ClassifiedInboundMessage     │
 ├───────────────────────────────────────────────────────┤
 │  Layer 1: Wire                                        │
-│  HeaderBag, Frame, FrameParser, CommandSerializer     │
+│  HeaderBag, Frame, FrameParser                        │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -47,7 +48,10 @@ Owns bytes. Knows nothing about protocol semantics beyond structure.
 - `HeaderBag` — immutable, case-insensitive header store
 - `Frame` — a parsed ESL frame (headers + raw body bytes)
 - `FrameParser` — incremental stateful parser; handles partial reads
-- `CommandSerializer` — serializes `CommandInterface` → wire bytes
+- `FrameSerializerInterface` — public advanced serializer contract for callers
+  that intentionally abstract command-to-wire encoding
+- `CommandSerializer` — internal serializer adapter backing the current
+  contract/fixture path
 
 Key invariants:
 - `FrameParser` is transport-neutral: it does not own I/O
@@ -74,6 +78,7 @@ Key invariants:
 - Auth failure vs command error cannot be distinguished at this layer (session state required)
 
 Downstream packages should treat this layer as descriptive of the protocol substrate, not as the preferred integration entry point for raw bytes. The supported ingress facade remains `InboundPipeline`.
+For advanced composition, the current staged public bridge starts after classification: callers can consume the classifier result through `Contracts\ClassifiedMessageInterface` and hand it to `ReplyFactory::fromClassification()`, but the classifier return contract itself is still provisional.
 
 ---
 
@@ -89,8 +94,15 @@ All implement `CommandInterface`. Serialization is on the command itself:
 - `EventSubscriptionCommand`, `FilterCommand`, `NoEventsCommand`, `ExitCommand`
 - `RawCommand` (escape hatch — must end with `\n\n`)
 
+The preferred public command-serialization path is `CommandInterface::serialize()`.
+`Contracts\FrameSerializerInterface` exists as an advanced public seam for
+callers that intentionally want a serializer abstraction, while the current
+`Serialization\CommandSerializer` implementation remains internal.
+
 ### Replies
-All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
+All implement `ReplyInterface`. Produced through `ReplyFactory` on the advanced
+reply bridge (`fromFrame()`, `fromClassification()`, or the older
+`fromClassified()` path):
 - `AuthAcceptedReply`, `CommandReply`, `ErrorReply`
 - `BgapiAcceptedReply`, `ApiReply`, `UnknownReply`
 

@@ -15,7 +15,7 @@ Use this table as the downstream integration shortcut:
 | Posture | What belongs here | Current examples |
 |---|---|---|
 | Preferred public seams | The default downstream path this package wants upper layers to adopt | `InboundPipeline::withDefaults()`, `InboundConnectionFactory::prepareAcceptedStream()`, `SocketTransportFactory`, typed commands/replies/events, `CorrelationContext`, `ReplayEnvelopeFactory` |
-| Advanced public seams | Public composition points that remain supported, but expose more concrete/provisional coupling than the preferred path | `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, `FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface` |
+| Advanced public seams | Public composition points that remain supported, but expose more concrete/provisional coupling than the preferred path | `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, `FrameSerializerInterface`, `FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface` |
 | Internal/provisional seams | Repository implementation details or non-default early-adopter surfaces that may change more freely before `1.0.0` | `Parsing\*`, `Internal\*`, most of `Protocol\*`, internal transport smoke helpers |
 
 Stable capability support and seam posture are related but distinct. A feature can be stable while some lower-level ways of composing that feature remain advanced or provisional.
@@ -76,6 +76,7 @@ These are the core interfaces intended for consumers and upper-layer packages:
 ```
 Contracts\CommandInterface
 Contracts\ClassifiedMessageInterface
+Contracts\FrameSerializerInterface
 Contracts\InboundConnectionFactoryInterface
 Contracts\InboundPipelineInterface
 Contracts\ProvidesNormalizedSubstrateInterface
@@ -90,12 +91,16 @@ Contracts\TransportInterface
 Contracts\TransportFactoryInterface
 ```
 
-Lower-level ingress-adjacent contracts such as `FrameParserInterface`,
-`EventParserInterface`, and `InboundMessageClassifierInterface` remain present in
-`Contracts\*`, but they should be treated as advanced/provisional composition
-points rather than the default supported upper-layer integration surface.
+Lower-level composition contracts such as `FrameSerializerInterface`,
+`FrameParserInterface`, `EventParserInterface`, and
+`InboundMessageClassifierInterface` remain present in `Contracts\*`, but they
+should be treated as advanced/provisional composition points rather than the
+default supported upper-layer integration surface.
 Current parser and classifier implementations still exist in the repository and remain fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` stay intentionally outside the supported pre-`1.0.0` public API boundary.
-Upper layers should prefer `Inbound\InboundPipeline` rather than composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly.
+Upper layers should prefer `CommandInterface::serialize()` for command output
+and `Inbound\InboundPipeline` for byte ingress rather than composing
+`Serialization\CommandSerializer`, `FrameParser`, `InboundMessageClassifier`,
+`ReplyFactory`, and `EventFactory` directly.
 
 For downstream packages, the practical split is:
 
@@ -155,6 +160,7 @@ These items are being documented for future hardening, not redesigned in this pa
 - `ReplyFactory::fromFrame()` is now the explicit advanced reply bridge for frame-owned composition, while `fromClassification()` is the additive public classified-message bridge. `fromClassified()` and the classifier interface still remain more provisional and lower-level.
 - `ReplyFactory`, `EventFactory`, and `EventClassifier` remain public advanced bridges and are not being promoted into the mainstream downstream ingress story.
 - `Contracts\ClassifiedMessageInterface` is the public read-only contract for advanced classified-message access. `InboundMessageClassifierInterface` still returns the current internal carrier for compatibility, but that carrier now implements the public contract.
+- No new producer-side classifier interface is added in this release line. Changing `InboundMessageClassifierInterface::classify()` would create avoidable churn for existing advanced implementations and callers, so the staged migration path is to consume current classifier output through `Contracts\ClassifiedMessageInterface` and `ReplyFactory::fromClassification()` instead.
 - `FrameParserInterface`, `EventParserInterface`, and `InboundMessageClassifierInterface` remain public-but-provisional until downstream usage proves they deserve stronger compatibility guarantees.
 - `DecodedInboundMessage::normalizedEvent()` remains the supported normalized-event substrate access point for downstream byte-ingress consumers, while `Contracts\ProvidesNormalizedSubstrateInterface` is the explicit additive contract for callers that already own a typed event instance; no new classified-message or parser-owned public seam is added in this pass.
 
