@@ -90,6 +90,8 @@ The supported public surface is centered on typed commands, the inbound decoding
 For new integrations, start from `InboundPipeline::withDefaults()` for raw byte decoding, `SocketTransportFactory` for endpoint/stream transport construction, and `InboundConnectionFactory` when a listener/runtime has already accepted a stream and needs one supported bootstrap bundle.
 Direct `InboundPipeline::__construct(...)` collaborator injection and parser/classifier/reply-factory composition remain available for advanced fixture-backed work, but they are not the preferred downstream ingress path at this checkpoint and are not being soft-deprecated in this release line.
 
+For one concise downstream integration map, see [`docs/downstream-integration.md`](docs/downstream-integration.md).
+
 ### Downstream integration map
 
 For packages such as `apntalk/laravel-freeswitch-esl`, the supported integration choices are:
@@ -234,6 +236,7 @@ That means:
 - [`docs/fixtures.md`](docs/fixtures.md)
 - [`docs/replay-primitives.md`](docs/replay-primitives.md)
 - [`docs/public-api.md`](docs/public-api.md)
+- [`docs/downstream-integration.md`](docs/downstream-integration.md)
 - [`docs/stability-policy.md`](docs/stability-policy.md)
 - [`docs/capabilities.md`](docs/capabilities.md)
 - [`docs/release-checklist.md`](docs/release-checklist.md)
