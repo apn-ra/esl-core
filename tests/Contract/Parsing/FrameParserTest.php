@@ -9,7 +9,11 @@ use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Contract tests for FrameParser behavior against deterministic fixtures.
+ * Contract tests for the low-level frame parser seam against deterministic
+ * fixtures.
+ *
+ * These tests intentionally pin a provisional composition surface. They do not
+ * redefine the preferred downstream ingress path, which is InboundPipeline.
  */
 final class FrameParserTest extends TestCase
 {

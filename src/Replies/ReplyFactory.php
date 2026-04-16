@@ -13,6 +13,13 @@ use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
  *
  * This is the bridge between the classification layer and the typed reply layer.
  * Event messages are NOT handled here; pass them to EventParser instead.
+ *
+ * This class remains public for callers that intentionally own lower-level
+ * frame/classifier composition, but it is not the preferred raw-byte ingress
+ * path for upper layers. For the stable default decode seam, prefer
+ * InboundPipeline::withDefaults().
+ *
+ * @api
  */
 final class ReplyFactory
 {

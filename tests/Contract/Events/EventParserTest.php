@@ -19,6 +19,12 @@ use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Fixture-backed coverage for the lower-level event parsing path.
+ *
+ * These tests intentionally exercise advanced/provisional collaborators rather
+ * than the preferred byte-ingress facade.
+ */
 final class EventParserTest extends TestCase
 {
     private FrameParser $frameParser;

@@ -16,6 +16,13 @@ use Apntalk\EslCore\Replies\UnknownReply;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Contract coverage for the lower-level typed reply bridge.
+ *
+ * ReplyFactory remains public, but this test class intentionally exercises the
+ * advanced frame/classifier-owned composition path instead of the preferred
+ * InboundPipeline ingress facade.
+ */
 final class ReplyFactoryTest extends TestCase
 {
     private FrameParser $parser;

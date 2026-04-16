@@ -90,6 +90,11 @@ All implement `ReplyInterface`. Produced via `ReplyFactory::fromClassified()`:
 - `AuthAcceptedReply`, `CommandReply`, `ErrorReply`
 - `BgapiAcceptedReply`, `ApiReply`, `UnknownReply`
 
+`ReplyFactory` remains a public lower-level bridge for callers that already own
+frame/classifier composition, but it is not the preferred raw-byte ingress path.
+`InboundPipeline::withDefaults()` is the preferred public ingress construction
+path for upper layers.
+
 ### Events
 Event parsing: supported event formats (`text/event-plain`, `text/event-json`, provisional `text/event-xml`) → `NormalizedEvent` (via `EventParser`)
 Classification: `NormalizedEvent` → typed event (via `EventClassifier`)
@@ -108,7 +113,7 @@ Key invariants:
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
 - `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
-- `InboundPipeline::withDefaults()` is the preferred stable ingress construction path; direct constructor collaborator injection remains an advanced composition path
+- `InboundPipeline::withDefaults()` is the preferred stable ingress construction path; direct constructor collaborator injection remains an advanced composition path that currently couples to provisional concrete collaborators
 - `InboundConnectionFactory` prepares one accepted stream but does not own listener loops, session supervision, or transport lifecycle beyond bootstrap
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 
@@ -192,7 +197,7 @@ Key invariants:
 | `Apntalk\EslCore\Capabilities` | Public API |
 | `Apntalk\EslCore\Exceptions` | Public API |
 | `Apntalk\EslCore\Transport` | Public API |
-| `Apntalk\EslCore\Protocol` | Internal (wire primitives) |
+| `Apntalk\EslCore\Protocol` | Mixed: `Frame` and `HeaderBag` are public substrate value objects; the remaining wire-layer namespace is internal |
 | `Apntalk\EslCore\Parsing` | Internal |
 | `Apntalk\EslCore\Serialization` | Internal |
 | `Apntalk\EslCore\Internal` | Permanently unstable |

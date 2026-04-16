@@ -152,6 +152,39 @@ final class InboundConnectionFactoryTest extends TestCase
         $this->assertSame('a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78', $eventEnvelope->channelCorrelation()?->uniqueId());
     }
 
+    public function test_prepared_connection_handles_fragmented_reads_and_finish_through_supported_bootstrap_seam(): void
+    {
+        [$this->transportSide, $this->peerSide] = $this->socketPair();
+
+        $prepared = $this->factory->prepareAcceptedStream($this->transportSide);
+        $payload = EslFixtureBuilder::authAccepted()
+            . EslFixtureBuilder::backgroundJobEvent('7f4db0f2-b848-4b0a-b3cf-559bdca96b38', "+OK queued\n");
+
+        foreach (str_split($payload, 9) as $fragment) {
+            fwrite($this->peerSide, $fragment);
+        }
+
+        fclose($this->peerSide);
+        $this->peerSide = null;
+
+        $decoded = [];
+
+        while (($chunk = $prepared->transport()->read(7)) !== null) {
+            if ($chunk === '') {
+                continue;
+            }
+
+            $prepared->pipeline()->push($chunk);
+            array_push($decoded, ...$prepared->pipeline()->drain());
+        }
+
+        $prepared->pipeline()->finish();
+
+        $this->assertCount(2, $decoded);
+        $this->assertSame(InboundMessageType::Reply, $decoded[0]->type());
+        $this->assertSame(InboundMessageType::Event, $decoded[1]->type());
+    }
+
     /**
      * @return array{resource, resource}
      */

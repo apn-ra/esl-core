@@ -88,18 +88,21 @@ See [`docs/architecture.md`](docs/architecture.md) for the full architecture des
 
 The supported public surface is centered on typed commands, the inbound decoding facade, normalized/typed events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
 For new integrations, start from `InboundPipeline::withDefaults()` for raw byte decoding, `SocketTransportFactory` for endpoint/stream transport construction, and `InboundConnectionFactory` when a listener/runtime has already accepted a stream and needs one supported bootstrap bundle.
+Direct `InboundPipeline::__construct(...)` collaborator injection and parser/classifier/reply-factory composition remain available for advanced fixture-backed work, but they are not the preferred downstream ingress path at this checkpoint and are not being soft-deprecated in this release line.
+
+### Preferred ingress facade
+
+Use `InboundPipeline::withDefaults()` when you need the supported raw-byte decode path without coupling to the current parser/classifier implementation details.
 
 ```php
 use Apntalk\EslCore\Commands\AuthCommand;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
-use Apntalk\EslCore\Inbound\InboundConnectionFactory;
 use Apntalk\EslCore\Inbound\InboundPipeline;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Transport\InMemoryTransport;
-use Apntalk\EslCore\Transport\SocketEndpoint;
-use Apntalk\EslCore\Transport\SocketTransportFactory;
 
+// InMemoryTransport is a test/smoke transport, not a runtime owner.
 $transport = new InMemoryTransport();
 $transport->write((new AuthCommand('ClueCon'))->serialize());
 
@@ -111,9 +114,26 @@ $messages[0]->isServerAuthRequest(); // true
 $sessionId = ConnectionSessionId::generate();
 $correlation = new CorrelationContext($sessionId);
 $replay = ReplayEnvelopeFactory::withSession($sessionId);
+```
+
+### Preferred transport construction seam
+
+Use `SocketTransportFactory` when you need core to create or wrap a real byte-stream transport while keeping lifecycle policy outside `esl-core`.
+
+```php
+use Apntalk\EslCore\Transport\SocketEndpoint;
+use Apntalk\EslCore\Transport\SocketTransportFactory;
 
 $socketFactory = new SocketTransportFactory();
 $transport = $socketFactory->connect(SocketEndpoint::tcp('127.0.0.1', 8021));
+```
+
+### Accepted-stream bootstrap seam
+
+Use `InboundConnectionFactory` when your listener/runtime has already accepted a PHP stream and now needs the supported core bootstrap bundle.
+
+```php
+use Apntalk\EslCore\Inbound\InboundConnectionFactory;
 
 [$acceptedPhpStream] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
 $acceptedFactory = new InboundConnectionFactory();
@@ -124,7 +144,7 @@ $prepared->pipeline()->push($prepared->transport()->read(4096) ?? '');
 In production, `$acceptedPhpStream` is provided by your listener/runtime layer after accept. If `prepareAcceptedStream()` is called without a `ConnectionSessionId`, core generates one for that connection and binds it to the returned `CorrelationContext`. That bootstrap step still does not imply listener ownership, a read loop, replay bootstrap integration, or any higher-level session supervision.
 
 If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
-Upper layers should prefer `InboundPipeline::withDefaults()` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need wire-level control and accept provisional coupling.
+Upper layers should prefer `InboundPipeline::withDefaults()` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need frame-level control and accept provisional coupling to lower-level collaborators.
 
 ## Current release scope
 
@@ -158,7 +178,7 @@ This smoke path exercises the supported inbound facade together with the typed c
 
 ## v0.2 status
 
-The repository is now positioned as **v0.2 release-ready core hardening completed, pending maintainer release decision**.
+The repository is now positioned as **a small pre-`1.0.0` release checkpoint with the core seams in place and residual provisional surfaces explicitly documented**.
 That means:
 
 - the supported ingress contract is explicit and documented around `InboundPipeline`

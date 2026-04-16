@@ -14,6 +14,12 @@ use Apntalk\EslCore\Replies\ReplyFactory;
 use Apntalk\EslCore\Tests\Fixtures\FixtureLoader;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Live-fixture coverage for the lower-level reply bridge.
+ *
+ * This class intentionally validates advanced reply composition behavior
+ * without implying that ReplyFactory is the preferred upper-layer ingress path.
+ */
 final class LiveReplyFixtureTest extends TestCase
 {
     private FrameParser $parser;

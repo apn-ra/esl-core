@@ -30,6 +30,12 @@ use Apntalk\EslCore\Transport\InMemoryTransport;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Stress coverage for low-level protocol composition under noisy inputs.
+ *
+ * This class intentionally exercises provisional parser/classifier/reply/event
+ * assembly and should not be read as the preferred downstream integration path.
+ */
 final class ProtocolChaosTest extends TestCase
 {
     private const JOB_UUID = '7f4db0f2-b848-4b0a-b3cf-559bdca96b38';

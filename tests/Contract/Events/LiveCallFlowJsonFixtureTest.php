@@ -27,6 +27,10 @@ use PHPUnit\Framework\TestCase;
  * Verifies curated live text/event-json frames promoted from the controlled
  * loopback call-flow smoke run.
  *
+ * This class intentionally uses lower-level parser/classifier/event-factory
+ * assembly to harden fixture truth, not to redefine the preferred downstream
+ * ingress path, which remains InboundPipeline.
+ *
  * Source captures:
  * - tools/smoke/captures/20260414T070855Z-call-flow-json-009-full-frame-8cd0c2e0.esl
  * - tools/smoke/captures/20260414T070855Z-call-flow-json-010-full-frame-5c316866.esl

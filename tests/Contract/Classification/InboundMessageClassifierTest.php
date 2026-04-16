@@ -10,6 +10,13 @@ use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Fixture-backed tests for the lower-level classifier seam.
+ *
+ * This class exists to pin truthful classification behavior for advanced
+ * composition and internal coverage, not to suggest the preferred upper-layer
+ * ingress path.
+ */
 final class InboundMessageClassifierTest extends TestCase
 {
     private InboundMessageClassifier $classifier;

@@ -27,6 +27,14 @@ use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use Apntalk\EslCore\Transport\InMemoryTransport;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Integration coverage for advanced low-level composition on top of the public
+ * in-memory transport.
+ *
+ * The preferred downstream ingress path is still InboundPipeline; this class
+ * exists to harden the lower-level parser/classifier/reply/event composition
+ * that remains available for targeted fixture-backed work.
+ */
 final class InMemoryTransportPipelineTest extends TestCase
 {
     private const JOB_UUID = '7f4db0f2-b848-4b0a-b3cf-559bdca96b38';

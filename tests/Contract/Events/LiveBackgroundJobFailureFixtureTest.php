@@ -30,6 +30,9 @@ use PHPUnit\Framework\TestCase;
  * Promoted to: tests/Fixtures/live/events/background-job-no-route-destination-plain.esl
  *
  * This test validates the current package behavior honestly.
+ * It intentionally uses lower-level parser/classifier/event-factory assembly
+ * to pin fixture truth rather than to suggest the preferred downstream ingress
+ * path.
  * It does not add new typed-event expectations.
  * Bridge/playback event expectations remain deferred pending a successful PBX rerun.
  */

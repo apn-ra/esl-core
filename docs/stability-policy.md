@@ -36,20 +36,22 @@ Stability is earned incrementally:
 
 | Surface | Stability status |
 |---|---|
-| `Contracts\*` interfaces | Provisional until fixture-validated |
+| `Contracts\InboundPipelineInterface`, `Contracts\InboundConnectionFactoryInterface`, `Contracts\TransportFactoryInterface` | Stable for the currently documented ingress/bootstrap/transport seams |
+| Low-level ingress composition contracts (`FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface`) | Provisional and intended for advanced fixture-backed composition, not the default downstream ingress path |
 | `Commands\*` serialization | Stable after Phase 5 |
-| `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path; `InboundPipeline::withDefaults()` is the preferred stable construction path |
+| `Inbound\InboundPipeline`, `DecodedInboundMessage`, `InboundMessageType` | Stable for the currently supported inbound byte-stream → typed message path; `InboundPipeline::withDefaults()` is the preferred stable construction path, while direct constructor injection remains an advanced public seam without an active soft deprecation |
 | `Contracts\InboundConnectionFactoryInterface`, `Inbound\PreparedInboundConnection`, `Inbound\InboundConnectionFactory` | Stable as the supported accepted-stream/bootstrap seam for one inbound connection |
-| `Replies\*` parsing | Stable after Phase 5 |
+| `Replies\*` parsing | Stable after Phase 5; `ReplyFactory` remains public as an advanced frame/classifier-owned composition bridge, while `InboundPipeline` is the preferred upper-layer decode seam |
 | `Events\NormalizedEvent` | Stable for current substrate invariants; format coverage is stable for `text/event-plain` / `text/event-json` and provisional for `text/event-xml` |
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Capability::EventXmlDecoding` / XML normalized event decoding | Provisional pending broader evidence than the current constructed-fixture corpus |
 | `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |
 | `Replay\*` envelope shape | Provisional until Phase 8 complete |
 | `TransportInterface`, `Contracts\TransportFactoryInterface`, `Transport\InMemoryTransport`, `Transport\SocketEndpoint`, `Transport\SocketTransportFactory` | Stable as the minimal transport boundary and supported transport-construction seam for testing, endpoint-based connect, and wrapping accepted PHP stream resources |
+| `Protocol\Frame`, `Protocol\HeaderBag` | Stable substrate value objects because public reply/event contracts expose them directly |
 | `Internal\Transport\StreamSocketTransport` | Internal-only smoke-path support; deliberately outside the public API boundary |
 | Concrete inbound parser/classifier implementations (`Parsing\*`, `Internal\Classification\*`) | Provisional and intentionally outside the stable public API boundary; upper layers should not treat them as the primary ingress contract |
-| `Internal\*` | Permanently unstable — not covered by SemVer |
+| Remaining `Protocol\*` and `Internal\*` | Permanently unstable — not covered by SemVer |
 
 ## Adding new protocol fixtures
 

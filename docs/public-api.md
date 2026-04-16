@@ -2,9 +2,15 @@
 
 This document defines the public API boundary for `apntalk/esl-core`.
 
+The repository uses three consumer postures:
+
+- Preferred public seams: the default downstream integration paths this package wants callers to start from.
+- Advanced public seams: public types that remain available for lower-level composition, but expose more concrete or provisional coupling than the preferred path.
+- Internal/provisional seams: implementation detail or pre-1.0 composition surfaces that may change without the same compatibility expectations.
+
 ## What counts as public API
 
-A type, interface, class, or constant is part of the public API when it lives in one of the following namespaces AND is not marked `@internal`:
+A type, interface, class, or constant is part of the public API when it lives in one of the following namespaces AND is not marked `@internal`, or when it is explicitly exposed by a public contract and marked `@api`:
 
 | Namespace | Contents |
 |---|---|
@@ -19,18 +25,23 @@ A type, interface, class, or constant is part of the public API when it lives in
 | `Apntalk\EslCore\Exceptions` | Exception hierarchy |
 | `Apntalk\EslCore\Transport` | Minimal transport boundary intended for testing and narrow smoke-path use |
 
+Two protocol substrate value objects are also public because public contracts expose them directly:
+
+- `Protocol\Frame`
+- `Protocol\HeaderBag`
+
 ## What is NOT public API
 
 The following are explicitly unstable and subject to change without notice before `1.0.0`:
 
 - `Apntalk\EslCore\Internal\*` — Implementation details. Do not depend on these.
-- `Apntalk\EslCore\Protocol\*` — Wire-layer primitives. Used internally; not a stable consumer surface.
+- `Apntalk\EslCore\Protocol\*` except `Protocol\Frame` and `Protocol\HeaderBag` — Wire-layer primitives. Used internally; not a stable consumer surface.
 - `Apntalk\EslCore\Parsing\*` — Parser implementations. Treat as internal.
 - `Apntalk\EslCore\Serialization\*` — Serializer implementations. Treat as internal.
 - Any class or interface marked `@internal`.
 
 Even when a low-level contract lives in `Contracts\*`, callers should distinguish
-between the supported ingress contract and the provisional low-level ingress
+between the preferred public seam and advanced or provisional lower-level
 building blocks. For upper-layer byte ingestion, `Inbound\InboundPipeline` is the
 supported path.
 
@@ -78,7 +89,9 @@ Upper layers should prefer `Inbound\InboundPipeline` rather than composing `Fram
 All command classes in `Apntalk\EslCore\Commands\*` are public.
 
 ### Replies
-All reply classes in `Apntalk\EslCore\Replies\*`, plus `ReplyFactory`, are public.
+All reply classes in `Apntalk\EslCore\Replies\*` are public.
+`ReplyFactory` also remains public, but it is an advanced reply-composition bridge rather than the preferred raw-byte ingress surface. Its current `fromClassified()` input is tied to the lower-level classified-message path, so downstream callers that want the disciplined stable default should prefer `InboundPipeline`.
+No soft deprecation is active for `ReplyFactory` in this release line; the hardening change here is clearer posture, not API churn.
 
 ### Events
 `NormalizedEvent`, `RawEvent`, and typed event families are public.
@@ -94,6 +107,7 @@ it has broader evidence than the current constructed fixture corpus.
 `Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, `Inbound\InboundMessageType`, `Inbound\PreparedInboundConnection`, and `Inbound\InboundConnectionFactory` are public.
 These types form the supported inbound decoding facade for raw byte ingestion, typed reply/event decoding, normalized-event access, auth-request/disconnect notices, and safe fallback to `RawEvent` / `UnknownReply` where appropriate.
 `InboundPipeline::withDefaults()` is the preferred stable construction path for that facade. Direct constructor collaborator injection remains available for advanced composition, but it is not the preferred public ingress path before `1.0.0`.
+No soft deprecation is active for `InboundPipeline::__construct(...)` in this release line; the hardening change here is clearer usage guidance, not constructor churn.
 `InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`. If no `ConnectionSessionId` is supplied, the factory generates one for the connection.
 For release-boundary purposes, this is the dominant supported ingress contract.
 
@@ -105,6 +119,10 @@ All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
 `SocketTransportFactory` is the supported public construction seam for real byte-stream transports. It can either connect from a `SocketEndpoint` or wrap an already-open PHP stream resource while still returning only `TransportInterface`. Invalid or closed stream inputs fail with `TransportException`.
 This does not imply reconnect, scheduling, supervision, or broader transport-runtime ownership in core.
 The new stream/socket smoke-path transport remains internal-only under `Internal\Transport\*`; it exists to validate realistic byte-stream behavior, not to widen the supported transport API.
+
+### Protocol substrate exceptions
+`Protocol\Frame` and `Protocol\HeaderBag` are stable substrate value objects because they are exposed by public reply/event contracts.
+They should not be treated as a signal that the rest of `Protocol\*` is public. The surrounding parser and classifier pipeline remains advanced/provisional outside the preferred ingress facade.
 
 The error taxonomy is intentionally layered:
 - `TransportException` covers I/O/connection failures only

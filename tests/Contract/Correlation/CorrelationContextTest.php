@@ -19,6 +19,14 @@ use Apntalk\EslCore\Replies\ReplyFactory;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Contract coverage for correlation primitives using lower-level fixture-backed
+ * reply/event composition.
+ *
+ * The preferred downstream raw-byte ingress path is still InboundPipeline.
+ * These tests intentionally exercise advanced collaborators so correlation
+ * behavior stays pinned even when callers own frame-level assembly.
+ */
 final class CorrelationContextTest extends TestCase
 {
     private const JOB_UUID    = '7f4db0f2-b848-4b0a-b3cf-559bdca96b38';

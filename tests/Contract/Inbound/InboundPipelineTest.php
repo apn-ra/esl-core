@@ -226,4 +226,14 @@ final class InboundPipelineTest extends TestCase
         $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
         $this->assertInstanceOf(AuthAcceptedReply::class, $messages[0]->reply());
     }
+
+    public function test_direct_constructor_remains_usable_for_advanced_public_composition(): void
+    {
+        $pipeline = new InboundPipeline();
+        $messages = $pipeline->decode(EslFixtureBuilder::authAccepted());
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
+        $this->assertInstanceOf(AuthAcceptedReply::class, $messages[0]->reply());
+    }
 }

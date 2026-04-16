@@ -20,7 +20,9 @@ use Apntalk\EslCore\Replies\UnknownReply;
  *
  * This facade composes the current parser, classifier, reply factory, and
  * event factory internally so upper layers can depend on one supported
- * ingress surface instead of provisional concrete internals.
+ * ingress surface instead of provisional concrete internals. Prefer
+ * InboundPipeline::withDefaults() for the stable default construction path;
+ * direct constructor injection remains an advanced public composition seam.
  *
  * @api
  */
@@ -49,6 +51,9 @@ final class InboundPipeline implements InboundPipelineInterface
      * current parser/classifier/event/reply collaborators.
      *
      * For the stable public ingress construction path, prefer withDefaults().
+     * This constructor remains public for lower-level fixture-backed
+     * composition, but its collaborator types are more concrete and more
+     * provisional than the default facade path before 1.0.0.
      */
     public function __construct(
         ?FrameParser $frameParser = null,

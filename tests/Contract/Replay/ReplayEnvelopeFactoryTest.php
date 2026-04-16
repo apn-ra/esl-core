@@ -20,6 +20,13 @@ use Apntalk\EslCore\Replies\ReplyFactory;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Contract coverage for replay-envelope export using lower-level fixture-backed
+ * reply/event assembly.
+ *
+ * These tests harden replay substrate behavior without implying that
+ * parser/classifier/reply-factory composition is the preferred ingress path.
+ */
 final class ReplayEnvelopeFactoryTest extends TestCase
 {
     public function test_from_reply_envelope_uses_correlation_sequence_and_timestamp(): void
