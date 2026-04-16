@@ -101,6 +101,11 @@ Classification: `NormalizedEvent` → typed event (via `EventClassifier`)
 Composition: `EventFactory` combines both steps.
 Public ingress: `InboundPipeline` composes framing + classification + reply/event decoding for upper layers that should not depend on the provisional concrete parser/classifier classes directly.
 
+`EventFactory` and `EventClassifier` remain public lower-level bridges for
+callers that already own a `Frame` or `NormalizedEvent`, but they are not the
+preferred raw-byte ingress path. `InboundPipeline::withDefaults()` remains the
+dominant supported byte-ingress construction path for upper layers.
+
 - `NormalizedEvent` — normalized header access + raw body, preserving whether the source format was URL-encoded
 - `RawEvent` — unknown event safe degradation (wraps `NormalizedEvent`)
 - `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, `CustomEvent`
@@ -113,6 +118,7 @@ Key invariants:
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
 - `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
+- `EventFactory` / `EventClassifier` remain available for advanced frame/normalized-event composition, not as the default upstream byte-ingress story
 - `InboundPipeline::withDefaults()` is the preferred stable ingress construction path; direct constructor collaborator injection remains an advanced composition path that currently couples to provisional concrete collaborators
 - `InboundConnectionFactory` prepares one accepted stream but does not own listener loops, session supervision, or transport lifecycle beyond bootstrap
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`

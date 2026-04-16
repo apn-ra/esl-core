@@ -25,7 +25,7 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `event-plain-decoding` | stable | EventParser decodes text/event-plain, URL-decodes values; bridge/playback paths are now backed by curated live plain captures |
 | `event-json-decoding` | stable | EventParser decodes text/event-json into the same NormalizedEvent path; bridge/playback paths are now backed by curated live JSON captures |
 | `event-xml-decoding` | provisional | EventParser decodes bounded `text/event-xml` documents into `NormalizedEvent`; currently backed by constructed fixtures rather than live captures |
-| `normalized-events` | stable | NormalizedEvent, EventClassifier, typed event families; current live-backed bridge/playback evidence covers both plain and json formats |
+| `normalized-events` | stable | NormalizedEvent, EventClassifier, EventFactory, and typed event families are stable for current selective decoding coverage; `EventFactory` / `EventClassifier` remain advanced public composition bridges rather than the preferred byte-ingress seam |
 | `correlation-metadata` | stable | ConnectionSessionId, ObservationSequence, CorrelationContext, metadata envelopes |
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
 | `reconstruction-hook-support` | provisional | ReconstructionHookInterface defined; no registry yet |

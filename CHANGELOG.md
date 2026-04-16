@@ -14,6 +14,8 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Added
 
+- `tests/Integration/SocketTransportFactoryPipelineTest` — a public-path integration proof for the supported `SocketTransportFactory::connect()` + `InboundPipeline::withDefaults()` composition over a real local TCP socket, including fragmented inbound decode and typed bgapi acceptance/completion assertions.
+- `tests/Contract/Events/EventFactoryTest` — focused contract coverage for the public-but-advanced `EventFactory` bridge, mirroring the reply-side tiering proof without promoting it to the preferred raw-byte ingress path.
 - `InboundPipeline::withDefaults()` — a stable named construction path for the supported ingress facade, reducing the need for downstream packages to couple to concrete parser/classifier collaborator types through the public constructor.
 - `src/Contracts/InboundConnectionFactoryInterface.php`, `src/Inbound/PreparedInboundConnection.php`, and `src/Inbound/InboundConnectionFactory.php` — a stable public accepted-stream/bootstrap seam for downstream packages that need to prepare one inbound connection as transport + pipeline + correlation context without ad hoc assembly.
 - `src/Contracts/TransportFactoryInterface.php`, `src/Transport/SocketEndpoint.php`, and `src/Transport/SocketTransportFactory.php` — a stable public transport-construction seam for downstream packages that need to connect from endpoint/config inputs or wrap an already accepted PHP stream without depending on `Internal\Transport\StreamSocketTransport`.
@@ -36,6 +38,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- `EventFactory` and `EventClassifier` remain public as advanced event-composition bridges for callers that already own a `Frame` or `NormalizedEvent`, but they are not the preferred byte-ingress seam. The preferred upper-layer raw-byte path remains `InboundPipeline::withDefaults()`.
 - `InboundPipeline::withDefaults()` is now the preferred public ingress construction path. Direct constructor collaborator injection remains available for advanced composition, but it is no longer the recommended downstream entry point.
 - The supported public inbound story now includes accepted-stream bootstrap: `InboundConnectionFactoryInterface`, `PreparedInboundConnection`, and `InboundConnectionFactory` are public, while listener ownership, read loops, and session supervision remain outside core.
 - The supported public transport boundary now includes a construction seam: `TransportFactoryInterface`, `SocketEndpoint`, and `SocketTransportFactory` are public, while `Internal\Transport\StreamSocketTransport` remains an implementation detail behind that seam.

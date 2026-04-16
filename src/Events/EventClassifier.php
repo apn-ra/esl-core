@@ -12,6 +12,10 @@ use Apntalk\EslCore\Contracts\EventInterface;
  * Returns the most specific typed event available for a known event name.
  * Unknown event names degrade to RawEvent — never throws on unknown names.
  *
+ * This classifier remains public as an advanced normalized-event composition
+ * helper. It is appropriate when a caller already owns a NormalizedEvent, but
+ * it is not the preferred raw-byte ingress path for upper layers.
+ *
  * The typed event families are:
  * - BackgroundJobEvent:    BACKGROUND_JOB
  * - ChannelLifecycleEvent: CHANNEL_CREATE, CHANNEL_DESTROY, CHANNEL_STATE,

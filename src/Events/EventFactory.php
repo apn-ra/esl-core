@@ -16,6 +16,11 @@ use Apntalk\EslCore\Protocol\Frame;
  * Combines EventParser (frame → NormalizedEvent) with EventClassifier
  * (NormalizedEvent → typed EventInterface).
  *
+ * This class remains public for callers that intentionally own lower-level
+ * frame or normalized-event composition, but it is not the preferred raw-byte
+ * ingress path for upper layers. For byte-oriented ingress, prefer
+ * InboundPipeline::withDefaults().
+ *
  * @api
  */
 final class EventFactory implements EventFactoryInterface

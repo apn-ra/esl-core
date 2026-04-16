@@ -43,6 +43,7 @@ Stability is earned incrementally:
 | `Contracts\InboundConnectionFactoryInterface`, `Inbound\PreparedInboundConnection`, `Inbound\InboundConnectionFactory` | Stable as the supported accepted-stream/bootstrap seam for one inbound connection |
 | `Replies\*` parsing | Stable after Phase 5; `ReplyFactory` remains public as an advanced frame/classifier-owned composition bridge, while `InboundPipeline` is the preferred upper-layer decode seam |
 | `Events\NormalizedEvent` | Stable for current substrate invariants; format coverage is stable for `text/event-plain` / `text/event-json` and provisional for `text/event-xml` |
+| `Events\EventFactory`, `Events\EventClassifier` | Stable as advanced event-composition bridges for callers that already own a frame or normalized event, but not the preferred byte-ingress seam |
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Capability::EventXmlDecoding` / XML normalized event decoding | Provisional pending broader evidence than the current constructed-fixture corpus |
 | `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |

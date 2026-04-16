@@ -96,6 +96,7 @@ No soft deprecation is active for `ReplyFactory` in this release line; the harde
 ### Events
 `NormalizedEvent`, `RawEvent`, and typed event families are public.
 `NormalizedEvent` remains a substrate object only: normalized headers, raw header access, raw body bytes, and source-format invariants. It does not carry correlation/replay/runtime state.
+`EventFactory` and `EventClassifier` also remain public, but they should be treated as advanced event-composition bridges for callers that already own a `Frame` or `NormalizedEvent`. They are not the preferred raw-byte ingress path; upper layers ingesting bytes should still prefer `InboundPipeline`.
 Selective typed event families currently include `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, and `CustomEvent`.
 Current live-backed evidence covers bridge/playback decoding in both
 `text/event-plain` and `text/event-json`, but the capture helper and PBX setup
