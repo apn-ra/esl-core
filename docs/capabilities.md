@@ -43,6 +43,12 @@ conditions, but that still does not make it a public transport API.
 `Protocol\Frame` and `Protocol\HeaderBag` are also part of the supported
 substrate because public reply/event contracts expose them, but that does not
 promote the rest of the `Protocol\*` parsing pipeline to a preferred public seam.
+Capability level and seam posture are separate axes: a capability may be
+`stable` while some lower-level composition routes into that capability remain
+advanced public seams rather than the default downstream integration path.
+For byte ingress and accepted-stream bootstrap, prefer `InboundPipeline`,
+`SocketTransportFactory`, and `InboundConnectionFactory` even when lower-level
+factories or contracts remain public.
 
 ## Inspecting capabilities at runtime
 

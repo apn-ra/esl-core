@@ -43,7 +43,7 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --coverage-text
+        run: composer test -- --coverage-text
 
   analyse:
     name: PHPStan
@@ -62,7 +62,7 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --no-progress
+        run: composer analyse -- --no-progress
 
   cs:
     name: Coding Standards
@@ -74,11 +74,11 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.1'
           tools: composer:v2, cs2pr
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Check coding standards
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --sequential --format=checkstyle | cs2pr
+        run: composer cs-check -- --format=checkstyle | cs2pr

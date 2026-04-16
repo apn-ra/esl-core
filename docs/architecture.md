@@ -34,6 +34,8 @@
 └───────────────────────────────────────────────────────┘
 ```
 
+The layer diagrams describe truthful implementation structure, not a recommendation that downstream packages integrate at the lowest visible layer. For upper-layer package work, prefer the documented public seams in `Inbound\*` and `Transport\*` over direct composition of Layer 1/2 concrete classes.
+
 ---
 
 ## Layer 1 — Wire layer
@@ -70,6 +72,8 @@ Key invariants:
 - Unknown content-types degrade to `Unknown` (never throw)
 - The bgapi acceptance reply is classified distinctly from ordinary command replies
 - Auth failure vs command error cannot be distinguished at this layer (session state required)
+
+Downstream packages should treat this layer as descriptive of the protocol substrate, not as the preferred integration entry point for raw bytes. The supported ingress facade remains `InboundPipeline`.
 
 ---
 

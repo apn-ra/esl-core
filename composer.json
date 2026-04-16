@@ -35,6 +35,9 @@
         }
     },
     "scripts": {
+        "unit": "phpunit --no-coverage --testsuite Unit",
+        "contract": "phpunit --no-coverage --testsuite Contract",
+        "integration": "phpunit --no-coverage --testsuite Integration",
         "test": "phpunit --no-coverage",
         "smoke": "phpunit --no-coverage tests/Integration/SmokeTest.php",
         "chaos": "phpunit --no-coverage tests/Integration/ProtocolChaosTest.php",

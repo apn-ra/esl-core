@@ -8,6 +8,18 @@ The repository uses three consumer postures:
 - Advanced public seams: public types that remain available for lower-level composition, but expose more concrete or provisional coupling than the preferred path.
 - Internal/provisional seams: implementation detail or pre-1.0 composition surfaces that may change without the same compatibility expectations.
 
+## Support-tier map
+
+Use this table as the downstream integration shortcut:
+
+| Posture | What belongs here | Current examples |
+|---|---|---|
+| Preferred public seams | The default downstream path this package wants upper layers to adopt | `InboundPipeline::withDefaults()`, `InboundConnectionFactory::prepareAcceptedStream()`, `SocketTransportFactory`, typed commands/replies/events, `CorrelationContext`, `ReplayEnvelopeFactory` |
+| Advanced public seams | Public composition points that remain supported, but expose more concrete/provisional coupling than the preferred path | `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, `FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface` |
+| Internal/provisional seams | Repository implementation details or non-default early-adopter surfaces that may change more freely before `1.0.0` | `Parsing\*`, `Internal\*`, most of `Protocol\*`, internal transport smoke helpers |
+
+Stable capability support and seam posture are related but distinct. A feature can be stable while some lower-level ways of composing that feature remain advanced or provisional.
+
 ## What counts as public API
 
 A type, interface, class, or constant is part of the public API when it lives in one of the following namespaces AND is not marked `@internal`, or when it is explicitly exposed by a public contract and marked `@api`:
@@ -83,6 +95,12 @@ points rather than the default supported upper-layer integration surface.
 Current parser and classifier implementations still exist in the repository and remain fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` stay intentionally outside the supported pre-`1.0.0` public API boundary.
 Upper layers should prefer `Inbound\InboundPipeline` rather than composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly.
 
+For downstream packages, the practical split is:
+
+- Build first on `InboundPipeline::withDefaults()`, `SocketTransportFactory`, and `InboundConnectionFactory` when you need supported byte ingress or accepted-stream bootstrap.
+- Reach for `ReplyFactory`, `EventFactory`, `EventClassifier`, or low-level parser/classifier contracts only when your package intentionally owns frame-level composition and accepts tighter provisional coupling.
+- Do not treat `Parsing\*`, `Internal\*`, or the rest of `Protocol\*` as stable extension seams.
+
 ## Concrete types consumers may depend on
 
 ### Commands
@@ -111,6 +129,7 @@ These types form the supported inbound decoding facade for raw byte ingestion, t
 No soft deprecation is active for `InboundPipeline::__construct(...)` in this release line; the hardening change here is clearer usage guidance, not constructor churn.
 `InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`. If no `ConnectionSessionId` is supplied, the factory generates one for the connection.
 For release-boundary purposes, this is the dominant supported ingress contract.
+This bootstrap seam stops at one connection bundle. Listener ownership, read pumps, reconnect policy, auth/session state machines, and higher-level supervision remain downstream responsibilities.
 
 ### Exceptions
 All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
@@ -124,6 +143,15 @@ The new stream/socket smoke-path transport remains internal-only under `Internal
 ### Protocol substrate exceptions
 `Protocol\Frame` and `Protocol\HeaderBag` are stable substrate value objects because they are exposed by public reply/event contracts.
 They should not be treated as a signal that the rest of `Protocol\*` is public. The surrounding parser and classifier pipeline remains advanced/provisional outside the preferred ingress facade.
+
+## Later-phase hardening notes
+
+These items are being documented for future hardening, not redesigned in this pass:
+
+- `InboundPipeline::withDefaults()` remains the default downstream ingress seam; the constructor stays public as an advanced composition escape hatch without an active deprecation.
+- `ReplyFactory`, `EventFactory`, and `EventClassifier` remain public advanced bridges and are not being promoted into the mainstream downstream ingress story.
+- `FrameParserInterface`, `EventParserInterface`, and `InboundMessageClassifierInterface` remain public-but-provisional until downstream usage proves they deserve stronger compatibility guarantees.
+- `DecodedInboundMessage::normalizedEvent()` is the supported normalized-event substrate access point for downstream byte-ingress consumers; no new classified-message or parser-owned public seam is added in this pass.
 
 The error taxonomy is intentionally layered:
 - `TransportException` covers I/O/connection failures only

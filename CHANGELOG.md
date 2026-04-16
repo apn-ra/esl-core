@@ -38,6 +38,9 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- Downstream integration guidance now centers the supported seams more explicitly: `SocketTransportFactory` for connection construction, `InboundConnectionFactory::prepareAcceptedStream()` for accepted-stream bootstrap, and `InboundPipeline::withDefaults()` for preferred byte ingress. The docs now separate those preferred seams from advanced public composition bridges such as `ReplyFactory`, `EventFactory`, and lower-level parser/classifier contracts.
+- Maintainer verification ergonomics are now aligned around Composer entrypoints. Dedicated `composer unit`, `composer contract`, and `composer integration` scripts were added for narrow suite runs, the release checklist now treats `composer check` as the main local gate with `composer smoke` as an optional fast sanity pass, and CI now routes through the same Composer script surface to reduce drift.
+- Later-phase hardening notes now document, rather than redesign, the current posture around normalized-event substrate access and public-but-advanced classified/parser/factory seams.
 - `EventFactory` and `EventClassifier` remain public as advanced event-composition bridges for callers that already own a `Frame` or `NormalizedEvent`, but they are not the preferred byte-ingress seam. The preferred upper-layer raw-byte path remains `InboundPipeline::withDefaults()`.
 - `InboundPipeline::withDefaults()` is now the preferred public ingress construction path. Direct constructor collaborator injection remains available for advanced composition, but it is no longer the recommended downstream entry point.
 - The supported public inbound story now includes accepted-stream bootstrap: `InboundConnectionFactoryInterface`, `PreparedInboundConnection`, and `InboundConnectionFactory` are public, while listener ownership, read loops, and session supervision remain outside core.

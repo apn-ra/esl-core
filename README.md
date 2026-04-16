@@ -90,6 +90,18 @@ The supported public surface is centered on typed commands, the inbound decoding
 For new integrations, start from `InboundPipeline::withDefaults()` for raw byte decoding, `SocketTransportFactory` for endpoint/stream transport construction, and `InboundConnectionFactory` when a listener/runtime has already accepted a stream and needs one supported bootstrap bundle.
 Direct `InboundPipeline::__construct(...)` collaborator injection and parser/classifier/reply-factory composition remain available for advanced fixture-backed work, but they are not the preferred downstream ingress path at this checkpoint and are not being soft-deprecated in this release line.
 
+### Downstream integration map
+
+For packages such as `apntalk/laravel-freeswitch-esl`, the supported integration choices are:
+
+| Downstream need | Preferred public seam | Ownership that stays outside `esl-core` |
+|---|---|---|
+| Open a client connection from host/port settings | `SocketTransportFactory::connect()` + `InboundPipeline::withDefaults()` | reconnect/backoff, read loops, auth/session policy, event subscription policy |
+| Bootstrap one already-accepted inbound stream | `InboundConnectionFactory::prepareAcceptedStream()` | listener ownership, accept loops, per-session supervision |
+| Compose directly from frames / normalized events | `ReplyFactory`, `EventFactory`, `EventClassifier`, lower-level contracts | byte-ingress defaults, stable constructor ergonomics, protection from provisional coupling |
+
+Use `CorrelationContext` after decode when your upper layer needs per-session ordering or derived job/channel correlation. Use `ReplayEnvelopeFactory` only for replay-safe capture/export hooks; storage, scheduling, and replay execution stay in upper layers.
+
 ### Preferred ingress facade
 
 Use `InboundPipeline::withDefaults()` when you need the supported raw-byte decode path without coupling to the current parser/classifier implementation details.
@@ -146,6 +158,14 @@ In production, `$acceptedPhpStream` is provided by your listener/runtime layer a
 If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
 Upper layers should prefer `InboundPipeline::withDefaults()` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need frame-level control and accept provisional coupling to lower-level collaborators.
 
+### Preferred vs advanced seam posture
+
+| Posture | What to build on first |
+|---|---|
+| Preferred public seams | `InboundPipeline::withDefaults()`, `SocketTransportFactory`, `InboundConnectionFactory`, typed commands/replies/events, `CorrelationContext`, `ReplayEnvelopeFactory` |
+| Advanced public seams | `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, lower-level `Contracts\*` parser/classifier interfaces |
+| Internal or provisional implementation details | `Parsing\*`, `Internal\*`, most of `Protocol\*` other than `Frame` and `HeaderBag` |
+
 ## Current release scope
 
 - Typed commands and replies for auth, command replies, `api`, and `bgapi`
@@ -175,6 +195,19 @@ composer smoke
 ```
 
 This smoke path exercises the supported inbound facade together with the typed command/reply and async event pipelines, including correlation/session metadata and replay-envelope creation.
+
+## Maintainer verification
+
+Use the narrowest useful check first:
+
+- `composer unit` for low-level value-object and wire-model regressions
+- `composer contract` for public seam and fixture-backed behavior checks
+- `composer integration` for composed in-memory/socket/inbound-path verification
+- `composer smoke` for a fast supported-path sanity pass
+- `composer check` for the full local release gate (`cs-check`, `analyse`, and `test`)
+- `composer validate --strict` when changing package metadata or Composer scripts
+
+Live `tools/smoke/*` helpers remain optional operator validation support for fixture work and PBX-side evidence gathering. They are not part of the package API or the default local release gate.
 
 ## v0.2 status
 

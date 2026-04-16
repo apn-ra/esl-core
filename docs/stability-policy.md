@@ -54,6 +54,8 @@ Stability is earned incrementally:
 | Concrete inbound parser/classifier implementations (`Parsing\*`, `Internal\Classification\*`) | Provisional and intentionally outside the stable public API boundary; upper layers should not treat them as the primary ingress contract |
 | Remaining `Protocol\*` and `Internal\*` | Permanently unstable — not covered by SemVer |
 
+The support level in this table does not mean every composition seam is equally preferred. A surface may be stable while still being an advanced public seam rather than the default downstream integration path. In this release line, that distinction is intentional: `InboundPipeline::withDefaults()`, `SocketTransportFactory`, and `InboundConnectionFactory` are the preferred stable seams, while lower-level parser/classifier/factory composition remains public but more advanced.
+
 ## Adding new protocol fixtures
 
 New ESL behavior must not be merged to public APIs without:
