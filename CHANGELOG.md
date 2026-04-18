@@ -14,11 +14,19 @@ No unreleased changes yet.
 
 ---
 
-## [0.2.7] - 2026-04-18
+## [0.2.8] - 2026-04-18
 
 ### Fixed
 
 - Smoke helper entrypoints under `tools/smoke/` now resolve Composer autoload from either the repo root or a normal Composer-installed dependency tree, so downstream packages can execute the upstream helpers directly without local proxy wrappers or vendor-tree hacks.
+
+---
+
+## [0.2.7] - 2026-04-18
+
+### Corrected
+
+- The published `v0.2.7` tag and installable artifact were cut from the earlier `Finalize release boundary docs` commit and therefore did not include the smoke-helper bootstrap resolver files or entrypoint updates described in the release notes. Consumers needing the smoke-helper bootstrap fix should use `v0.2.8` or later.
 
 ---
 
