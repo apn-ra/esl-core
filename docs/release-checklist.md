@@ -7,6 +7,8 @@ Use this checklist when cutting the next pre-`1.0.0` release of `apntalk/esl-cor
 - Confirm the working tree is clean or intentionally scoped.
 - Resolve or explicitly exclude unrelated local changes before tagging.
 - Review `CHANGELOG.md` and the draft release notes for the intended version.
+- Move release-scoped changelog entries out of `[Unreleased]` into the intended
+  version section before tagging or publishing.
 - Confirm deferred items remain out of scope for the release.
 
 ## Verification

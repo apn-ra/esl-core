@@ -19,7 +19,9 @@ It provides:
 - Capability declaration of supported surfaces
 - A minimal transport abstraction for testing and smoke-path use
 
-It is designed to sit **below** framework-specific packages such as `apntalk/esl-react` and `apntalk/laravel-freeswitch-esl`.
+It is designed to sit **below** runtime, framework, and replay packages such as
+`apntalk/esl-react`, `apntalk/laravel-freeswitch-esl`, and
+`apntalk/esl-replay`.
 
 ---
 
@@ -34,9 +36,13 @@ This package does **not** provide:
 - Cluster or multi-PBX orchestration
 - Database-backed registry behavior
 - Durable replay execution engines
+- Replay re-injection or replay scheduling
 - Health endpoints
 
-Those concerns belong in upper-layer packages that depend on this one.
+Those concerns belong in upper-layer packages that depend on this one:
+`apntalk/esl-react` owns runtime/reconnect behavior,
+`apntalk/laravel-freeswitch-esl` owns Laravel integration and persistence
+concerns, and `apntalk/esl-replay` owns replay execution/re-injection.
 
 ---
 
@@ -102,7 +108,7 @@ For packages such as `apntalk/laravel-freeswitch-esl`, the supported integration
 | Bootstrap one already-accepted inbound stream | `InboundConnectionFactory::prepareAcceptedStream()` | listener ownership, accept loops, per-session supervision |
 | Compose directly from frames / normalized events | `ReplyFactory::fromFrame()`, `ReplyFactory::fromClassification()`, `EventFactory`, `EventClassifier`, lower-level contracts | byte-ingress defaults, stable constructor ergonomics, protection from provisional coupling |
 
-Use `CorrelationContext` after decode when your upper layer needs per-session ordering or derived job/channel correlation. Use `ReplayEnvelopeFactory` only for replay-safe capture/export hooks; storage, scheduling, and replay execution stay in upper layers.
+Use `CorrelationContext` after decode when your upper layer needs per-session ordering or derived job/channel correlation. Use `ReplayEnvelopeFactory` only for replay-safe capture/export hooks; storage, scheduling, replay execution, and replay re-injection stay in upper layers such as `apntalk/esl-replay`.
 
 ### Preferred ingress facade
 
@@ -191,7 +197,7 @@ Still provisional or deferred from this release:
 - live-backed `text/event-xml` evidence beyond constructed fixtures
 - framework/runtime integrations
 - broader transport runtime expansion beyond the minimal socket construction seam
-- replay storage, scheduling, or orchestration
+- replay storage, scheduling, execution, re-injection, or orchestration
 
 ## Smoke check
 

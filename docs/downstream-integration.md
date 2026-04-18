@@ -19,7 +19,8 @@ For new downstream work, start from the stable public seams:
 4. `ReplayEnvelopeFactory` only when you need replay-safe capture/export primitives
 
 That is the preferred core composition story for packages such as
-`apntalk/laravel-freeswitch-esl`.
+`apntalk/esl-react`, `apntalk/laravel-freeswitch-esl`, and
+`apntalk/esl-replay`.
 
 ## Accepted-stream bootstrap path
 
@@ -91,9 +92,9 @@ These issues are documented, but not treated as release blockers in this line:
   `EventFactory`, and `EventClassifier`, but is not the preferred downstream
   ingress story
 
-## What still belongs to `esl-react`
+## What still belongs outside `esl-core`
 
-`esl-core` remains the protocol/core package. These responsibilities still
+`esl-core` remains the protocol/core package. Runtime responsibilities still
 belong in upper-layer runtime packages such as `apntalk/esl-react`:
 
 - listener or server runtime ownership
@@ -101,7 +102,20 @@ belong in upper-layer runtime packages such as `apntalk/esl-react`:
 - reconnect and backoff policy
 - heartbeat or session lifecycle supervision
 - routing, orchestration, or worker coordination
-- replay execution/runtime orchestration
+
+Framework integration responsibilities belong in packages such as
+`apntalk/laravel-freeswitch-esl`:
+
+- Laravel service container bindings
+- database-backed registries and persistence
+- application-specific configuration and operational endpoints
+
+Replay execution responsibilities belong in replay-focused packages such as
+`apntalk/esl-replay`:
+
+- replay scheduling and cursor running
+- replay execution or re-injection
+- durable replay storage engines
 
 ## Release-truth reminder
 
