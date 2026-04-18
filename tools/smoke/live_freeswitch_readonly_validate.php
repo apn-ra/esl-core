@@ -22,7 +22,8 @@ use Apntalk\EslCore\Protocol\Frame;
 use Apntalk\EslCore\Replies\ReplyFactory;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 
-require dirname(__DIR__, 2) . '/vendor/autoload.php';
+require __DIR__ . '/bootstrap.php';
+require resolveSmokeHelperAutoloadPath(__DIR__);
 
 try {
     $options = LiveValidationOptions::fromArgv($argv);

@@ -25,7 +25,8 @@ use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
 use Apntalk\EslCore\Replies\ReplyFactory;
 
-require dirname(__DIR__, 2) . '/vendor/autoload.php';
+require __DIR__ . '/bootstrap.php';
+require resolveSmokeHelperAutoloadPath(__DIR__);
 
 try {
     $options = CallFlowOptions::fromArgv($argv);

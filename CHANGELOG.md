@@ -14,6 +14,14 @@ No unreleased changes yet.
 
 ---
 
+## [0.2.7] - 2026-04-18
+
+### Fixed
+
+- Smoke helper entrypoints under `tools/smoke/` now resolve Composer autoload from either the repo root or a normal Composer-installed dependency tree, so downstream packages can execute the upstream helpers directly without local proxy wrappers or vendor-tree hacks.
+
+---
+
 ## [0.2.6] - 2026-04-18
 
 This pre-`1.0.0` patch release closes the bounded malformed-frame and protocol-side fixture/harness hardening pass. The package remains a typed ESL protocol substrate; this release does not add runtime supervision, reconnect/backoff ownership, framework integration, or replay execution.

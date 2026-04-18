@@ -13,7 +13,8 @@ use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Replies\ReplyFactory;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 
-require dirname(__DIR__, 2) . '/vendor/autoload.php';
+require __DIR__ . '/bootstrap.php';
+require resolveSmokeHelperAutoloadPath(__DIR__);
 
 $raw = stream_get_contents(STDIN);
 if (!is_string($raw) || $raw === '') {
