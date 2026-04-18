@@ -157,6 +157,20 @@ final class HeaderBagTest extends TestCase
         $this->assertSame('b', $flat[1]['value']);
     }
 
+    public function test_to_flat_array_preserves_true_interleaved_insertion_order(): void
+    {
+        $bag = HeaderBag::fromHeaderBlock("X-A: 1\nX-B: 2\nX-A: 3");
+
+        $this->assertSame(
+            [
+                ['name' => 'X-A', 'value' => '1'],
+                ['name' => 'X-B', 'value' => '2'],
+                ['name' => 'X-A', 'value' => '3'],
+            ],
+            $bag->toFlatArray(),
+        );
+    }
+
     public function test_count_counts_distinct_names_not_values(): void
     {
         $block = "X-A: 1\nX-B: 2\nX-A: 3"; // X-A appears twice

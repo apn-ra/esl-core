@@ -61,12 +61,13 @@ final class EventParser implements EventParserInterface
         $delimPos = strpos($body, "\n\n");
 
         if ($delimPos === false) {
-            $eventHeaderBlock = rtrim($body, "\n");
-            $eventBody        = '';
-        } else {
-            $eventHeaderBlock = substr($body, 0, $delimPos);
-            $eventBody        = substr($body, $delimPos + 2);
+            throw new MalformedFrameException(
+                'Plain event payload must contain an inner header terminator'
+            );
         }
+
+        $eventHeaderBlock = substr($body, 0, $delimPos);
+        $eventBody        = substr($body, $delimPos + 2);
 
         $eventHeaders = $this->parseHeaderBlock($eventHeaderBlock);
         $this->assertDeclaredBodyLengthMatches($eventHeaders, $eventBody);

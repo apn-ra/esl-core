@@ -421,6 +421,15 @@ final class EventParserTest extends TestCase
         $this->eventParser->parse($frame);
     }
 
+    public function test_parse_throws_for_plain_event_missing_inner_header_terminator(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(FixtureLoader::load('malformed/event-plain-missing-inner-terminator.esl'));
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
     public function test_parse_throws_for_json_event_body_shorter_than_declared_content_length(): void
     {
         $this->expectException(MalformedFrameException::class);

@@ -10,7 +10,22 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 
 ## [Unreleased]
 
-No unreleased changes yet.
+---
+
+## [0.2.10] - 2026-04-18
+
+### Fixed
+
+- Restored LF-only malformed and partial parser fixtures, and pinned raw fixture line endings in git so malformed-input coverage stays byte-stable across platforms.
+- `EventParser` now rejects `text/event-plain` payloads that omit the required inner header terminator instead of accepting them as header-only events.
+- `HeaderBag::toFlatArray()` now preserves true flat insertion order for interleaved duplicate headers, so replay/export payloads keep their documented header ordering.
+- The default PHPUnit no-coverage path no longer fails solely because coverage reporting was configured without a driver.
+
+### Clarified
+
+- Release-facing docs now reflect the actual checked-in fixture layout and provenance posture for promoted live fixtures.
+- XML event decoding now declares its `ext-dom` requirement explicitly in package metadata and capability docs.
+- The current release-line posture around built-in typed-event normalized substrate access and real-stream blocking semantics is now documented more explicitly.
 
 ---
 

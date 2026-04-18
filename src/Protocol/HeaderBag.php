@@ -30,11 +30,20 @@ final class HeaderBag
     private readonly array $headers;
 
     /**
-     * @param array<string, array{name: string, values: list<string>}> $headers
+     * Headers in their original flat insertion order, including repeats.
+     *
+     * @var list<array{key: string, name: string, value: string}>
      */
-    private function __construct(array $headers)
+    private readonly array $flatHeaders;
+
+    /**
+     * @param array<string, array{name: string, values: list<string>}> $headers
+     * @param list<array{key: string, name: string, value: string}> $flatHeaders
+     */
+    private function __construct(array $headers, array $flatHeaders)
     {
         $this->headers = $headers;
+        $this->flatHeaders = $flatHeaders;
     }
 
     /**
@@ -48,10 +57,11 @@ final class HeaderBag
     public static function fromHeaderBlock(string $block): self
     {
         if ($block === '') {
-            return new self([]);
+            return new self([], []);
         }
 
         $headers = [];
+        $flatHeaders = [];
 
         foreach (explode("\n", $block) as $line) {
             $line = rtrim($line, "\r");
@@ -84,9 +94,10 @@ final class HeaderBag
                 $headers[$key] = ['name' => $name, 'values' => []];
             }
             $headers[$key]['values'][] = $value;
+            $flatHeaders[] = ['key' => $key, 'name' => $name, 'value' => $value];
         }
 
-        return new self($headers);
+        return new self($headers, $flatHeaders);
     }
 
     /**
@@ -144,13 +155,13 @@ final class HeaderBag
      */
     public function toFlatArray(): array
     {
-        $result = [];
-        foreach ($this->headers as $entry) {
-            foreach ($entry['values'] as $value) {
-                $result[] = ['name' => $entry['name'], 'value' => $value];
-            }
-        }
-        return $result;
+        return array_map(
+            static fn(array $entry): array => [
+                'name' => $entry['name'],
+                'value' => $entry['value'],
+            ],
+            $this->flatHeaders,
+        );
     }
 
     /**
@@ -177,8 +188,15 @@ final class HeaderBag
 
         $key     = strtolower($name);
         $headers = $this->headers;
+        $flatHeaders = array_values(array_filter(
+            $this->flatHeaders,
+            static fn(array $entry): bool => $entry['key'] !== $key
+        ));
+
         $headers[$key] = ['name' => $name, 'values' => [$value]];
-        return new self($headers);
+        $flatHeaders[] = ['key' => $key, 'name' => $name, 'value' => $value];
+
+        return new self($headers, $flatHeaders);
     }
 
     private static function assertValidHeaderName(string $name, ?string $line = null): void

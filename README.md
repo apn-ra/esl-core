@@ -49,6 +49,7 @@ concerns, and `apntalk/esl-replay` owns replay execution/re-injection.
 ## Requirements
 
 - PHP 8.1 or higher
+- `ext-dom` enabled
 - No runtime framework dependencies
 
 ---
@@ -148,6 +149,11 @@ $socketFactory = new SocketTransportFactory();
 $transport = $socketFactory->connect(SocketEndpoint::tcp('127.0.0.1', 8021));
 ```
 
+`TransportInterface::read()` returns `''` as a non-blocking "no data yet"
+signal only when the underlying transport is configured for non-blocking reads.
+`SocketTransportFactory` preserves the current blocking mode of the PHP stream
+it connects or wraps; if your runtime polls, configure the stream accordingly.
+
 ### Accepted-stream bootstrap seam
 
 Use `InboundConnectionFactory` when your listener/runtime has already accepted a PHP stream and now needs the supported core bootstrap bundle.
@@ -170,6 +176,13 @@ For that advanced composition path, the current staged migration posture is:
 - consume classified output through `Contracts\\ClassifiedMessageInterface`
 - pass it to `ReplyFactory::fromClassification()` when you need typed replies
 - avoid treating `InboundMessageClassifierInterface` itself as a fully hardened public producer contract yet
+
+For typed events, the built-in event wrappers currently expose a public readonly
+`$normalized` property and also implement
+`Contracts\ProvidesNormalizedSubstrateInterface`. Treat the interface or
+`DecodedInboundMessage::normalizedEvent()` as the supported substrate seam for
+downstream code; a similarly named property on custom wrappers is not enough to
+participate in correlation/replay substrate extraction.
 
 ### Preferred vs advanced seam posture
 

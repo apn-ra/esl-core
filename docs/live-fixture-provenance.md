@@ -7,16 +7,17 @@ It exists to keep the release story conservative and traceable:
 
 - the package capability claim comes from the curated fixture plus its contract
   test
-- the raw source of truth is the quarantined ESL capture under
-  `tools/smoke/captures/`
+- the raw source of truth during promotion review is the quarantined ESL capture
+  produced under `tools/smoke/captures/`
 - the capture producer is non-public operator tooling under `tools/smoke/`
 - operator setup and PBX behavior are prerequisites for capture generation, not
   package API
 
 The primary truth for these fixture promotions is the raw ESL frame captured by
 the helper, not MCP telemetry or any external observability layer. MCP-assisted
-inspection may help operators during a live run, but the promoted fixture must
-round-trip to a quarantined raw frame in this repository.
+inspection may help operators during a live run. The current repository keeps
+the curated fixture plus this promotion record; it does not retain the
+quarantined raw capture files in git by default.
 
 ## Controlled Scenario
 
@@ -50,7 +51,7 @@ call-flow scenario:
 
 All audited live fixtures in the current bridge/playback promotion set now have:
 
-- one exact raw source capture in `tools/smoke/captures/`
+- one recorded raw source capture filename from the reviewed promotion session
 - one identified capture mode (`plain` or `json`)
 - one controlled operator scenario
 - one explicit promotion reason

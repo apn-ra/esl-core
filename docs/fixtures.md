@@ -8,14 +8,10 @@ Fixtures are deterministic protocol evidence used by tests to validate parser an
 tests/Fixtures/
 ├── EslFixtureBuilder.php  — programmatic frame builder
 ├── FixtureLoader.php      — file-based fixture loader
-├── auth/                  — authentication flow frames
-├── commands/              — outbound command frames (serialized)
-├── replies/               — inbound reply frames
-├── events/                — inbound event frames
+├── live/                  — curated live-backed reply/event frames promoted into tests
 ├── malformed/             — intentionally bad frames for error path tests
 ├── partial/               — truncated frames for partial-read tests
-├── sequences/             — multi-frame inbound byte sequences
-└── replay/                — replay envelope fixtures
+└── sequences/             — multi-frame inbound byte sequences
 ```
 
 ## Fixture strategy
@@ -52,14 +48,19 @@ $frame = EslFixtureBuilder::frame(
 
 ### 2. File-based fixtures (`FixtureLoader`)
 
-Raw `.esl` files in subdirectories contain static byte strings for documentation and regression purposes. These are especially useful for edge cases captured from real FreeSWITCH connections.
+Raw `.esl` and `.bin` files in subdirectories contain static byte strings for
+documentation and regression purposes. These are especially useful for edge
+cases and curated live captures.
 
 ```php
-$bytes = FixtureLoader::load('auth/auth-request.esl');
+$bytes = FixtureLoader::load('live/auth-accepted-command-reply.esl');
 ```
 
 File-based fixtures MUST:
 - Use LF (`\n`) line endings only. No `\r\n`.
+- Stay stable in git. The repository pins raw fixture line endings with
+  `.gitattributes` so malformed and partial coverage remains byte-accurate
+  across platforms.
 - Include a correct `Content-Length` where required.
 - Preserve the exact parser input bytes. Do not add inline comments to raw
   `.esl` / `.bin` fixtures when those comments would become part of the frame.
@@ -73,13 +74,10 @@ See `docs/live-fixture-provenance.md` for the current live-backed capture map.
 
 | Directory | Pattern | Contents |
 |---|---|---|
-| `auth/` | `auth-{description}.esl` | Auth flow frames |
-| `replies/` | `{type}-{description}.esl` | Inbound reply frames |
-| `events/` | `{event-name}-{description}.esl` | Inbound event frames |
+| `live/` | repo-specific promoted fixture names | Curated live-backed reply and event frames used directly by contract tests |
 | `malformed/` | `{description}.esl` | Intentionally broken parser or event-parser inputs |
 | `partial/` | `{description}-partial.bin` | Truncated or fragmented frames |
 | `sequences/` | `{description}.esl` | Multi-frame inbound captures or constructed protocol flows |
-| `replay/` | `{description}.json` | Replay envelope shapes |
 
 ## Fixture provenance
 
@@ -102,6 +100,11 @@ should record:
 - the controlled scenario that produced it
 - the reason it was promoted
 - the contract test(s) that now pin it
+
+The repository does not currently retain those quarantined capture files in git.
+The checked-in provenance record names the reviewed source capture from the
+promotion session, while the curated fixture under `tests/Fixtures/live/`
+remains the package-facing evidence surface.
 
 Constructed XML fixtures should explicitly remain labeled as constructed
 protocol corpus rather than implied live captures.

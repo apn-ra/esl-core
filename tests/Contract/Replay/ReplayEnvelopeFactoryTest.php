@@ -17,6 +17,8 @@ use Apntalk\EslCore\Exceptions\ReplayConsistencyException;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Protocol\Frame;
+use Apntalk\EslCore\Protocol\HeaderBag;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\ApiReply;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
@@ -108,6 +110,38 @@ final class ReplayEnvelopeFactoryTest extends TestCase
 
         $this->assertSame(
             "Content-Type: command/reply\nReply-Text: +OK accepted\n\n",
+            $envelope->rawPayload(),
+        );
+    }
+
+    public function test_reply_raw_payload_preserves_interleaved_duplicate_header_order(): void
+    {
+        $headers = HeaderBag::fromHeaderBlock(
+            "Content-Type: command/reply\nX-Debug: first\nReply-Text: +OK accepted\nX-Debug: second"
+        );
+        $reply = new class (new Frame($headers, '')) implements ReplyInterface {
+            public function __construct(
+                private readonly Frame $frame,
+            ) {}
+
+            public function isSuccess(): bool
+            {
+                return true;
+            }
+
+            public function frame(): Frame
+            {
+                return $this->frame;
+            }
+        };
+
+        $envelope = (new ReplayEnvelopeFactory())->fromReply($reply);
+
+        $this->assertSame(
+            "Content-Type: command/reply\n"
+            . "X-Debug: first\n"
+            . "Reply-Text: +OK accepted\n"
+            . "X-Debug: second\n\n",
             $envelope->rawPayload(),
         );
     }

@@ -243,6 +243,13 @@ final class InboundPipelineTest extends TestCase
         $this->pipeline->decode(FixtureLoader::load('malformed/event-plain-inner-body-truncated.esl'));
     }
 
+    public function test_public_facade_rejects_event_missing_inner_header_terminator_fixture(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->pipeline->decode(FixtureLoader::load('malformed/event-plain-missing-inner-terminator.esl'));
+    }
+
     public function test_public_facade_reports_truncation_for_partial_file_fixture(): void
     {
         $this->pipeline->push(FixtureLoader::load('partial/api-response-body-truncated-partial.bin'));
