@@ -12,6 +12,29 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 
 ---
 
+## [0.2.12] - 2026-04-18
+
+### Fixed
+
+- Typed command constructors now reject empty or whitespace-containing values in
+  token-position fields such as API command names, BGAPI command names, filter
+  header names, and named event subscriptions, while preserving raw/free-form
+  escape hatches where intended.
+- `FrameParser` and `EventParser` now reject `Content-Length` values that exceed
+  PHP's supported integer range instead of silently corrupting parser state
+  during integer conversion.
+- `ReplayEnvelopeFactory` now preserves the full short class name for
+  unnamespaced custom reply implementations.
+
+### Clarified
+
+- `InboundPipelineInterface::drain()` now documents that parse failures during
+  decoded-message construction throw `ParseException`, do not return partial
+  decoded results, and require callers to reset or discard the pipeline before
+  continuing.
+
+---
+
 ## [0.2.11] - 2026-04-18
 
 ### Added

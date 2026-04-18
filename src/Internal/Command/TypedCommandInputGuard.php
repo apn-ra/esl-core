@@ -23,4 +23,17 @@ final class TypedCommandInputGuard
             ));
         }
     }
+
+    /**
+     * @throws SerializationException
+     */
+    public static function assertToken(string $value, string $field): void
+    {
+        if ($value === '' || preg_match('/\s/', $value) === 1) {
+            throw new SerializationException(sprintf(
+                'Typed command field "%s" must be a non-empty token without whitespace.',
+                $field,
+            ));
+        }
+    }
 }

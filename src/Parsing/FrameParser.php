@@ -55,9 +55,10 @@ final class FrameParser implements CompletableFrameParserInterface
      *
      * @throws ParseException if a malformed header block is encountered.
      *
-     * Large digit-only Content-Length values are accepted as protocol input and
-     * will keep the parser in a buffered waiting state until enough bytes arrive
-     * or finish() reports truncation. This method does not apply a body-size cap.
+     * Digit-only Content-Length values within PHP's integer range are accepted
+     * as protocol input and will keep the parser in a buffered waiting state
+     * until enough bytes arrive or finish() reports truncation. This method
+     * does not apply a body-size cap.
      */
     public function feed(string $bytes): void
     {
@@ -169,7 +170,7 @@ final class FrameParser implements CompletableFrameParserInterface
                     "Invalid Content-Length value: {$contentLengthValue}"
                 );
             }
-            $this->pendingBodyLength = (int) $contentLengthValue;
+            $this->pendingBodyLength = $this->parseContentLength($contentLengthValue);
         } else {
             $this->pendingBodyLength = 0;
         }
@@ -184,6 +185,26 @@ final class FrameParser implements CompletableFrameParserInterface
         }
 
         return true;
+    }
+
+    /**
+     * @throws MalformedFrameException
+     */
+    private function parseContentLength(string $value): int
+    {
+        $normalized = ltrim($value, '0');
+        if ($normalized === '') {
+            return 0;
+        }
+
+        $max = (string) PHP_INT_MAX;
+        if (strlen($normalized) > strlen($max) || (strlen($normalized) === strlen($max) && strcmp($normalized, $max) > 0)) {
+            throw new MalformedFrameException(
+                "Content-Length value exceeds supported integer range: {$value}"
+            );
+        }
+
+        return (int) $normalized;
     }
 
     /**

@@ -84,7 +84,7 @@ final class ReplayEnvelopeFactory
     {
         $frame = $reply->frame();
         $name  = get_class($reply);
-        $name = substr($name, strrpos($name, '\\') + 1);
+        $name = basename(str_replace('\\', '/', $name));
         $jobUuid = $reply instanceof BgapiAcceptedReply ? $reply->jobUuid() : null;
 
         return new ReplayEnvelope(

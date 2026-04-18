@@ -10,6 +10,7 @@ use Apntalk\EslCore\Contracts\EventParserInterface;
 use Apntalk\EslCore\Contracts\InboundMessageClassifierInterface;
 use Apntalk\EslCore\Contracts\InboundPipelineInterface;
 use Apntalk\EslCore\Events\EventFactory;
+use Apntalk\EslCore\Exceptions\ParseException;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
@@ -99,6 +100,11 @@ final class InboundPipeline implements InboundPipelineInterface
         $this->frameParser->feed($bytes);
     }
 
+    /**
+     * @throws ParseException if a drained frame cannot be decoded structurally.
+     *
+     * @return list<DecodedInboundMessage>
+     */
     public function drain(): array
     {
         $decoded = [];

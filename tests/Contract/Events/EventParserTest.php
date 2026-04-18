@@ -421,6 +421,20 @@ final class EventParserTest extends TestCase
         $this->eventParser->parse($frame);
     }
 
+    public function test_parse_throws_for_plain_event_inner_content_length_larger_than_supported_integer_range(): void
+    {
+        $overflow = (string) PHP_INT_MAX . '0';
+
+        $this->expectException(MalformedFrameException::class);
+        $this->expectExceptionMessage('Event Content-Length exceeds supported integer range');
+
+        $this->frameParser->feed(EslFixtureBuilder::eventPlain(
+            "Event-Name: BACKGROUND_JOB\nContent-Length: {$overflow}\n\n"
+        ));
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
     public function test_parse_throws_for_plain_event_missing_inner_header_terminator(): void
     {
         $this->expectException(MalformedFrameException::class);

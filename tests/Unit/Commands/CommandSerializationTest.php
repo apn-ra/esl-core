@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 final class CommandSerializationTest extends TestCase
 {
     /**
-     * @return iterable<string, array{0: callable(): void}>
+     * @return iterable<string, array{0: callable(): void, 1: string}>
      */
     public static function invalidTypedCommandProvider(): iterable
     {
@@ -27,42 +27,98 @@ final class CommandSerializationTest extends TestCase
             static function (): void {
                 new AuthCommand("Clue\nCon");
             },
+            'must not contain carriage return or newline characters',
         ];
 
         yield 'api command carriage return' => [
             static function (): void {
                 new ApiCommand("status\r");
             },
+            'must be a non-empty token without whitespace',
+        ];
+
+        yield 'api command empty' => [
+            static function (): void {
+                new ApiCommand('');
+            },
+            'Typed command field "command" must be a non-empty token without whitespace.',
+        ];
+
+        yield 'api command contains space' => [
+            static function (): void {
+                new ApiCommand('show channels');
+            },
+            'Typed command field "command" must be a non-empty token without whitespace.',
         ];
 
         yield 'api args newline' => [
             static function (): void {
                 new ApiCommand('show', "channels\napi hupall");
             },
+            'must not contain carriage return or newline characters',
+        ];
+
+        yield 'bgapi command empty' => [
+            static function (): void {
+                new BgapiCommand('');
+            },
+            'Typed command field "command" must be a non-empty token without whitespace.',
+        ];
+
+        yield 'bgapi command contains tab' => [
+            static function (): void {
+                new BgapiCommand("originate\tbad");
+            },
+            'Typed command field "command" must be a non-empty token without whitespace.',
         ];
 
         yield 'bgapi args carriage return' => [
             static function (): void {
                 new BgapiCommand('originate', "sofia/internal/1001\r\napi status");
             },
+            'must not contain carriage return or newline characters',
         ];
 
         yield 'filter header name newline' => [
             static function (): void {
                 FilterCommand::add("Event-Name\nReply-Text", 'CHANNEL_CREATE');
             },
+            'Typed command field "headerName" must be a non-empty token without whitespace.',
+        ];
+
+        yield 'filter header name contains space' => [
+            static function (): void {
+                FilterCommand::add('Event Name', 'CHANNEL_CREATE');
+            },
+            'Typed command field "headerName" must be a non-empty token without whitespace.',
         ];
 
         yield 'filter header value carriage return' => [
             static function (): void {
                 FilterCommand::delete('Event-Name', "CHANNEL_CREATE\rfilter delete");
             },
+            'must not contain carriage return or newline characters',
         ];
 
         yield 'event subscription name newline' => [
             static function (): void {
                 EventSubscriptionCommand::forNames(['CHANNEL_CREATE', "CHANNEL_HANGUP\napi status"]);
             },
+            'Typed command field "eventNames[1]" must be a non-empty token without whitespace.',
+        ];
+
+        yield 'event subscription name empty' => [
+            static function (): void {
+                EventSubscriptionCommand::forNames(['CHANNEL_CREATE', '']);
+            },
+            'Typed command field "eventNames[1]" must be a non-empty token without whitespace.',
+        ];
+
+        yield 'event subscription name contains space' => [
+            static function (): void {
+                EventSubscriptionCommand::forNames(['CHANNEL CREATE']);
+            },
+            'Typed command field "eventNames[0]" must be a non-empty token without whitespace.',
         ];
     }
 
@@ -243,10 +299,10 @@ final class CommandSerializationTest extends TestCase
     /**
      * @dataProvider invalidTypedCommandProvider
      */
-    public function test_typed_commands_reject_crlf_in_user_provided_fields(callable $factory): void
+    public function test_typed_commands_reject_invalid_user_provided_fields(callable $factory, string $message): void
     {
         $this->expectException(SerializationException::class);
-        $this->expectExceptionMessage('must not contain carriage return or newline characters');
+        $this->expectExceptionMessage($message);
 
         $factory();
     }

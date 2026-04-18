@@ -122,9 +122,11 @@ For downstream packages, the practical split is:
 ### Commands
 All command classes in `Apntalk\EslCore\Commands\*` are public.
 Typed command constructors reject carriage return and newline characters in
-user-provided command segments so their serialized wire payload stays a single
-logical ESL command. `RawCommand` remains the explicit escape hatch for callers
-that intentionally need raw multiline command control.
+free-form command segments so their serialized wire payload stays a single
+logical ESL command. Fields serialized in token position, such as API command
+names, BGAPI command names, filter header names, and named event subscriptions,
+must be non-empty and contain no whitespace. `RawCommand` remains the explicit
+escape hatch for callers that intentionally need raw multiline command control.
 
 ### Replies
 All reply classes in `Apntalk\EslCore\Replies\*` are public.
@@ -153,6 +155,11 @@ for callers that need to provide a public `CompletableFrameParserInterface` and
 `InboundMessageClassifierInterface` implementation. Treat it as an advanced
 extension seam for controlled composition, not as the mainstream downstream
 ingress story.
+`InboundPipelineInterface::drain()` may throw `ParseException` while decoding
+already parsed frames, for example when an event frame has structurally invalid
+event payload. If that happens mid-batch, the method does not return partial
+decoded messages and the frames already drained from the underlying parser are
+not replayed; callers should reset or discard the pipeline before continuing.
 No soft deprecation is active for `InboundPipeline::__construct(...)` in this release line; the hardening change here is clearer usage guidance, not constructor churn.
 `InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`. If no `ConnectionSessionId` is supplied, the factory generates one for the connection.
 For release-boundary purposes, this is the dominant supported ingress contract.
@@ -186,7 +193,7 @@ These items are being documented for future hardening, not redesigned in this pa
 - `Contracts\ClassifiedMessageInterface` is the public read-only contract for advanced classified-message access. It exposes the classifier outcomes core actually emits: auth request, auth accepted, bgapi accepted, command accepted/error, API response, event, disconnect notice, and unknown. It does not expose a distinct auth-rejected outcome because auth `-ERR` remains a session-context interpretation layered on top of `CommandError`.
 - `InboundMessageClassifierInterface::classify()` now returns `Contracts\ClassifiedMessageInterface`, removing the previous internal-carrier return type from the public classifier seam.
 - `FrameParserInterface`, `CompletableFrameParserInterface`, `EventParserInterface`, and `InboundMessageClassifierInterface` remain advanced public contracts until downstream usage proves they deserve stronger compatibility guarantees.
-- `FrameParser` remains a low-level protocol parser rather than a transport policy owner. It does not impose a built-in `Content-Length` / body-size cap; downstream transports or runtimes that need memory bounds must enforce them outside the parser.
+- `FrameParser` remains a low-level protocol parser rather than a transport policy owner. It does not impose a built-in `Content-Length` / body-size cap; downstream transports or runtimes that need memory bounds must enforce them outside the parser. Digit-only `Content-Length` values that exceed PHP's supported integer range are malformed because they cannot be represented safely by the parser state machine.
 - `DecodedInboundMessage::normalizedEvent()` remains the supported normalized-event substrate access point for downstream byte-ingress consumers, while `Contracts\ProvidesNormalizedSubstrateInterface` is the explicit additive contract for callers that already own a typed event instance; no new classified-message or parser-owned public seam is added in this pass.
 
 The error taxonomy is intentionally layered:

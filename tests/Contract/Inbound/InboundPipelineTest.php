@@ -345,6 +345,22 @@ final class InboundPipelineTest extends TestCase
         );
     }
 
+    public function test_drain_throws_on_mid_batch_decode_failure_without_partial_result_replay(): void
+    {
+        $this->pipeline->push(
+            EslFixtureBuilder::authAccepted()
+            . EslFixtureBuilder::eventJson('{"Event-Name":"PLAYBACK_START","Nested":{"oops":"not scalar"}}')
+            . EslFixtureBuilder::commandReplyOk('+OK after bad event')
+        );
+
+        try {
+            $this->pipeline->drain();
+            $this->fail('Expected malformed mid-batch event payload to fail drain().');
+        } catch (MalformedFrameException) {
+            $this->assertSame([], $this->pipeline->drain());
+        }
+    }
+
     public function test_live_plain_bridge_and_playback_fixtures_decode_with_normalized_substrate_attached(): void
     {
         $bridgeMessages = $this->pipeline->decode(FixtureLoader::loadFrame('live/events/channel-bridge-loopback-plain.esl'));

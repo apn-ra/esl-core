@@ -28,7 +28,7 @@ final class BgapiCommand implements CommandInterface
         private readonly string $command,
         private readonly string $args = '',
     ) {
-        TypedCommandInputGuard::assertNoCrLf($this->command, 'command');
+        TypedCommandInputGuard::assertToken($this->command, 'command');
         TypedCommandInputGuard::assertNoCrLf($this->args, 'args');
     }
 

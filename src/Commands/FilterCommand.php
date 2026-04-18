@@ -27,7 +27,7 @@ final class FilterCommand implements CommandInterface
         private readonly string $headerValue,
         private readonly bool $delete = false,
     ) {
-        TypedCommandInputGuard::assertNoCrLf($this->headerName, 'headerName');
+        TypedCommandInputGuard::assertToken($this->headerName, 'headerName');
         TypedCommandInputGuard::assertNoCrLf($this->headerValue, 'headerValue');
     }
 

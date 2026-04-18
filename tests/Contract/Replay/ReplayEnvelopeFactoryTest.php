@@ -146,6 +146,40 @@ final class ReplayEnvelopeFactoryTest extends TestCase
         );
     }
 
+    public function test_unnamespaced_custom_reply_class_name_is_preserved(): void
+    {
+        if (!class_exists('ReplayEnvelopeFactoryUnnamespacedReplyForTest', false)) {
+            eval('
+                final class ReplayEnvelopeFactoryUnnamespacedReplyForTest implements \Apntalk\EslCore\Contracts\ReplyInterface
+                {
+                    public function __construct(
+                        private readonly \Apntalk\EslCore\Protocol\Frame $frame,
+                    ) {}
+
+                    public function isSuccess(): bool
+                    {
+                        return true;
+                    }
+
+                    public function frame(): \Apntalk\EslCore\Protocol\Frame
+                    {
+                        return $this->frame;
+                    }
+                }
+            ');
+        }
+
+        $replyClass = '\ReplayEnvelopeFactoryUnnamespacedReplyForTest';
+        $reply = new $replyClass(new Frame(
+            HeaderBag::fromHeaderBlock("Content-Type: command/reply\nReply-Text: +OK custom"),
+            '',
+        ));
+
+        $envelope = (new ReplayEnvelopeFactory())->fromReply($reply);
+
+        $this->assertSame('ReplayEnvelopeFactoryUnnamespacedReplyForTest', $envelope->capturedName());
+    }
+
     public function test_typed_event_with_explicit_substrate_contract_preserves_normalized_replay_export(): void
     {
         $event = $this->makeBackgroundJobEvent();

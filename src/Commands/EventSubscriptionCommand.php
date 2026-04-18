@@ -33,7 +33,7 @@ final class EventSubscriptionCommand implements CommandInterface
         private readonly array $eventNames = [],
     ) {
         foreach ($this->eventNames as $index => $eventName) {
-            TypedCommandInputGuard::assertNoCrLf($eventName, sprintf('eventNames[%d]', $index));
+            TypedCommandInputGuard::assertToken($eventName, sprintf('eventNames[%d]', $index));
         }
     }
 

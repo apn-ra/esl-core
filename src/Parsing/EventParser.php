@@ -288,7 +288,7 @@ final class EventParser implements EventParserInterface
             );
         }
 
-        $declaredLength = (int) $contentLength;
+        $declaredLength = $this->parseDeclaredBodyLength($contentLength);
         $actualLength = strlen($eventBody);
 
         if ($actualLength !== $declaredLength) {
@@ -300,6 +300,23 @@ final class EventParser implements EventParserInterface
                 )
             );
         }
+    }
+
+    private function parseDeclaredBodyLength(string $value): int
+    {
+        $normalized = ltrim($value, '0');
+        if ($normalized === '') {
+            return 0;
+        }
+
+        $max = (string) PHP_INT_MAX;
+        if (strlen($normalized) > strlen($max) || (strlen($normalized) === strlen($max) && strcmp($normalized, $max) > 0)) {
+            throw new MalformedFrameException(
+                sprintf('Event Content-Length exceeds supported integer range; got: %s', $value)
+            );
+        }
+
+        return (int) $normalized;
     }
 
     private function assertNoElementChildren(DOMElement $element, string $context): void

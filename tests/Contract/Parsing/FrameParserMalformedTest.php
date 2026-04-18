@@ -38,6 +38,16 @@ final class FrameParserMalformedTest extends TestCase
         $this->parser->feed("Content-Type: api/response\nContent-Length: not-a-number\n\n");
     }
 
+    public function test_content_length_larger_than_supported_integer_range_throws_parse_exception(): void
+    {
+        $overflow = (string) PHP_INT_MAX . '0';
+
+        $this->expectException(ParseException::class);
+        $this->expectExceptionMessage('Content-Length value exceeds supported integer range');
+
+        $this->parser->feed("Content-Type: api/response\nContent-Length: {$overflow}\n\n");
+    }
+
     #[DataProvider('malformedFrameFixtures')]
     public function test_malformed_file_fixtures_throw_parse_exception(string $fixture): void
     {

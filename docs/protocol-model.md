@@ -39,9 +39,11 @@ State: ReadingBody
 The parser is partial-read safe: bytes may arrive in any chunk sizes.
 It does not impose a maximum `Content-Length` / body-size cap. If a digit-only
 `Content-Length` declares a large body, the parser will continue buffering until
-that many bytes arrive or `finish()` reports truncation. Memory bounds and
-hostile-peer protection belong to the embedding transport/runtime layer, not to
-`FrameParser` itself.
+that many bytes arrive or `finish()` reports truncation, as long as the declared
+length is representable as a PHP integer. Values beyond that range are rejected
+as malformed instead of being silently clamped by integer conversion. Memory
+bounds and hostile-peer protection belong to the embedding transport/runtime
+layer, not to `FrameParser` itself.
 
 ## Content-Type categories
 
@@ -185,11 +187,12 @@ This keeps the JSON path deterministic and aligned with the existing normalized 
 | Empty or whitespace-only header name | `MalformedFrameException` |
 | Header name with leading or trailing whitespace | `MalformedFrameException` |
 | Non-numeric `Content-Length` | `MalformedFrameException` |
+| `Content-Length` beyond PHP's integer range | `MalformedFrameException` |
 | Incomplete body (truncated) | No frame emitted; buffered |
 | Missing header terminator at end of input | `TruncatedFrameException` from `FrameParser::finish()` |
 | Unknown `Content-Type` | `ClassifiedInboundMessage.category == Unknown` |
 | Unsupported event parser content type | `UnsupportedContentTypeException` |
 | Invalid `text/event-json` payload | `MalformedFrameException` |
-| Event inner `Content-Length` that is non-numeric or does not match the event body length | `MalformedFrameException` |
+| Event inner `Content-Length` that is non-numeric, beyond PHP's integer range, or does not match the event body length | `MalformedFrameException` |
 | Event with unknown name | `RawEvent` (no exception) |
 | Empty event body | `NormalizedEvent.hasBody() == false` |

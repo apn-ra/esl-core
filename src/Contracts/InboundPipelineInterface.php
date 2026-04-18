@@ -26,6 +26,13 @@ interface InboundPipelineInterface
     /**
      * Drain all decoded inbound messages produced since the last drain().
      *
+     * If a frame in the drained batch fails during reply/event decoding, the
+     * exception is thrown and no partial decoded-message list is returned. The
+     * already drained parser frames are not replayed; callers should reset or
+     * discard the pipeline before continuing after a parse failure.
+     *
+     * @throws ParseException if a drained frame cannot be decoded structurally.
+     *
      * @return list<DecodedInboundMessage>
      */
     public function drain(): array;
