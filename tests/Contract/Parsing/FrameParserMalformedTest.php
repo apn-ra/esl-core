@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Tests\Contract\Parsing;
 
 use Apntalk\EslCore\Exceptions\ParseException;
+use Apntalk\EslCore\Exceptions\TruncatedFrameException;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Tests\Fixtures\FixtureLoader;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -33,6 +36,27 @@ final class FrameParserMalformedTest extends TestCase
         $this->expectException(ParseException::class);
 
         $this->parser->feed("Content-Type: api/response\nContent-Length: not-a-number\n\n");
+    }
+
+    #[DataProvider('malformedFrameFixtures')]
+    public function test_malformed_file_fixtures_throw_parse_exception(string $fixture): void
+    {
+        $this->expectException(ParseException::class);
+
+        $this->parser->feed(FixtureLoader::load("malformed/{$fixture}"));
+    }
+
+    #[DataProvider('partialFrameFixtures')]
+    public function test_partial_file_fixtures_buffer_until_finish_reports_truncation(string $fixture): void
+    {
+        $this->parser->feed(FixtureLoader::load("partial/{$fixture}"));
+
+        $this->assertEmpty($this->parser->drain());
+        $this->assertGreaterThan(0, $this->parser->bufferedByteCount());
+
+        $this->expectException(TruncatedFrameException::class);
+
+        $this->parser->finish();
     }
 
     public function test_partial_frame_produces_no_frames(): void
@@ -97,5 +121,25 @@ final class FrameParserMalformedTest extends TestCase
 
         $this->assertCount(1, $frames);
         $this->assertFalse($frames[0]->hasBody());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function malformedFrameFixtures(): iterable
+    {
+        yield 'empty header name' => ['empty-header-name.esl'];
+        yield 'header name with surrounding whitespace' => ['header-name-with-surrounding-whitespace.esl'];
+        yield 'invalid content length' => ['invalid-content-length.esl'];
+        yield 'missing header colon' => ['missing-header-colon.esl'];
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function partialFrameFixtures(): iterable
+    {
+        yield 'truncated api response body' => ['api-response-body-truncated-partial.bin'];
+        yield 'auth request missing terminator' => ['auth-request-missing-terminator-partial.bin'];
     }
 }

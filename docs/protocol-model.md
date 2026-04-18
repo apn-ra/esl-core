@@ -172,10 +172,14 @@ This keeps the JSON path deterministic and aligned with the existing normalized 
 | Condition | Behavior |
 |---|---|
 | Header line with no colon separator | `MalformedFrameException` |
+| Empty or whitespace-only header name | `MalformedFrameException` |
+| Header name with leading or trailing whitespace | `MalformedFrameException` |
 | Non-numeric `Content-Length` | `MalformedFrameException` |
 | Incomplete body (truncated) | No frame emitted; buffered |
+| Missing header terminator at end of input | `TruncatedFrameException` from `FrameParser::finish()` |
 | Unknown `Content-Type` | `ClassifiedInboundMessage.category == Unknown` |
 | Unsupported event parser content type | `UnsupportedContentTypeException` |
 | Invalid `text/event-json` payload | `MalformedFrameException` |
+| Event inner `Content-Length` that is non-numeric or does not match the event body length | `MalformedFrameException` |
 | Event with unknown name | `RawEvent` (no exception) |
 | Empty event body | `NormalizedEvent.hasBody() == false` |

@@ -228,6 +228,31 @@ final class InboundPipelineTest extends TestCase
         $this->pipeline->finish();
     }
 
+    public function test_public_facade_rejects_malformed_file_fixture(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->pipeline->decode(FixtureLoader::load('malformed/empty-header-name.esl'));
+    }
+
+    public function test_public_facade_rejects_event_with_truncated_inner_body_fixture(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->pipeline->decode(FixtureLoader::load('malformed/event-plain-inner-body-truncated.esl'));
+    }
+
+    public function test_public_facade_reports_truncation_for_partial_file_fixture(): void
+    {
+        $this->pipeline->push(FixtureLoader::load('partial/api-response-body-truncated-partial.bin'));
+
+        $this->assertSame([], $this->pipeline->drain());
+
+        $this->expectException(TruncatedFrameException::class);
+
+        $this->pipeline->finish();
+    }
+
     public function test_named_default_construction_path_returns_supported_public_facade(): void
     {
         $pipeline = InboundPipeline::withDefaults();

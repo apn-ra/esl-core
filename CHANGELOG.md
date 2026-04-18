@@ -14,6 +14,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Added
 
+- Deterministic malformed/partial parser fixtures under `tests/Fixtures/malformed/` and `tests/Fixtures/partial/`, with focused parser, event-parser, and public-facade tests proving invalid/whitespace-padded header names, invalid `Content-Length`, missing header separators, missing header terminators, truncated outer bodies, and mismatched inner event bodies.
 - `tests/Integration/SocketTransportFactoryPipelineTest` — a public-path integration proof for the supported `SocketTransportFactory::connect()` + `InboundPipeline::withDefaults()` composition over a real local TCP socket, including fragmented inbound decode and typed bgapi acceptance/completion assertions.
 - `tests/Contract/Events/EventFactoryTest` — focused contract coverage for the public-but-advanced `EventFactory` bridge, mirroring the reply-side tiering proof without promoting it to the preferred raw-byte ingress path.
 - `InboundPipeline::withDefaults()` — a stable named construction path for the supported ingress facade, reducing the need for downstream packages to couple to concrete parser/classifier collaborator types through the public constructor.
@@ -38,6 +39,7 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 
 ### Clarified
 
+- Fixture documentation now distinguishes raw parser input from sidecar provenance notes. Malformed and partial fixtures should keep exact bytes in the fixture file and record provenance in README/provenance surfaces or tests rather than adding comments that would alter parser input.
 - Typed-event normalized-substrate access is now expressed more explicitly: the additive public contract `Contracts\ProvidesNormalizedSubstrateInterface` exposes `normalized(): NormalizedEvent` on `NormalizedEvent` and the built-in typed event wrappers. `CorrelationContext` and `ReplayEnvelopeFactory` now prefer that explicit contract and only retain reflection as a compatibility fallback for legacy/property-based event wrappers.
 - `ReplyFactory::fromFrame()` now provides an explicit advanced reply-side seam for callers that already own a parsed `Frame` but do not want to pass the internal `ClassifiedInboundMessage` carrier around directly. The older `fromClassified()` path remains in place for lower-level fixture-backed composition.
 - `Contracts\ClassifiedMessageInterface` now provides an additive public read-only contract for advanced classified-message access. The current internal classified carrier implements it, and `ReplyFactory::fromClassification()` consumes it directly while preserving the older classifier and `fromClassified()` signatures for compatibility.
@@ -63,6 +65,11 @@ Release preparation is in progress for the next small pre-`1.0.0` tag. The curre
 - `NormalizedEvent` remains a protocol-substrate object rather than an application aggregate: it now exposes explicit source-content-type and URL-encoding invariants while correlation/replay/runtime state stays in separate layers.
 - The supported ingress surface for upper layers is now `Inbound\InboundPipeline`; concrete parser/classifier implementations remain intentionally provisional even though they continue to exist in-repo for low-level testing.
 - Current bridge/playback typed-event coverage is live-backed in both `text/event-plain` and `text/event-json`, but that evidence comes from curated fixtures and non-public smoke tooling rather than from any supported runtime or transport integration surface.
+
+### Fixed
+
+- `HeaderBag::fromHeaderBlock()` now rejects empty, whitespace-only, or whitespace-padded header names as malformed frame input instead of accepting ambiguous header keys.
+- `EventParser` now rejects event payloads whose inner `Content-Length` is non-numeric or does not match the normalized event body byte length, instead of silently accepting semantically incomplete event bodies.
 
 ## [0.2.1] - 2026-04-14
 

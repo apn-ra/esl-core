@@ -61,7 +61,10 @@ $bytes = FixtureLoader::load('auth/auth-request.esl');
 File-based fixtures MUST:
 - Use LF (`\n`) line endings only. No `\r\n`.
 - Include a correct `Content-Length` where required.
-- Have a comment at the top describing provenance.
+- Preserve the exact parser input bytes. Do not add inline comments to raw
+  `.esl` / `.bin` fixtures when those comments would become part of the frame.
+- Document provenance in a nearby `README.md`, a central provenance document, or
+  the test that consumes the fixture.
 
 Promoted live fixtures should also be listed in a central provenance surface.
 See `docs/live-fixture-provenance.md` for the current live-backed capture map.
@@ -73,7 +76,7 @@ See `docs/live-fixture-provenance.md` for the current live-backed capture map.
 | `auth/` | `auth-{description}.esl` | Auth flow frames |
 | `replies/` | `{type}-{description}.esl` | Inbound reply frames |
 | `events/` | `{event-name}-{description}.esl` | Inbound event frames |
-| `malformed/` | `{description}.esl` | Intentionally broken frames |
+| `malformed/` | `{description}.esl` | Intentionally broken parser or event-parser inputs |
 | `partial/` | `{description}-partial.bin` | Truncated or fragmented frames |
 | `sequences/` | `{description}.esl` | Multi-frame inbound captures or constructed protocol flows |
 | `replay/` | `{description}.json` | Replay envelope shapes |
@@ -85,6 +88,11 @@ Fixtures should document their origin:
 - `# provenance: constructed` — built from the FreeSWITCH ESL documentation
 - `# provenance: captured` — captured from a live FreeSWITCH connection
 - `# provenance: regression` — created to reproduce a specific bug
+
+These labels may appear in sidecar fixture documentation instead of inside the
+raw fixture file. For malformed and partial parser fixtures, sidecar
+documentation is preferred because changing the raw bytes changes the condition
+being tested.
 
 For curated live fixtures promoted from `tools/smoke/captures/`, maintainers
 should record:
@@ -102,12 +110,19 @@ protocol corpus rather than implied live captures.
 
 1. Create the fixture using `EslFixtureBuilder` in a test first.
 2. If a file-based fixture is needed (e.g., for a known-bad frame), add it to the appropriate subdirectory.
-3. Document the fixture behavior in a comment within the fixture file.
+3. Document the fixture behavior in a sidecar README, central provenance document, or focused test when inline comments would alter raw wire truth.
 4. Add a test that consumes the fixture through the relevant parser or classifier.
 
 ## Fixture validation rules
 
 - A fixture for a valid frame MUST parse without exceptions.
-- A fixture in `malformed/` MUST cause a `ParseException` when fed to the parser.
-- A fixture in `partial/` MUST produce zero frames when fed as a single read, and one complete frame when the remainder is fed.
+- A fixture in `malformed/` MUST cause a `ParseException` when fed through the
+  relevant parser layer. Pure frame-shape fixtures should fail in
+  `FrameParser`; event-payload fixtures may parse as an outer frame first and
+  then fail in `EventParser` / `InboundPipeline`.
+- A fixture in `partial/` MUST produce zero frames when fed as a single read and
+  MUST produce `TruncatedFrameException` when `FrameParser::finish()` is called
+  without supplying the missing bytes. If a completion counterpart is added, it
+  should prove that the same prefix can produce one complete frame once the
+  missing bytes arrive.
 - Event fixtures MUST contain normalized event names that match classifier expectations.

@@ -17,6 +17,7 @@ use Apntalk\EslCore\Exceptions\ParseException;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
+use Apntalk\EslCore\Tests\Fixtures\FixtureLoader;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -373,6 +374,53 @@ final class EventParserTest extends TestCase
         $this->frameParser->feed(
             EslFixtureBuilder::eventXml(
                 '<event><headers><Event-Name><Nested/></Event-Name></headers></event>'
+            )
+        );
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
+    public function test_parse_throws_for_plain_event_inner_body_shorter_than_declared_content_length(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(FixtureLoader::load('malformed/event-plain-inner-body-truncated.esl'));
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
+    public function test_parse_throws_for_json_event_body_shorter_than_declared_content_length(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(
+            EslFixtureBuilder::eventJson(
+                EslFixtureBuilder::eventJsonData(
+                    [
+                        'Event-Name' => 'BACKGROUND_JOB',
+                        'Content-Length' => 12,
+                    ],
+                    "+OK\n"
+                )
+            )
+        );
+        $frame = $this->frameParser->drain()[0];
+        $this->eventParser->parse($frame);
+    }
+
+    public function test_parse_throws_for_xml_event_body_shorter_than_declared_content_length(): void
+    {
+        $this->expectException(MalformedFrameException::class);
+
+        $this->frameParser->feed(
+            EslFixtureBuilder::eventXml(
+                EslFixtureBuilder::eventXmlData(
+                    [
+                        'Event-Name' => 'BACKGROUND_JOB',
+                        'Content-Length' => 12,
+                    ],
+                    "+OK\n"
+                )
             )
         );
         $frame = $this->frameParser->drain()[0];

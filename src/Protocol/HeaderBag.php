@@ -77,6 +77,18 @@ final class HeaderBag
                 $value = ltrim(substr($line, $colonPos + 1));
             }
 
+            if (trim($name) === '') {
+                throw new MalformedFrameException(
+                    "Malformed header line (empty header name): {$line}"
+                );
+            }
+
+            if ($name !== trim($name)) {
+                throw new MalformedFrameException(
+                    "Malformed header line (header name contains surrounding whitespace): {$line}"
+                );
+            }
+
             $key = strtolower($name);
             if (!isset($headers[$key])) {
                 $headers[$key] = ['name' => $name, 'values' => []];

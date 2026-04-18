@@ -69,6 +69,7 @@ final class EventParser implements EventParserInterface
         }
 
         $eventHeaders = $this->parseHeaderBlock($eventHeaderBlock);
+        $this->assertDeclaredBodyLengthMatches($eventHeaders, $eventBody);
 
         return new NormalizedEvent(
             outerHeaders: $frame->headers,
@@ -127,6 +128,7 @@ final class EventParser implements EventParserInterface
         }
 
         $eventHeaders = $this->parseHeaderBlock($this->headerBlockFromMap($headers));
+        $this->assertDeclaredBodyLengthMatches($eventHeaders, $eventBody);
 
         return new NormalizedEvent(
             outerHeaders: $frame->headers,
@@ -228,6 +230,8 @@ final class EventParser implements EventParserInterface
             $eventBody = $bodyElement->textContent;
         }
 
+        $this->assertDeclaredBodyLengthMatches($eventHeaders, $eventBody);
+
         return new NormalizedEvent(
             outerHeaders: $frame->headers,
             eventHeaders: $eventHeaders,
@@ -268,6 +272,33 @@ final class EventParser implements EventParserInterface
         }
 
         return implode("\n", $lines);
+    }
+
+    private function assertDeclaredBodyLengthMatches(HeaderBag $eventHeaders, string $eventBody): void
+    {
+        $contentLength = $eventHeaders->get('Content-Length');
+        if ($contentLength === null) {
+            return;
+        }
+
+        if (!ctype_digit($contentLength)) {
+            throw new MalformedFrameException(
+                sprintf('Event Content-Length must be numeric; got: %s', $contentLength)
+            );
+        }
+
+        $declaredLength = (int) $contentLength;
+        $actualLength = strlen($eventBody);
+
+        if ($actualLength !== $declaredLength) {
+            throw new MalformedFrameException(
+                sprintf(
+                    'Event body length mismatch: Content-Length declared %d bytes, got %d bytes',
+                    $declaredLength,
+                    $actualLength
+                )
+            );
+        }
     }
 
     private function assertNoElementChildren(DOMElement $element, string $context): void

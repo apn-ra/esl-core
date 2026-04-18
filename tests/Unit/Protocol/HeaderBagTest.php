@@ -104,6 +104,20 @@ final class HeaderBagTest extends TestCase
         HeaderBag::fromHeaderBlock("Content-Type auth/request");
     }
 
+    public function test_empty_header_name_throws_parse_exception(): void
+    {
+        $this->expectException(ParseException::class);
+
+        HeaderBag::fromHeaderBlock(": value");
+    }
+
+    public function test_header_name_with_surrounding_whitespace_throws_parse_exception(): void
+    {
+        $this->expectException(ParseException::class);
+
+        HeaderBag::fromHeaderBlock("Content-Type : auth/request");
+    }
+
     // ---------------------------------------------------------------------------
     // Accessors
     // ---------------------------------------------------------------------------
