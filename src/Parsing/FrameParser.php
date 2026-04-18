@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Parsing;
 
-use Apntalk\EslCore\Contracts\FrameParserInterface;
+use Apntalk\EslCore\Contracts\CompletableFrameParserInterface;
 use Apntalk\EslCore\Exceptions\MalformedFrameException;
 use Apntalk\EslCore\Exceptions\ParseException;
 use Apntalk\EslCore\Exceptions\TruncatedFrameException;
@@ -35,7 +35,7 @@ use Apntalk\EslCore\Protocol\HeaderBag;
  *
  * @see FrameParserInterface
  */
-final class FrameParser implements FrameParserInterface
+final class FrameParser implements CompletableFrameParserInterface
 {
     /** Raw byte buffer. */
     private string $buffer = '';

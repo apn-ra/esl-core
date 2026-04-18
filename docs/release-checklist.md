@@ -27,7 +27,12 @@ Use this checklist when cutting the next pre-`1.0.0` release of `apntalk/esl-cor
 - Confirm preferred vs advanced vs internal seam labels still align across `README.md`, `docs/public-api.md`, and `docs/capabilities.md`.
 - Confirm `docs/public-api.md` matches the intended supported surface.
 - Confirm `docs/capabilities.md` matches tested behavior.
-- Confirm every newly promoted live fixture has a provenance entry in `docs/live-fixture-provenance.md` and that the listed source capture still exists under `tools/smoke/captures/`.
+- Confirm every newly promoted live fixture has a provenance entry in
+  `docs/live-fixture-provenance.md` naming the reviewed quarantine capture,
+  promotion reason, and contract tests. The raw quarantine files under
+  `tools/smoke/captures/` are operator artifacts and are not retained in git by
+  default, so release review should not require those files to exist in a fresh
+  checkout.
 - Confirm `docs/replay-primitives.md` and `docs/correlation.md` do not imply a replay runtime.
 - Confirm `CHANGELOG.md` is release-facing and does not overclaim completeness or stability.
 

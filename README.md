@@ -95,7 +95,7 @@ See [`docs/architecture.md`](docs/architecture.md) for the full architecture des
 
 The supported public surface is centered on typed commands, the inbound decoding facade, normalized/typed events, correlation metadata, replay envelopes, capabilities, and the minimal transport boundary.
 For new integrations, start from `InboundPipeline::withDefaults()` for raw byte decoding, `SocketTransportFactory` for endpoint/stream transport construction, and `InboundConnectionFactory` when a listener/runtime has already accepted a stream and needs one supported bootstrap bundle.
-Direct `InboundPipeline::__construct(...)` collaborator injection and parser/classifier/reply-factory composition remain available for advanced fixture-backed work, but they are not the preferred downstream ingress path at this checkpoint and are not being soft-deprecated in this release line.
+Direct `InboundPipeline::__construct(...)` collaborator injection and parser/classifier/reply-factory composition remain available for advanced fixture-backed work, but they are not the preferred downstream ingress path at this checkpoint and are not being soft-deprecated in this release line. For advanced callers that need parser/classifier replacement through public contracts, use `InboundPipeline::withContracts(...)`; treat that as an advanced extension seam, not a co-equal integration route.
 
 For one concise downstream integration map, see [`docs/downstream-integration.md`](docs/downstream-integration.md).
 
@@ -153,6 +153,11 @@ $transport = $socketFactory->connect(SocketEndpoint::tcp('127.0.0.1', 8021));
 signal only when the underlying transport is configured for non-blocking reads.
 `SocketTransportFactory` preserves the current blocking mode of the PHP stream
 it connects or wraps; if your runtime polls, configure the stream accordingly.
+For this release line, `TransportInterface::write()` assumes the wrapped stream
+is currently writable and is expected to be used with a blocking stream or with
+runtime-managed write readiness. Core does not implement async retry,
+would-block buffering, or write scheduling; non-writable writes fail with
+`TransportException`.
 
 ### Accepted-stream bootstrap seam
 
@@ -170,12 +175,12 @@ $prepared->pipeline()->push($prepared->transport()->read(4096) ?? '');
 In production, `$acceptedPhpStream` is provided by your listener/runtime layer after accept. If `prepareAcceptedStream()` is called without a `ConnectionSessionId`, core generates one for that connection and binds it to the returned `CorrelationContext`. That bootstrap step still does not imply listener ownership, a read loop, replay bootstrap integration, or any higher-level session supervision.
 
 If you need the current low-level parser/classifier implementations directly, they are still available in the repository and fixture-backed, but they remain pre-1.0 unstable implementation surfaces rather than the disciplined public API boundary.
-Upper layers should prefer `InboundPipeline::withDefaults()` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need frame-level control and accept provisional coupling to lower-level collaborators.
+Upper layers should prefer `InboundPipeline::withDefaults()` instead of composing `FrameParser`, `InboundMessageClassifier`, `ReplyFactory`, and `EventFactory` directly, unless they intentionally need frame-level control and accept lower-level coupling. Use `InboundPipeline::withContracts(...)` when that customization must be expressed through public parser/classifier contracts.
 For that advanced composition path, the current staged migration posture is:
 
 - consume classified output through `Contracts\\ClassifiedMessageInterface`
 - pass it to `ReplyFactory::fromClassification()` when you need typed replies
-- avoid treating `InboundMessageClassifierInterface` itself as a fully hardened public producer contract yet
+- implement `InboundMessageClassifierInterface` against the public `ClassifiedMessageInterface` result contract when you need custom classification
 
 For typed events, the built-in event wrappers currently expose a public readonly
 `$normalized` property and also implement
@@ -189,7 +194,7 @@ participate in correlation/replay substrate extraction.
 | Posture | What to build on first |
 |---|---|
 | Preferred public seams | `InboundPipeline::withDefaults()`, `SocketTransportFactory`, `InboundConnectionFactory`, typed commands/replies/events, `CorrelationContext`, `ReplayEnvelopeFactory` |
-| Advanced public seams | `InboundPipeline::__construct(...)`, `ReplyFactory::fromFrame()`, `ReplyFactory::fromClassification()`, `ReplyFactory::fromClassified()`, `EventFactory`, `EventClassifier`, `Contracts\ClassifiedMessageInterface`, `Contracts\ProvidesNormalizedSubstrateInterface`, `Contracts\FrameSerializerInterface`, lower-level `Contracts\*` parser/classifier interfaces |
+| Advanced public seams | `InboundPipeline::withContracts(...)`, `InboundPipeline::__construct(...)`, `ReplyFactory::fromFrame()`, `ReplyFactory::fromClassification()`, `ReplyFactory::fromClassified()`, `EventFactory`, `EventClassifier`, `Contracts\ClassifiedMessageInterface`, `Contracts\CompletableFrameParserInterface`, `Contracts\ProvidesNormalizedSubstrateInterface`, `Contracts\FrameSerializerInterface`, lower-level `Contracts\*` parser/classifier interfaces |
 | Internal or provisional implementation details | `Parsing\*`, `Internal\*`, most of `Protocol\*` other than `Frame` and `HeaderBag` |
 
 ## Current release scope

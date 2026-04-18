@@ -31,6 +31,11 @@ interface TransportInterface
     /**
      * Write bytes to the transport.
      *
+     * Stream-backed implementations in this release line assume the underlying
+     * stream is currently writable, usually by using blocking streams or by
+     * letting the embedding runtime wait for write readiness first. Core does
+     * not define async would-block retry, buffering, or scheduling semantics.
+     *
      * @throws TransportException on I/O error.
      */
     public function write(string $bytes): void;

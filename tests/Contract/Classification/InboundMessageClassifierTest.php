@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Tests\Contract\Classification;
 
 use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
+use Apntalk\EslCore\Contracts\InboundMessageClassifierInterface;
+use Apntalk\EslCore\Internal\Classification\ClassifiedInboundMessage;
 use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\FrameParser;
+use Apntalk\EslCore\Protocol\Frame;
+use Apntalk\EslCore\Protocol\MessageType;
 use Apntalk\EslCore\Tests\Fixtures\EslFixtureBuilder;
 use PHPUnit\Framework\TestCase;
 
@@ -29,7 +33,7 @@ final class InboundMessageClassifierTest extends TestCase
         $this->parser     = new FrameParser();
     }
 
-    private function classify(string $fixture): \Apntalk\EslCore\Internal\Classification\ClassifiedInboundMessage
+    private function classify(string $fixture): ClassifiedInboundMessage
     {
         $this->parser->reset();
         $this->parser->feed($fixture);
@@ -185,7 +189,7 @@ final class InboundMessageClassifierTest extends TestCase
     {
         $classified = $this->classify(EslFixtureBuilder::authRequest());
 
-        $this->assertSame(\Apntalk\EslCore\Protocol\MessageType::AuthRequest, $classified->messageType);
+        $this->assertSame(MessageType::AuthRequest, $classified->messageType);
     }
 
     public function test_original_frame_preserved_on_classified_message(): void
@@ -206,5 +210,107 @@ final class InboundMessageClassifierTest extends TestCase
         $this->assertTrue($classified->isApiResponse());
         $this->assertFalse($classified->isEvent());
         $this->assertSame('api/response', $classified->frame()->contentType());
+    }
+
+    public function test_downstream_classifier_can_implement_public_interface_without_internal_carrier(): void
+    {
+        $classifier = new class implements InboundMessageClassifierInterface {
+            public function classify(Frame $frame): ClassifiedMessageInterface
+            {
+                return new class ($frame) implements ClassifiedMessageInterface {
+                    public function __construct(
+                        private readonly Frame $frame,
+                    ) {}
+
+                    public function frame(): Frame
+                    {
+                        return $this->frame;
+                    }
+
+                    public function isAuthRequest(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isAuthAccepted(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isBgapiAccepted(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isCommandAccepted(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isCommandError(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isApiResponse(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isEvent(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isDisconnectNotice(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isUnknown(): bool
+                    {
+                        return true;
+                    }
+                };
+            }
+        };
+
+        $classified = $classifier->classify($this->parsedFrame(EslFixtureBuilder::frame([
+            'Content-Type' => 'application/x-downstream',
+        ])));
+
+        $this->assertInstanceOf(ClassifiedMessageInterface::class, $classified);
+        $this->assertTrue($classified->isUnknown());
+        $this->assertSame('application/x-downstream', $classified->frame()->contentType());
+    }
+
+    public function test_existing_classifier_implementation_returning_internal_carrier_remains_compatible(): void
+    {
+        $classifier = new class implements InboundMessageClassifierInterface {
+            public function classify(Frame $frame): ClassifiedInboundMessage
+            {
+                return new ClassifiedInboundMessage(
+                    InboundMessageCategory::CommandAccepted,
+                    $frame,
+                    MessageType::CommandReply,
+                );
+            }
+        };
+
+        $classified = $classifier->classify($this->parsedFrame(EslFixtureBuilder::commandReplyOk()));
+
+        $this->assertInstanceOf(ClassifiedMessageInterface::class, $classified);
+        $this->assertTrue($classified->isCommandAccepted());
+        $this->assertSame('+OK', $classified->frame()->replyText());
+    }
+
+    private function parsedFrame(string $fixture): Frame
+    {
+        $this->parser->reset();
+        $this->parser->feed($fixture);
+        $frames = $this->parser->drain();
+        $this->assertCount(1, $frames);
+
+        return $frames[0];
     }
 }

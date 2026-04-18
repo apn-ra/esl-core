@@ -19,6 +19,12 @@ inspection may help operators during a live run. The current repository keeps
 the curated fixture plus this promotion record; it does not retain the
 quarantined raw capture files in git by default.
 
+The `Source Capture` column below records the reviewed quarantine filename from
+the promotion session. It is traceability metadata, not a promise that the
+source capture is committed in this repository. Fresh checkouts should expect
+`tools/smoke/captures/` to contain only its control files unless an operator has
+run new live validation locally.
+
 ## Controlled Scenario
 
 All fixtures in this table came from the same non-public controlled loopback

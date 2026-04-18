@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Inbound;
 
+use Apntalk\EslCore\Contracts\CompletableFrameParserInterface;
 use Apntalk\EslCore\Contracts\EventFactoryInterface;
 use Apntalk\EslCore\Contracts\EventParserInterface;
+use Apntalk\EslCore\Contracts\InboundMessageClassifierInterface;
 use Apntalk\EslCore\Contracts\InboundPipelineInterface;
 use Apntalk\EslCore\Events\EventFactory;
-use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
@@ -28,8 +29,8 @@ use Apntalk\EslCore\Replies\UnknownReply;
  */
 final class InboundPipeline implements InboundPipelineInterface
 {
-    private readonly FrameParser $frameParser;
-    private readonly InboundMessageClassifier $classifier;
+    private readonly CompletableFrameParserInterface $frameParser;
+    private readonly InboundMessageClassifierInterface $classifier;
     private readonly EventParserInterface $eventParser;
     private readonly EventFactoryInterface $eventFactory;
     private readonly ReplyFactory $replyFactory;
@@ -47,17 +48,41 @@ final class InboundPipeline implements InboundPipelineInterface
     }
 
     /**
+     * Advanced contract-based composition path.
+     *
+     * This factory lets downstream packages provide public parser/classifier
+     * contract implementations without depending on current concrete internals.
+     * It remains an advanced path; the preferred ingress seam is still
+     * withDefaults().
+     */
+    public static function withContracts(
+        CompletableFrameParserInterface $frameParser,
+        InboundMessageClassifierInterface $classifier,
+        ?EventParserInterface $eventParser = null,
+        ?EventFactoryInterface $eventFactory = null,
+        ?ReplyFactory $replyFactory = null,
+    ): self {
+        return new self(
+            frameParser: $frameParser,
+            classifier: $classifier,
+            eventParser: $eventParser,
+            eventFactory: $eventFactory,
+            replyFactory: $replyFactory,
+        );
+    }
+
+    /**
      * Advanced composition path for callers intentionally overriding the
      * current parser/classifier/event/reply collaborators.
      *
      * For the stable public ingress construction path, prefer withDefaults().
      * This constructor remains public for lower-level fixture-backed
-     * composition, but its collaborator types are more concrete and more
-     * provisional than the default facade path before 1.0.0.
+     * composition. For contract-based parser/classifier replacement, prefer
+     * withContracts().
      */
     public function __construct(
-        ?FrameParser $frameParser = null,
-        ?InboundMessageClassifier $classifier = null,
+        ?CompletableFrameParserInterface $frameParser = null,
+        ?InboundMessageClassifierInterface $classifier = null,
         ?EventParserInterface $eventParser = null,
         ?EventFactoryInterface $eventFactory = null,
         ?ReplyFactory $replyFactory = null,
@@ -80,13 +105,14 @@ final class InboundPipeline implements InboundPipelineInterface
 
         foreach ($this->frameParser->drain() as $frame) {
             $classified = $this->classifier->classify($frame);
+            $classifiedFrame = $classified->frame();
 
-            $decoded[] = match ($classified->category) {
-                InboundMessageCategory::ServerAuthRequest => DecodedInboundMessage::forServerAuthRequest(),
-                InboundMessageCategory::DisconnectNotice => DecodedInboundMessage::forDisconnectNotice(),
-                InboundMessageCategory::EventMessage => $this->decodeEventFrame($frame),
-                InboundMessageCategory::Unknown => DecodedInboundMessage::forUnknown(UnknownReply::fromFrame($frame)),
-                default => DecodedInboundMessage::forReply($this->replyFactory->fromClassified($classified)),
+            $decoded[] = match (true) {
+                $classified->isAuthRequest() => DecodedInboundMessage::forServerAuthRequest(),
+                $classified->isDisconnectNotice() => DecodedInboundMessage::forDisconnectNotice(),
+                $classified->isEvent() => $this->decodeEventFrame($classifiedFrame),
+                $classified->isUnknown() => DecodedInboundMessage::forUnknown(UnknownReply::fromFrame($classifiedFrame)),
+                default => DecodedInboundMessage::forReply($this->replyFactory->fromClassification($classified)),
             };
         }
 

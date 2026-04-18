@@ -9,3 +9,8 @@ Use captures for:
 - promoting selected samples into curated test fixtures after review
 
 Do not commit ad hoc captures blindly. Review and minimize them before turning any sample into a fixture.
+
+Curated fixtures promoted from this quarantine area should be checked in under
+`tests/Fixtures/live/` and recorded in `docs/live-fixture-provenance.md`. The
+quarantined source capture files themselves are intentionally ignored by git by
+default and may be absent from a fresh checkout.

@@ -5,7 +5,7 @@ This document defines the public API boundary for `apntalk/esl-core`.
 The repository uses three consumer postures:
 
 - Preferred public seams: the default downstream integration paths this package wants callers to start from.
-- Advanced public seams: public types that remain available for lower-level composition, but expose more concrete or provisional coupling than the preferred path.
+- Advanced public seams: public types that remain available for lower-level composition, but expose lower-level or still-provisional coupling compared with the preferred path.
 - Internal/provisional seams: implementation detail or pre-1.0 composition surfaces that may change without the same compatibility expectations.
 
 ## Support-tier map
@@ -15,7 +15,7 @@ Use this table as the downstream integration shortcut:
 | Posture | What belongs here | Current examples |
 |---|---|---|
 | Preferred public seams | The default downstream path this package wants upper layers to adopt | `InboundPipeline::withDefaults()`, `InboundConnectionFactory::prepareAcceptedStream()`, `SocketTransportFactory`, typed commands/replies/events, `CorrelationContext`, `ReplayEnvelopeFactory` |
-| Advanced public seams | Public composition points that remain supported, but expose more concrete/provisional coupling than the preferred path | `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, `FrameSerializerInterface`, `FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface` |
+| Advanced public seams | Public composition points that remain supported, but expose lower-level/provisional coupling compared with the preferred path | `InboundPipeline::withContracts(...)`, `InboundPipeline::__construct(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, `FrameSerializerInterface`, `CompletableFrameParserInterface`, `FrameParserInterface`, `EventParserInterface`, `InboundMessageClassifierInterface` |
 | Internal/provisional seams | Repository implementation details or non-default early-adopter surfaces that may change more freely before `1.0.0` | `Parsing\*`, `Internal\*`, most of `Protocol\*`, internal transport smoke helpers |
 
 Stable capability support and seam posture are related but distinct. A feature can be stable while some lower-level ways of composing that feature remain advanced or provisional.
@@ -76,6 +76,7 @@ These are the core interfaces intended for consumers and upper-layer packages:
 ```
 Contracts\CommandInterface
 Contracts\ClassifiedMessageInterface
+Contracts\CompletableFrameParserInterface
 Contracts\FrameSerializerInterface
 Contracts\InboundConnectionFactoryInterface
 Contracts\InboundPipelineInterface
@@ -92,10 +93,18 @@ Contracts\TransportFactoryInterface
 ```
 
 Lower-level composition contracts such as `FrameSerializerInterface`,
-`FrameParserInterface`, `EventParserInterface`, and
+`FrameParserInterface`, `CompletableFrameParserInterface`,
+`EventParserInterface`, and
 `InboundMessageClassifierInterface` remain present in `Contracts\*`, but they
 should be treated as advanced/provisional composition points rather than the
 default supported upper-layer integration surface.
+`InboundMessageClassifierInterface::classify()` now returns the public
+`ClassifiedMessageInterface`, so advanced classifier implementations,
+decorators, mocks, and adapters no longer need to import the internal carrier.
+Existing implementations that declare the current concrete internal carrier as
+a covariant return remain source-compatible because that carrier implements
+`ClassifiedMessageInterface`; new implementations should prefer the public
+return contract.
 Current parser and classifier implementations still exist in the repository and remain fixture-backed, but the concrete classes under `Parsing`, `Protocol`, and `Internal` stay intentionally outside the supported pre-`1.0.0` public API boundary.
 Upper layers should prefer `CommandInterface::serialize()` for command output
 and `Inbound\InboundPipeline` for byte ingress rather than composing
@@ -105,7 +114,7 @@ and `Inbound\InboundPipeline` for byte ingress rather than composing
 For downstream packages, the practical split is:
 
 - Build first on `InboundPipeline::withDefaults()`, `SocketTransportFactory`, and `InboundConnectionFactory` when you need supported byte ingress or accepted-stream bootstrap.
-- Reach for `ReplyFactory`, `EventFactory`, `EventClassifier`, or low-level parser/classifier contracts only when your package intentionally owns frame-level composition and accepts tighter provisional coupling.
+- Reach for `InboundPipeline::withContracts(...)`, `ReplyFactory`, `EventFactory`, `EventClassifier`, or low-level parser/classifier contracts only when your package intentionally owns frame-level composition and accepts tighter advanced-seam coupling. These lower-level routes are not co-equal alternatives to the preferred ingress facade.
 - Do not treat `Parsing\*`, `Internal\*`, or the rest of `Protocol\*` as stable extension seams.
 
 ## Concrete types consumers may depend on
@@ -139,6 +148,11 @@ it has broader evidence than the current constructed fixture corpus.
 `Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, `Inbound\InboundMessageType`, `Inbound\PreparedInboundConnection`, and `Inbound\InboundConnectionFactory` are public.
 These types form the supported inbound decoding facade for raw byte ingestion, typed reply/event decoding, normalized-event access, auth-request/disconnect notices, and safe fallback to `RawEvent` / `UnknownReply` where appropriate.
 `InboundPipeline::withDefaults()` is the preferred stable construction path for that facade. Direct constructor collaborator injection remains available for advanced composition, but it is not the preferred public ingress path before `1.0.0`.
+`InboundPipeline::withContracts(...)` is the additive advanced construction path
+for callers that need to provide a public `CompletableFrameParserInterface` and
+`InboundMessageClassifierInterface` implementation. Treat it as an advanced
+extension seam for controlled composition, not as the mainstream downstream
+ingress story.
 No soft deprecation is active for `InboundPipeline::__construct(...)` in this release line; the hardening change here is clearer usage guidance, not constructor churn.
 `InboundConnectionFactory` is the supported accepted-stream bootstrap seam. It prepares a `PreparedInboundConnection` bundle carrying the wrapped transport, the stable decode facade, and the per-session `CorrelationContext`. If no `ConnectionSessionId` is supplied, the factory generates one for the connection.
 For release-boundary purposes, this is the dominant supported ingress contract.
@@ -151,6 +165,10 @@ All exception classes in `Apntalk\EslCore\Exceptions\*` are public.
 `TransportInterface`, `TransportFactoryInterface`, `InMemoryTransport`, `SocketEndpoint`, and `SocketTransportFactory` are public as the minimal transport boundary for testing and narrow smoke-path use.
 `SocketTransportFactory` is the supported public construction seam for real byte-stream transports. It can either connect from a `SocketEndpoint` or wrap an already-open PHP stream resource while still returning only `TransportInterface`. Invalid or closed stream inputs fail with `TransportException`.
 For real PHP streams, core preserves the stream's current blocking mode. Downstream runtimes that poll for `''` as a non-blocking "no data yet" signal must configure the wrapped stream accordingly before handing it to core or before calling `read()`.
+For writes, this release line assumes a blocking/writable stream or
+runtime-managed write readiness. Core writes the full payload synchronously and
+does not provide async retry, would-block buffering, or write scheduling; a
+non-writable write is reported as `TransportException`.
 This does not imply reconnect, scheduling, supervision, or broader transport-runtime ownership in core.
 The new stream/socket smoke-path transport remains internal-only under `Internal\Transport\*`; it exists to validate realistic byte-stream behavior, not to widen the supported transport API.
 
@@ -162,12 +180,12 @@ They should not be treated as a signal that the rest of `Protocol\*` is public. 
 
 These items are being documented for future hardening, not redesigned in this pass:
 
-- `InboundPipeline::withDefaults()` remains the default downstream ingress seam; the constructor stays public as an advanced composition escape hatch without an active deprecation.
-- `ReplyFactory::fromFrame()` is now the explicit advanced reply bridge for frame-owned composition, while `fromClassification()` is the additive public classified-message bridge. `fromClassified()` and the classifier interface still remain more provisional and lower-level.
+- `InboundPipeline::withDefaults()` remains the default downstream ingress seam; `withContracts(...)` is the additive advanced public composition path, and the constructor stays public as an advanced composition escape hatch without an active deprecation.
+- `ReplyFactory::fromFrame()` is now the explicit advanced reply bridge for frame-owned composition, while `fromClassification()` is the additive public classified-message bridge. `fromClassified()` and lower-level classifier composition remain advanced paths rather than the preferred byte-ingress facade.
 - `ReplyFactory`, `EventFactory`, and `EventClassifier` remain public advanced bridges and are not being promoted into the mainstream downstream ingress story.
 - `Contracts\ClassifiedMessageInterface` is the public read-only contract for advanced classified-message access. It exposes the classifier outcomes core actually emits: auth request, auth accepted, bgapi accepted, command accepted/error, API response, event, disconnect notice, and unknown. It does not expose a distinct auth-rejected outcome because auth `-ERR` remains a session-context interpretation layered on top of `CommandError`.
-- No new producer-side classifier interface is added in this release line. Changing `InboundMessageClassifierInterface::classify()` would create avoidable churn for existing advanced implementations and callers, so the staged migration path is to consume current classifier output through `Contracts\ClassifiedMessageInterface` and `ReplyFactory::fromClassification()` instead.
-- `FrameParserInterface`, `EventParserInterface`, and `InboundMessageClassifierInterface` remain public-but-provisional until downstream usage proves they deserve stronger compatibility guarantees.
+- `InboundMessageClassifierInterface::classify()` now returns `Contracts\ClassifiedMessageInterface`, removing the previous internal-carrier return type from the public classifier seam.
+- `FrameParserInterface`, `CompletableFrameParserInterface`, `EventParserInterface`, and `InboundMessageClassifierInterface` remain advanced public contracts until downstream usage proves they deserve stronger compatibility guarantees.
 - `FrameParser` remains a low-level protocol parser rather than a transport policy owner. It does not impose a built-in `Content-Length` / body-size cap; downstream transports or runtimes that need memory bounds must enforce them outside the parser.
 - `DecodedInboundMessage::normalizedEvent()` remains the supported normalized-event substrate access point for downstream byte-ingress consumers, while `Contracts\ProvidesNormalizedSubstrateInterface` is the explicit additive contract for callers that already own a typed event instance; no new classified-message or parser-owned public seam is added in this pass.
 

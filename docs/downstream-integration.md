@@ -55,6 +55,7 @@ Build on these first:
 
 Use these only when your package intentionally owns lower-level composition:
 
+- `InboundPipeline::withContracts(...)`
 - `InboundPipeline::__construct(...)`
 - `ReplyFactory::fromFrame()`
 - `ReplyFactory::fromClassification()`
@@ -66,8 +67,44 @@ Use these only when your package intentionally owns lower-level composition:
 - `Contracts\FrameSerializerInterface`
 - lower-level parser/classifier contracts under `Contracts\*`
 
-These seams are public, but they expose more concrete or provisional coupling
-than the preferred path.
+These seams are public, but they expose more lower-level coupling than the
+preferred path. `InboundPipeline::withContracts(...)` is the additive advanced
+path for custom parser/classifier implementations typed against public
+contracts, including the public `ClassifiedMessageInterface` classifier result.
+Treat these as controlled advanced seams, not the mainstream downstream ingress
+model.
+
+### Minimal advanced classifier example
+
+Most downstream packages should not need this path. When a package intentionally
+owns frame-level ingress behavior, it can still stay on public contracts:
+
+```php
+use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
+use Apntalk\EslCore\Contracts\CompletableFrameParserInterface;
+use Apntalk\EslCore\Contracts\InboundMessageClassifierInterface;
+use Apntalk\EslCore\Inbound\InboundPipeline;
+use Apntalk\EslCore\Protocol\Frame;
+
+final class MyClassifier implements InboundMessageClassifierInterface
+{
+    public function classify(Frame $frame): ClassifiedMessageInterface
+    {
+        // Return a value object implementing ClassifiedMessageInterface.
+        // Unknown inputs should still degrade safely instead of throwing.
+    }
+}
+
+/** @var CompletableFrameParserInterface $parser */
+$pipeline = InboundPipeline::withContracts($parser, new MyClassifier());
+```
+
+The important compatibility point is the return contract:
+`InboundMessageClassifierInterface::classify()` now returns
+`ClassifiedMessageInterface`. Existing classifiers that return the package's
+current concrete classifier carrier remain compatible because that carrier
+implements the public contract, but new downstream implementations no longer
+need to import it.
 
 ### Internal or provisional surfaces
 
@@ -89,8 +126,8 @@ These issues are documented, but not treated as release blockers in this line:
   intentionally; exposing a similarly named public property is not a supported seam
 - classified-message consumption is explicit through `ClassifiedMessageInterface`
   and `ReplyFactory::fromClassification()`
-- producer-side classifier returns remain softer because `InboundMessageClassifierInterface`
-  still returns the current internal carrier for compatibility
+- producer-side classifier returns now use `ClassifiedMessageInterface`, so
+  custom classifiers no longer need the current internal carrier
 - advanced reply/event construction remains supported through `ReplyFactory`,
   `EventFactory`, and `EventClassifier`, but is not the preferred downstream
   ingress story
@@ -125,6 +162,9 @@ Byte-stream resource policy also stays outside `esl-core`:
 - transport-level memory or body-size limits for inbound peers
 - connection admission / backpressure policy
 - hostile-peer buffering protection around raw parser feeds
+- write readiness and retry policy for non-blocking streams; core write calls
+  assume the stream is currently writable and do not provide async buffering or
+  scheduling
 
 ## Release-truth reminder
 
@@ -132,6 +172,6 @@ If a downstream package wants the most conservative integration posture for this
 release line:
 
 - prefer the stable seams above
-- treat advanced seams as supported but more concrete
+- treat advanced seams as supported but lower-level
 - treat softer classifier/parser internals as intentionally deferred rather than
   missing runtime features

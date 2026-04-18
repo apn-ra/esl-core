@@ -14,6 +14,8 @@ use PHPUnit\Framework\TestCase;
 
 final class SocketTransportFactoryTest extends TestCase
 {
+    private const ZERO_WRITE_STREAM_SCHEME = 'eslcorezerowrite';
+
     /** @var resource|null */
     private $server = null;
 
@@ -32,6 +34,10 @@ final class SocketTransportFactoryTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (in_array(self::ZERO_WRITE_STREAM_SCHEME, stream_get_wrappers(), true)) {
+            stream_wrapper_unregister(self::ZERO_WRITE_STREAM_SCHEME);
+        }
+
         if (is_resource($this->acceptedPeer)) {
             fclose($this->acceptedPeer);
         }
@@ -77,6 +83,27 @@ final class SocketTransportFactoryTest extends TestCase
 
         $transport->close();
         $this->assertFalse($transport->isConnected());
+    }
+
+    public function test_write_reports_transport_exception_when_wrapped_stream_cannot_accept_bytes(): void
+    {
+        if (!in_array(self::ZERO_WRITE_STREAM_SCHEME, stream_get_wrappers(), true)) {
+            $this->assertTrue(stream_wrapper_register(
+                self::ZERO_WRITE_STREAM_SCHEME,
+                ZeroWriteStreamWrapper::class,
+            ));
+        }
+
+        $stream = fopen(self::ZERO_WRITE_STREAM_SCHEME . '://transport', 'r+');
+
+        $this->assertIsResource($stream);
+
+        $transport = $this->factory->fromStream($stream);
+
+        $this->expectException(TransportException::class);
+        $this->expectExceptionMessage('Failed to write full payload');
+
+        $transport->write("auth ClueCon\n\n");
     }
 
     public function test_from_stream_wraps_existing_connected_stream_without_internal_class_dependency(): void
@@ -186,5 +213,40 @@ final class SocketTransportFactoryTest extends TestCase
         stream_set_blocking($pair[1], true);
 
         return [$pair[0], $pair[1]];
+    }
+}
+
+/**
+ * @internal Test-only stream wrapper that deterministically refuses writes.
+ */
+final class ZeroWriteStreamWrapper
+{
+    /** @var resource|null */
+    public $context = null;
+
+    /**
+     * @param string $path
+     * @param string $mode
+     * @param int $options
+     * @param ?string $openedPath
+     */
+    public function stream_open($path, $mode, $options, &$openedPath): bool
+    {
+        return true;
+    }
+
+    public function stream_write(string $data): int
+    {
+        return 0;
+    }
+
+    public function stream_read(int $count): string
+    {
+        return '';
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
     }
 }

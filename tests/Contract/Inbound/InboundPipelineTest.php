@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Inbound;
 
+use Apntalk\EslCore\Contracts\ClassifiedMessageInterface;
+use Apntalk\EslCore\Contracts\CompletableFrameParserInterface;
+use Apntalk\EslCore\Contracts\InboundMessageClassifierInterface;
 use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
@@ -18,6 +21,11 @@ use Apntalk\EslCore\Exceptions\MalformedFrameException;
 use Apntalk\EslCore\Exceptions\TruncatedFrameException;
 use Apntalk\EslCore\Inbound\InboundMessageType;
 use Apntalk\EslCore\Inbound\InboundPipeline;
+use Apntalk\EslCore\Internal\Classification\ClassifiedInboundMessage;
+use Apntalk\EslCore\Internal\Classification\InboundMessageCategory;
+use Apntalk\EslCore\Protocol\Frame;
+use Apntalk\EslCore\Protocol\HeaderBag;
+use Apntalk\EslCore\Protocol\MessageType;
 use Apntalk\EslCore\Replay\ReplayEnvelopeFactory;
 use Apntalk\EslCore\Replies\AuthAcceptedReply;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
@@ -55,6 +63,178 @@ final class InboundPipelineTest extends TestCase
         $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
         $this->assertInstanceOf(AuthAcceptedReply::class, $messages[0]->reply());
         $this->assertSame('command/reply', $messages[0]->contentType());
+    }
+
+    public function test_contract_based_advanced_composition_accepts_public_classifier_result(): void
+    {
+        $frame = new Frame(
+            HeaderBag::fromHeaderBlock("Content-Type: command/reply\nReply-Text: +OK custom"),
+            '',
+        );
+        $parser = new class ($frame) implements CompletableFrameParserInterface {
+            private bool $hasFrame = false;
+
+            public function __construct(
+                private readonly Frame $frame,
+            ) {}
+
+            public function feed(string $bytes): void
+            {
+                $this->hasFrame = $bytes !== '';
+            }
+
+            public function drain(): array
+            {
+                if (!$this->hasFrame) {
+                    return [];
+                }
+
+                $this->hasFrame = false;
+
+                return [$this->frame];
+            }
+
+            public function reset(): void
+            {
+                $this->hasFrame = false;
+            }
+
+            public function bufferedByteCount(): int
+            {
+                return 0;
+            }
+
+            public function finish(): void {}
+        };
+        $classifier = new class implements InboundMessageClassifierInterface {
+            public function classify(Frame $frame): ClassifiedMessageInterface
+            {
+                return new class ($frame) implements ClassifiedMessageInterface {
+                    public function __construct(
+                        private readonly Frame $frame,
+                    ) {}
+
+                    public function frame(): Frame
+                    {
+                        return $this->frame;
+                    }
+
+                    public function isAuthRequest(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isAuthAccepted(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isBgapiAccepted(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isCommandAccepted(): bool
+                    {
+                        return true;
+                    }
+
+                    public function isCommandError(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isApiResponse(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isEvent(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isDisconnectNotice(): bool
+                    {
+                        return false;
+                    }
+
+                    public function isUnknown(): bool
+                    {
+                        return false;
+                    }
+                };
+            }
+        };
+
+        $pipeline = InboundPipeline::withContracts($parser, $classifier);
+
+        $messages = $pipeline->decode("ignored by custom parser\n\n");
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
+        $this->assertSame('+OK custom', $messages[0]->reply()?->frame()->replyText());
+    }
+
+    public function test_contract_based_pipeline_accepts_classifier_with_older_concrete_return_type(): void
+    {
+        $frame = new Frame(
+            HeaderBag::fromHeaderBlock("Content-Type: command/reply\nReply-Text: +OK old-style"),
+            '',
+        );
+        $parser = new class ($frame) implements CompletableFrameParserInterface {
+            private bool $hasFrame = false;
+
+            public function __construct(
+                private readonly Frame $frame,
+            ) {}
+
+            public function feed(string $bytes): void
+            {
+                $this->hasFrame = $bytes !== '';
+            }
+
+            public function drain(): array
+            {
+                if (!$this->hasFrame) {
+                    return [];
+                }
+
+                $this->hasFrame = false;
+
+                return [$this->frame];
+            }
+
+            public function reset(): void
+            {
+                $this->hasFrame = false;
+            }
+
+            public function bufferedByteCount(): int
+            {
+                return 0;
+            }
+
+            public function finish(): void {}
+        };
+        $classifier = new class implements InboundMessageClassifierInterface {
+            public function classify(Frame $frame): ClassifiedInboundMessage
+            {
+                return new ClassifiedInboundMessage(
+                    InboundMessageCategory::CommandAccepted,
+                    $frame,
+                    MessageType::CommandReply,
+                );
+            }
+        };
+
+        $pipeline = InboundPipeline::withContracts($parser, $classifier);
+
+        $messages = $pipeline->decode("ignored by custom parser\n\n");
+
+        $this->assertCount(1, $messages);
+        $this->assertSame(InboundMessageType::Reply, $messages[0]->type());
+        $this->assertSame('+OK old-style', $messages[0]->reply()?->frame()->replyText());
     }
 
     public function test_bgapi_acceptance_and_completion_sequence_stays_correlatable_through_public_facade(): void

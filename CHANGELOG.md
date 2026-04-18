@@ -12,6 +12,37 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 
 ---
 
+## [0.2.11] - 2026-04-18
+
+### Added
+
+- Added `Contracts\CompletableFrameParserInterface` and
+  `InboundPipeline::withContracts(...)` as the advanced public composition path
+  for parser/classifier replacement without depending on concrete internals.
+
+### Changed
+
+- `InboundMessageClassifierInterface::classify()` now returns the public
+  `ClassifiedMessageInterface` result contract, allowing downstream
+  classifiers, decorators, mocks, and adapters to avoid importing the internal
+  classifier carrier. Existing implementations that return the current concrete
+  internal carrier remain compatible because it implements the public contract.
+
+### Clarified
+
+- Release and provenance docs now align with the actual live-capture retention
+  policy: quarantined `tools/smoke/captures/` files are operator artifacts and
+  are not expected to exist in a fresh checkout.
+- Advanced classifier and inbound-pipeline customization docs now distinguish
+  the new public-contract composition path from lower-level concrete escape
+  hatches, while keeping both subordinate to the preferred downstream ingress
+  path.
+- The public transport write contract now explicitly assumes a blocking or
+  runtime-managed writable stream; core does not provide async would-block
+  buffering or retry scheduling in this release line.
+
+---
+
 ## [0.2.10] - 2026-04-18
 
 ### Fixed

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Contracts;
 
-use Apntalk\EslCore\Internal\Classification\ClassifiedInboundMessage;
 use Apntalk\EslCore\Protocol\Frame;
 
 /**
@@ -23,10 +22,9 @@ use Apntalk\EslCore\Protocol\Frame;
  * supported ingress path. This lower-level contract remains provisional and
  * primarily exists for internal composition and targeted tests.
  *
- * The concrete return type remains the current internal classified-message
- * carrier for compatibility in this release line. Advanced callers that want
- * to stay on a public read-only contract should treat the result as
- * `ClassifiedMessageInterface` or prefer `InboundPipelineInterface`.
+ * The return type is the public read-only classifier result contract so
+ * advanced callers can implement, decorate, mock, or adapt the classifier seam
+ * without importing the current internal classifier carrier.
  */
 interface InboundMessageClassifierInterface
 {
@@ -35,5 +33,5 @@ interface InboundMessageClassifierInterface
      *
      * Never throws for unknown content-types. Degrades to Unknown category.
      */
-    public function classify(Frame $frame): ClassifiedInboundMessage;
+    public function classify(Frame $frame): ClassifiedMessageInterface;
 }

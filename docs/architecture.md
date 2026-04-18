@@ -78,7 +78,10 @@ Key invariants:
 - Auth failure vs command error cannot be distinguished at this layer (session state required)
 
 Downstream packages should treat this layer as descriptive of the protocol substrate, not as the preferred integration entry point for raw bytes. The supported ingress facade remains `InboundPipeline`.
-For advanced composition, the current staged public bridge starts after classification: callers can consume the classifier result through `Contracts\ClassifiedMessageInterface` and hand it to `ReplyFactory::fromClassification()`, but the classifier return contract itself is still provisional.
+For advanced composition, classifier output is now represented by
+`Contracts\ClassifiedMessageInterface`. `InboundPipeline::withContracts(...)`
+accepts public parser/classifier contracts for specialized consumers, while
+`InboundPipeline::withDefaults()` remains the preferred raw-byte ingress path.
 
 ---
 
@@ -128,6 +131,8 @@ Public ingress: `InboundPipeline` composes framing + classification + reply/even
 callers that already own a `Frame` or `NormalizedEvent`, but they are not the
 preferred raw-byte ingress path. `InboundPipeline::withDefaults()` remains the
 dominant supported byte-ingress construction path for upper layers.
+`InboundPipeline::withContracts(...)` is available for advanced consumers that
+intentionally provide public parser/classifier contracts.
 When a caller already owns a built-in typed event and needs the underlying
 normalized substrate, `Contracts\ProvidesNormalizedSubstrateInterface` is the
 explicit contract for that access instead of relying on property inspection.
@@ -143,9 +148,9 @@ Key invariants:
 - Unknown events NEVER throw; they produce `RawEvent`
 - `NormalizedEvent.header()` returns normalized values for the source format; `.rawHeader()` preserves the stored source value
 - `NormalizedEvent` stays protocol-substrate-only: normalized headers/body/frame truth, not application aggregation or runtime metadata
-- `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available but provisional
+- `InboundPipeline` is the dominant supported upper-layer ingress path; lower-level parser/classifier composition remains available for advanced use
 - `EventFactory` / `EventClassifier` remain available for advanced frame/normalized-event composition, not as the default upstream byte-ingress story
-- `InboundPipeline::withDefaults()` is the preferred stable ingress construction path; direct constructor collaborator injection remains an advanced composition path that currently couples to provisional concrete collaborators
+- `InboundPipeline::withDefaults()` is the preferred stable ingress construction path; `withContracts(...)` is the advanced public-contract composition path, while direct constructor collaborator injection remains a lower-level advanced escape hatch
 - `InboundConnectionFactory` prepares one accepted stream but does not own listener loops, session supervision, or transport lifecycle beyond bootstrap
 - `BgapiAcceptedReply.jobUuid()` is the correlation key for the later `BackgroundJobEvent`
 

@@ -51,8 +51,8 @@ For byte ingress and accepted-stream bootstrap, prefer `InboundPipeline`,
 factories or contracts remain public.
 The same distinction applies to classified-message access: the public
 read-only `ClassifiedMessageInterface` is available for advanced composition,
-but `InboundMessageClassifierInterface` itself still remains a provisional
-producer-side seam in this release line.
+and `InboundMessageClassifierInterface` now returns that public result contract
+so advanced classifier implementations no longer need the internal carrier.
 
 ## Inspecting capabilities at runtime
 
