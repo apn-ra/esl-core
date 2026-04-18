@@ -35,11 +35,6 @@ final class ClassifiedInboundMessage implements ClassifiedMessageInterface
         return $this->category === InboundMessageCategory::AuthAccepted;
     }
 
-    public function isAuthRejected(): bool
-    {
-        return $this->category === InboundMessageCategory::AuthRejected;
-    }
-
     public function isBgapiAccepted(): bool
     {
         return $this->category === InboundMessageCategory::BgapiAccepted;

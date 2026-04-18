@@ -14,6 +14,21 @@ No unreleased changes yet.
 
 ---
 
+## [0.2.9] - 2026-04-18
+
+### Fixed
+
+- `ReplayEnvelopeFactory` now preserves reply body bytes in `ReplayEnvelope.rawPayload` by exporting a deterministic frame-shaped reply payload instead of silently dropping bodies such as `api/response` output during replay capture.
+- Typed command constructors now reject carriage return and newline characters in user-provided command segments so the default typed command surface cannot accidentally serialize multi-command or framing-breaking ESL payloads. `RawCommand` remains the explicit raw escape hatch.
+- Correlation and replay substrate extraction now rely only on `ProvidesNormalizedSubstrateInterface` instead of a reflection-based public-property fallback, so custom typed events must opt in explicitly to richer normalized-substrate behavior.
+- `ClassifiedMessageInterface` no longer advertises a distinct auth-rejected outcome that the core classifier does not emit; auth `-ERR` remains the truthful `CommandError` classifier result, with auth-failure interpretation left to upper-layer session context.
+- `HeaderBag::with()` now enforces the same header-name validity invariant as `HeaderBag::fromHeaderBlock()`, rejecting empty or surrounding-whitespace header names instead of allowing states the parser would reject.
+- `UnknownReply::isSuccess()` is now documented explicitly as a conservative "not known-success" signal for unsupported or degraded reply shapes, rather than an implied typed protocol-failure classification.
+- JSON/XML event parser coverage now explicitly proves header values containing `": "` survive normalization intact, guarding the header-block reconstruction path against subtle delimiter regressions.
+- `FrameParser` buffering policy is now stated explicitly: digit-only `Content-Length` values are buffered without a built-in size cap, and memory/body-size limits remain an embedding transport/runtime responsibility rather than a parser-owned policy.
+
+---
+
 ## [0.2.8] - 2026-04-18
 
 ### Fixed
@@ -65,7 +80,7 @@ This pre-`1.0.0` patch release closes the bounded malformed-frame and protocol-s
 
 - A deterministic chaos test path covering fragmented delivery, mixed reply/event streams, safe degradation for unknown inputs, explicit malformed/truncated failures, and correlation/replay consistency under noisy session traffic.
 
-## [0.2.0] - Draft
+## [0.2.0] - 2026-04-14
 
 ### Highlights
 
@@ -79,7 +94,7 @@ This pre-`1.0.0` patch release closes the bounded malformed-frame and protocol-s
 ### Verification
 
 - Added a narrow smoke-test path for the current happy-path command/reply and async event substrate wiring
-- PHPUnit, PHPStan, Composer metadata validation, and coding-standard checks are part of release readiness for this draft release.
+- PHPUnit, PHPStan, Composer metadata validation, and coding-standard checks were part of the release-readiness gate for this initial pre-`1.0.0` tag.
 - Capability declarations are verified against the implemented support surfaces.
 
 ### Deferred for a later pre-`1.0.0` release

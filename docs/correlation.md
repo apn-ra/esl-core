@@ -171,6 +171,12 @@ Correlation extracted automatically:
 - Channel events (`NormalizedEvent` or typed wrappers) → `ChannelCorrelation`
 - All events → `protocolSequence` from `Event-Sequence` header
 
+For custom typed events, the richer normalized-substrate path is explicit:
+implement `Contracts\ProvidesNormalizedSubstrateInterface` if you want
+`CorrelationContext` and replay export to treat your type as carrying the
+underlying `NormalizedEvent`. A public property with a matching name is not a
+supported compatibility path.
+
 ---
 
 ### `EventEnvelope` and `ReplyEnvelope`

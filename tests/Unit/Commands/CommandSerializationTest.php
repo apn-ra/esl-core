@@ -18,6 +18,54 @@ use PHPUnit\Framework\TestCase;
 
 final class CommandSerializationTest extends TestCase
 {
+    /**
+     * @return iterable<string, array{0: callable(): void}>
+     */
+    public static function invalidTypedCommandProvider(): iterable
+    {
+        yield 'auth password newline' => [
+            static function (): void {
+                new AuthCommand("Clue\nCon");
+            },
+        ];
+
+        yield 'api command carriage return' => [
+            static function (): void {
+                new ApiCommand("status\r");
+            },
+        ];
+
+        yield 'api args newline' => [
+            static function (): void {
+                new ApiCommand('show', "channels\napi hupall");
+            },
+        ];
+
+        yield 'bgapi args carriage return' => [
+            static function (): void {
+                new BgapiCommand('originate', "sofia/internal/1001\r\napi status");
+            },
+        ];
+
+        yield 'filter header name newline' => [
+            static function (): void {
+                FilterCommand::add("Event-Name\nReply-Text", 'CHANNEL_CREATE');
+            },
+        ];
+
+        yield 'filter header value carriage return' => [
+            static function (): void {
+                FilterCommand::delete('Event-Name', "CHANNEL_CREATE\rfilter delete");
+            },
+        ];
+
+        yield 'event subscription name newline' => [
+            static function (): void {
+                EventSubscriptionCommand::forNames(['CHANNEL_CREATE', "CHANNEL_HANGUP\napi status"]);
+            },
+        ];
+    }
+
     // ---------------------------------------------------------------------------
     // AuthCommand
     // ---------------------------------------------------------------------------
@@ -190,6 +238,17 @@ final class CommandSerializationTest extends TestCase
         $raw = "sendevent CUSTOM\nEvent-Subclass: myapp::event\n\n";
         $cmd = new RawCommand($raw);
         $this->assertSame($raw, $cmd->serialize());
+    }
+
+    /**
+     * @dataProvider invalidTypedCommandProvider
+     */
+    public function test_typed_commands_reject_crlf_in_user_provided_fields(callable $factory): void
+    {
+        $this->expectException(SerializationException::class);
+        $this->expectExceptionMessage('must not contain carriage return or newline characters');
+
+        $factory();
     }
 
     // ---------------------------------------------------------------------------

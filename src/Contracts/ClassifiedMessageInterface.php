@@ -25,8 +25,6 @@ interface ClassifiedMessageInterface
 
     public function isAuthAccepted(): bool;
 
-    public function isAuthRejected(): bool;
-
     public function isBgapiAccepted(): bool;
 
     public function isCommandAccepted(): bool;

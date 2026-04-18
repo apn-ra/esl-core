@@ -206,15 +206,18 @@ final class ReplyFactoryTest extends TestCase
     // Unknown / degrade safely
     // ---------------------------------------------------------------------------
 
-    public function test_unknown_content_type_produces_unknown_reply(): void
+    public function test_unknown_content_type_produces_unknown_reply_with_conservative_not_known_success_semantics(): void
     {
         $fixture = EslFixtureBuilder::frame(['Content-Type' => 'text/disconnect-notice']);
         $reply   = $this->reply($fixture);
 
         // Disconnect notices are classified as DisconnectNotice, not a reply category
-        // The factory should degrade to UnknownReply for non-reply messages
+        // The factory degrades to UnknownReply for non-reply messages.
+        // isSuccess() stays false as a conservative "not known-success" signal,
+        // not because the content has been typed as an ErrorReply.
         $this->assertInstanceOf(UnknownReply::class, $reply);
         $this->assertFalse($reply->isSuccess());
+        $this->assertNotInstanceOf(ErrorReply::class, $reply);
     }
 
     public function test_unknown_reply_preserves_content_type(): void
@@ -307,11 +310,6 @@ final class ReplyFactoryTest extends TestCase
             }
 
             public function isAuthAccepted(): bool
-            {
-                return false;
-            }
-
-            public function isAuthRejected(): bool
             {
                 return false;
             }

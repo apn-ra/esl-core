@@ -18,7 +18,6 @@ use Apntalk\EslCore\Protocol\MessageType;
  *
  * - auth/request                               → ServerAuthRequest
  * - command/reply, Reply-Text: +OK accepted    → AuthAccepted
- * - command/reply, Reply-Text: -ERR (after auth attempt) → AuthRejected*
  * - command/reply, Reply-Text: +OK Job-UUID:   → BgapiAccepted
  * - command/reply, Reply-Text: +OK ...         → CommandAccepted
  * - command/reply, Reply-Text: -ERR ...        → CommandError
@@ -27,11 +26,10 @@ use Apntalk\EslCore\Protocol\MessageType;
  * - text/disconnect-notice                     → DisconnectNotice
  * - anything else                              → Unknown
  *
- * * Note: The classifier cannot distinguish auth -ERR from command -ERR
- *   purely from the frame alone. Session state (AuthState) is separate.
- *   The AuthRejected category is inferred when an -ERR reply arrives
- *   and the caller knows auth has not yet succeeded. This detail is
- *   documented in docs/protocol-state.md.
+ * Note: The classifier cannot distinguish auth -ERR from command -ERR
+ * purely from the frame alone. Session state is separate, so both cases
+ * classify as CommandError at this layer. Higher-level auth/session logic
+ * may interpret CommandError differently depending on connection state.
  *
  * @internal Not part of the public API.
  */

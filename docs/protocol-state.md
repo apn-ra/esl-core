@@ -42,6 +42,7 @@ Specifically: it CANNOT distinguish between:
 - A `-ERR` reply to any other command (should map to `CommandError`)
 
 Both produce `InboundMessageCategory::CommandError` at the classifier level.
+There is no distinct classified-message `AuthRejected` outcome in core.
 
 **The caller** (upper layer or session-state manager) must track whether auth has succeeded and interpret `CommandError` accordingly:
 - If auth has not yet completed: `CommandError` means `AUTH_FAILED`

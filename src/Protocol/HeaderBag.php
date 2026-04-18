@@ -77,17 +77,7 @@ final class HeaderBag
                 $value = ltrim(substr($line, $colonPos + 1));
             }
 
-            if (trim($name) === '') {
-                throw new MalformedFrameException(
-                    "Malformed header line (empty header name): {$line}"
-                );
-            }
-
-            if ($name !== trim($name)) {
-                throw new MalformedFrameException(
-                    "Malformed header line (header name contains surrounding whitespace): {$line}"
-                );
-            }
+            self::assertValidHeaderName($name, $line);
 
             $key = strtolower($name);
             if (!isset($headers[$key])) {
@@ -178,12 +168,41 @@ final class HeaderBag
 
     /**
      * Return a new HeaderBag with the given header added or replaced.
+     *
+     * @throws ParseException if the header name is empty or has surrounding whitespace.
      */
     public function with(string $name, string $value): self
     {
+        self::assertValidHeaderName($name);
+
         $key     = strtolower($name);
         $headers = $this->headers;
         $headers[$key] = ['name' => $name, 'values' => [$value]];
         return new self($headers);
+    }
+
+    private static function assertValidHeaderName(string $name, ?string $line = null): void
+    {
+        if (trim($name) === '') {
+            if ($line !== null) {
+                throw new MalformedFrameException(
+                    "Malformed header line (empty header name): {$line}"
+                );
+            }
+
+            throw new MalformedFrameException('Invalid header name: header name must not be empty');
+        }
+
+        if ($name !== trim($name)) {
+            if ($line !== null) {
+                throw new MalformedFrameException(
+                    "Malformed header line (header name contains surrounding whitespace): {$line}"
+                );
+            }
+
+            throw new MalformedFrameException(
+                'Invalid header name: header name must not contain surrounding whitespace'
+            );
+        }
     }
 }

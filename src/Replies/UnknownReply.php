@@ -13,6 +13,9 @@ use Apntalk\EslCore\Protocol\Frame;
  * This is the safe degradation case for frames that do not match any
  * known reply pattern. It allows the upper layer to decide how to handle
  * the unknown frame rather than silently ignoring or throwing.
+ *
+ * UnknownReply::isSuccess() is intentionally conservative: false here means
+ * "not known-success" rather than a typed protocol failure classification.
  */
 final class UnknownReply implements ReplyInterface
 {
@@ -27,6 +30,8 @@ final class UnknownReply implements ReplyInterface
 
     public function isSuccess(): bool
     {
+        // Unknown replies degrade conservatively: callers must inspect the
+        // underlying frame/content-type if they want richer semantics.
         return false;
     }
 

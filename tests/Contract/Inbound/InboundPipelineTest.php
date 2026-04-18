@@ -150,6 +150,7 @@ final class InboundPipelineTest extends TestCase
         $this->assertCount(1, $messages);
         $this->assertSame(InboundMessageType::Unknown, $messages[0]->type());
         $this->assertInstanceOf(UnknownReply::class, $messages[0]->reply());
+        $this->assertFalse($messages[0]->reply()?->isSuccess());
         $this->assertSame('text/surprising-thing', $messages[0]->contentType());
     }
 

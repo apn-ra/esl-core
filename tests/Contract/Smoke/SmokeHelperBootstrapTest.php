@@ -102,6 +102,6 @@ final class SmokeHelperBootstrapTest extends TestCase
             return;
         }
 
-        mkdir($path, 0777, true);
+        mkdir($path, 0o777, true);
     }
 }

@@ -222,15 +222,20 @@ Use the narrowest useful check first:
 
 Live `tools/smoke/*` helpers remain optional operator validation support for fixture work and PBX-side evidence gathering. They are not part of the package API or the default local release gate.
 
-## v0.2 status
+## Current release-line status
 
-The repository is now positioned as **a small pre-`1.0.0` release checkpoint with the core seams in place and residual provisional surfaces explicitly documented**.
+The repository is currently positioned as **a small pre-`1.0.0` release line with the core seams in place and residual provisional surfaces explicitly documented**.
 That means:
 
 - the supported ingress contract is explicit and documented around `InboundPipeline`
 - XML event decoding exists, but is still declared provisional pending broader evidence
 - stream/socket validation is stronger, but remains internal smoke support only
 - residual pre-1.0 gaps are documented rather than hidden
+
+For shipped version history and current unreleased changes, treat
+[`CHANGELOG.md`](CHANGELOG.md) plus the published git tags/GitHub releases as
+the release source of truth. Historical draft notes under `docs/releases/`
+remain maintainer context only.
 
 ---
 

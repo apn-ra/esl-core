@@ -61,11 +61,12 @@ final class InboundMessageClassifierTest extends TestCase
 
     public function test_auth_rejected_classified_as_command_error(): void
     {
-        // The classifier cannot distinguish auth -ERR from command -ERR;
-        // it returns CommandError. Session-state layer refines this.
+        // The classifier cannot distinguish auth -ERR from command -ERR,
+        // so the public classified-message contract exposes only CommandError here.
         $classified = $this->classify(EslFixtureBuilder::authRejected());
 
         $this->assertSame(InboundMessageCategory::CommandError, $classified->category);
+        $this->assertTrue($classified->isCommandError());
     }
 
     // ---------------------------------------------------------------------------

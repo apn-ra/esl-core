@@ -17,9 +17,6 @@ enum InboundMessageCategory
     /** command/reply with +OK accepted — auth was successful. */
     case AuthAccepted;
 
-    /** command/reply with -ERR — auth was rejected. */
-    case AuthRejected;
-
     /** command/reply with +OK Job-UUID: ... — bgapi was accepted, job is running. */
     case BgapiAccepted;
 

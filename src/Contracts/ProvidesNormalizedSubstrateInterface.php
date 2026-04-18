@@ -12,7 +12,9 @@ use Apntalk\EslCore\Events\NormalizedEvent;
  *
  * This additive contract lets callers that already own a typed event reach
  * the shared NormalizedEvent without relying on reflection or concrete
- * property names. It does not change the preferred raw-byte ingress story;
+ * property names. Custom typed events must implement this contract
+ * intentionally; exposing a public property with a matching name is not a
+ * supported extension mechanism. It does not change the preferred raw-byte ingress story;
  * callers ingesting bytes should still prefer InboundPipeline and
  * DecodedInboundMessage::normalizedEvent().
  *

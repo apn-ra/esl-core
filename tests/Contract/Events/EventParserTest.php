@@ -180,6 +180,22 @@ final class EventParserTest extends TestCase
         $this->assertSame("+OK json-body\n", $event->body());
     }
 
+    public function test_event_json_preserves_header_value_containing_colon_space(): void
+    {
+        $fixture = EslFixtureBuilder::eventJson(
+            EslFixtureBuilder::eventJsonData([
+                'Event-Name' => 'CHANNEL_CREATE',
+                'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+                'variable_sip_h_X-Debug' => 'sip: 1001',
+            ])
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertSame('sip: 1001', $event->header('variable_sip_h_X-Debug'));
+        $this->assertSame('sip: 1001', $event->rawHeader('variable_sip_h_X-Debug'));
+    }
+
     public function test_event_xml_parses_into_normalized_event(): void
     {
         $fixture = EslFixtureBuilder::eventXml(
@@ -216,6 +232,22 @@ final class EventParserTest extends TestCase
 
         $this->assertTrue($event->hasBody());
         $this->assertSame("+OK xml-body\n", $event->body());
+    }
+
+    public function test_event_xml_preserves_header_value_containing_colon_space(): void
+    {
+        $fixture = EslFixtureBuilder::eventXml(
+            EslFixtureBuilder::eventXmlData([
+                'Event-Name' => 'CHANNEL_CREATE',
+                'Unique-ID' => 'a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78',
+                'variable_sip_h_X-Debug' => 'sip: 1001',
+            ])
+        );
+
+        $event = $this->parseEvent($fixture);
+
+        $this->assertSame('sip: 1001', $event->header('variable_sip_h_X-Debug'));
+        $this->assertSame('sip: 1001', $event->rawHeader('variable_sip_h_X-Debug'));
     }
 
     public function test_plain_event_reports_source_content_type_and_url_encoding_policy(): void

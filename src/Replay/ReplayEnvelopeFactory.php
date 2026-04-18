@@ -14,7 +14,6 @@ use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\NormalizedEvent;
 use Apntalk\EslCore\Exceptions\ReplayConsistencyException;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
-use ReflectionObject;
 
 /**
  * Produces ReplayEnvelope instances from typed protocol objects.
@@ -168,12 +167,14 @@ final class ReplayEnvelopeFactory
 
     private function replyPayload(ReplyInterface $reply): string
     {
-        $frame  = $reply->frame();
-        $lines  = '';
+        $frame = $reply->frame();
+        $lines = '';
+
         foreach ($frame->headers->toFlatArray() as $header) {
             $lines .= "{$header['name']}: {$header['value']}\n";
         }
-        return $lines;
+
+        return $lines . "\n" . $frame->body;
     }
 
     private function extractNormalized(EventInterface $event): ?NormalizedEvent
@@ -182,12 +183,6 @@ final class ReplayEnvelopeFactory
             return $event->normalized();
         }
 
-        $prop = new ReflectionObject($event);
-        if ($prop->hasProperty('normalized')) {
-            $p = $prop->getProperty('normalized');
-            $value = $p->getValue($event);
-            return $value instanceof NormalizedEvent ? $value : null;
-        }
         return null;
     }
 

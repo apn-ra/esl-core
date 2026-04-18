@@ -112,16 +112,21 @@ For downstream packages, the practical split is:
 
 ### Commands
 All command classes in `Apntalk\EslCore\Commands\*` are public.
+Typed command constructors reject carriage return and newline characters in
+user-provided command segments so their serialized wire payload stays a single
+logical ESL command. `RawCommand` remains the explicit escape hatch for callers
+that intentionally need raw multiline command control.
 
 ### Replies
 All reply classes in `Apntalk\EslCore\Replies\*` are public.
 `ReplyFactory` also remains public, but it is an advanced reply-composition bridge rather than the preferred raw-byte ingress surface. `fromFrame()` is now the explicit advanced entrypoint for callers that already own a `Frame` and want typed reply decoding without passing around the internal classified-message carrier directly. `fromClassification()` is the additive public bridge for callers that already own a classified message and want to type against a public contract instead of the current internal carrier. `fromClassified()` remains available for lower-level fixture-backed composition, but its input is still tied to the lower-level classified-message path, so downstream callers that want the disciplined stable default should prefer `InboundPipeline`.
+`ReplyInterface::isSuccess()` means "known-success on this reply's own contract," not a universal semantic verdict. In particular, `UnknownReply::isSuccess()` remains `false` as conservative degradation for unsupported or non-reply content, not as a typed protocol-error classification.
 No soft deprecation is active for `ReplyFactory` in this release line; the hardening change here is clearer posture, not API churn.
 
 ### Events
 `NormalizedEvent`, `RawEvent`, and typed event families are public.
 `NormalizedEvent` remains a substrate object only: normalized headers, raw header access, raw body bytes, and source-format invariants. It does not carry correlation/replay/runtime state.
-`Contracts\ProvidesNormalizedSubstrateInterface` is the additive explicit contract for callers that already own a typed event and need the underlying `NormalizedEvent` without relying on concrete property names or reflection-soft coupling. `NormalizedEvent` and the built-in typed wrappers implement this contract.
+`Contracts\ProvidesNormalizedSubstrateInterface` is the additive explicit contract for callers that already own a typed event and need the underlying `NormalizedEvent` without relying on concrete property names or reflection-soft coupling. `NormalizedEvent` and the built-in typed wrappers implement this contract. Custom typed events that want the same richer correlation/replay substrate access must implement the interface intentionally; a public `normalized` property is not a supported fallback seam.
 `EventFactory` and `EventClassifier` also remain public, but they should be treated as advanced event-composition bridges for callers that already own a `Frame` or `NormalizedEvent`. They are not the preferred raw-byte ingress path; upper layers ingesting bytes should still prefer `InboundPipeline`.
 Selective typed event families currently include `BackgroundJobEvent`, `ChannelLifecycleEvent`, `BridgeEvent`, `HangupEvent`, `PlaybackEvent`, and `CustomEvent`.
 Current live-backed evidence covers bridge/playback decoding in both
@@ -159,9 +164,10 @@ These items are being documented for future hardening, not redesigned in this pa
 - `InboundPipeline::withDefaults()` remains the default downstream ingress seam; the constructor stays public as an advanced composition escape hatch without an active deprecation.
 - `ReplyFactory::fromFrame()` is now the explicit advanced reply bridge for frame-owned composition, while `fromClassification()` is the additive public classified-message bridge. `fromClassified()` and the classifier interface still remain more provisional and lower-level.
 - `ReplyFactory`, `EventFactory`, and `EventClassifier` remain public advanced bridges and are not being promoted into the mainstream downstream ingress story.
-- `Contracts\ClassifiedMessageInterface` is the public read-only contract for advanced classified-message access. `InboundMessageClassifierInterface` still returns the current internal carrier for compatibility, but that carrier now implements the public contract.
+- `Contracts\ClassifiedMessageInterface` is the public read-only contract for advanced classified-message access. It exposes the classifier outcomes core actually emits: auth request, auth accepted, bgapi accepted, command accepted/error, API response, event, disconnect notice, and unknown. It does not expose a distinct auth-rejected outcome because auth `-ERR` remains a session-context interpretation layered on top of `CommandError`.
 - No new producer-side classifier interface is added in this release line. Changing `InboundMessageClassifierInterface::classify()` would create avoidable churn for existing advanced implementations and callers, so the staged migration path is to consume current classifier output through `Contracts\ClassifiedMessageInterface` and `ReplyFactory::fromClassification()` instead.
 - `FrameParserInterface`, `EventParserInterface`, and `InboundMessageClassifierInterface` remain public-but-provisional until downstream usage proves they deserve stronger compatibility guarantees.
+- `FrameParser` remains a low-level protocol parser rather than a transport policy owner. It does not impose a built-in `Content-Length` / body-size cap; downstream transports or runtimes that need memory bounds must enforce them outside the parser.
 - `DecodedInboundMessage::normalizedEvent()` remains the supported normalized-event substrate access point for downstream byte-ingress consumers, while `Contracts\ProvidesNormalizedSubstrateInterface` is the explicit additive contract for callers that already own a typed event instance; no new classified-message or parser-owned public seam is added in this pass.
 
 The error taxonomy is intentionally layered:

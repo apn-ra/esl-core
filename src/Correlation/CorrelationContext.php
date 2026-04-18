@@ -9,7 +9,6 @@ use Apntalk\EslCore\Contracts\ProvidesNormalizedSubstrateInterface;
 use Apntalk\EslCore\Contracts\ReplyInterface;
 use Apntalk\EslCore\Events\NormalizedEvent;
 use Apntalk\EslCore\Replies\BgapiAcceptedReply;
-use ReflectionObject;
 
 /**
  * Stateful per-session correlation context.
@@ -145,14 +144,6 @@ final class CorrelationContext
             return $correlation->isEmpty() ? null : $correlation;
         }
 
-        // Legacy compatibility fallback for custom/older wrappers that still only
-        // expose a public "normalized" property without the explicit contract.
-        $normalized = $this->extractNormalizedFromTyped($event);
-        if ($normalized !== null) {
-            $correlation = ChannelCorrelation::fromNormalizedEvent($normalized);
-            return $correlation->isEmpty() ? null : $correlation;
-        }
-
         // Fallback: EventInterface gives us only uniqueId
         $correlation = ChannelCorrelation::fromEvent($event);
         return $correlation->isEmpty() ? null : $correlation;
@@ -165,17 +156,6 @@ final class CorrelationContext
             return null;
         }
         return JobCorrelation::fromString($jobUuid);
-    }
-
-    private function extractNormalizedFromTyped(EventInterface $event): ?NormalizedEvent
-    {
-        $ref = new ReflectionObject($event);
-        if ($ref->hasProperty('normalized')) {
-            $prop  = $ref->getProperty('normalized');
-            $value = $prop->getValue($event);
-            return $value instanceof NormalizedEvent ? $value : null;
-        }
-        return null;
     }
 
     private function nowMicros(): int

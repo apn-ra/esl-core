@@ -163,6 +163,27 @@ final class FrameParserPartialTest extends TestCase
         $this->assertSame($body, $frames[0]->body);
     }
 
+    public function test_digit_only_content_length_keeps_buffering_until_declared_body_bytes_arrive_without_parser_cap(): void
+    {
+        $body = str_repeat('x', 4096);
+        $full = EslFixtureBuilder::apiResponse($body);
+        $headerEnd = strpos($full, "\n\n") + 2;
+
+        $this->parser->feed(substr($full, 0, $headerEnd));
+        $this->assertEmpty($this->parser->drain());
+
+        $partialBody = 512;
+        $this->parser->feed(substr($full, $headerEnd, $partialBody));
+        $this->assertEmpty($this->parser->drain());
+        $this->assertSame($partialBody, $this->parser->bufferedByteCount());
+
+        $this->parser->feed(substr($full, $headerEnd + $partialBody));
+        $frames = $this->parser->drain();
+
+        $this->assertCount(1, $frames);
+        $this->assertSame($body, $frames[0]->body);
+    }
+
     public function test_three_coalesced_frames_drain_together_after_single_feed(): void
     {
         $full = EslFixtureBuilder::authAccepted()

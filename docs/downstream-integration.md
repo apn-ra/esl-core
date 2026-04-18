@@ -84,6 +84,9 @@ These issues are documented, but not treated as release blockers in this line:
 
 - normalized-substrate access is explicit through `ProvidesNormalizedSubstrateInterface`
   and `DecodedInboundMessage::normalizedEvent()`
+- custom typed events only participate in richer normalized-substrate-based
+  correlation/replay paths when they implement `ProvidesNormalizedSubstrateInterface`
+  intentionally; exposing a similarly named public property is not a supported seam
 - classified-message consumption is explicit through `ClassifiedMessageInterface`
   and `ReplyFactory::fromClassification()`
 - producer-side classifier returns remain softer because `InboundMessageClassifierInterface`
@@ -116,6 +119,12 @@ Replay execution responsibilities belong in replay-focused packages such as
 - replay scheduling and cursor running
 - replay execution or re-injection
 - durable replay storage engines
+
+Byte-stream resource policy also stays outside `esl-core`:
+
+- transport-level memory or body-size limits for inbound peers
+- connection admission / backpressure policy
+- hostile-peer buffering protection around raw parser feeds
 
 ## Release-truth reminder
 

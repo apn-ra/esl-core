@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Apntalk\EslCore\Tests\Contract\Correlation;
 
+use Apntalk\EslCore\Contracts\EventInterface;
 use Apntalk\EslCore\Correlation\ConnectionSessionId;
 use Apntalk\EslCore\Correlation\CorrelationContext;
 use Apntalk\EslCore\Correlation\EventEnvelope;
 use Apntalk\EslCore\Correlation\ReplyEnvelope;
 use Apntalk\EslCore\Events\BackgroundJobEvent;
+use Apntalk\EslCore\Events\ChannelLifecycleEvent;
 use Apntalk\EslCore\Events\EventFactory;
+use Apntalk\EslCore\Events\NormalizedEvent;
 use Apntalk\EslCore\Internal\Classification\InboundMessageClassifier;
 use Apntalk\EslCore\Parsing\EventParser;
 use Apntalk\EslCore\Parsing\FrameParser;
@@ -236,6 +239,65 @@ final class CorrelationContextTest extends TestCase
         $this->assertNotNull($corr->callDirection());
     }
 
+    public function test_typed_channel_lifecycle_event_uses_explicit_substrate_contract_for_full_channel_correlation(): void
+    {
+        $context = CorrelationContext::anonymous();
+        $normalized = $this->makeChannelCreateEvent(self::CHANNEL_UUID);
+        $event = $this->eventFactory->fromNormalized($normalized);
+
+        $this->assertInstanceOf(ChannelLifecycleEvent::class, $event);
+
+        $metadata = $context->nextMetadataForEvent($event);
+
+        $this->assertTrue($metadata->hasChannelCorrelation());
+        $this->assertSame(self::CHANNEL_UUID, $metadata->channelCorrelation()->uniqueId());
+        $this->assertSame($normalized->channelName(), $metadata->channelCorrelation()->channelName());
+        $this->assertSame($normalized->callDirection(), $metadata->channelCorrelation()->callDirection());
+    }
+
+    public function test_event_without_explicit_substrate_contract_does_not_gain_full_channel_correlation_from_public_property(): void
+    {
+        $context = CorrelationContext::anonymous();
+        $normalized = $this->makeChannelCreateEvent(self::CHANNEL_UUID);
+        $event = new class ($normalized) implements EventInterface {
+            public function __construct(
+                public readonly NormalizedEvent $normalized,
+            ) {}
+
+            public function eventName(): string
+            {
+                return $this->normalized->eventName();
+            }
+
+            public function uniqueId(): ?string
+            {
+                return $this->normalized->uniqueId();
+            }
+
+            public function jobUuid(): ?string
+            {
+                return $this->normalized->jobUuid();
+            }
+
+            public function coreUuid(): ?string
+            {
+                return $this->normalized->coreUuid();
+            }
+
+            public function eventSequence(): ?string
+            {
+                return $this->normalized->eventSequence();
+            }
+        };
+
+        $metadata = $context->nextMetadataForEvent($event);
+
+        $this->assertTrue($metadata->hasChannelCorrelation());
+        $this->assertSame(self::CHANNEL_UUID, $metadata->channelCorrelation()->uniqueId());
+        $this->assertNull($metadata->channelCorrelation()->channelName());
+        $this->assertNull($metadata->channelCorrelation()->callDirection());
+    }
+
     public function test_background_job_event_has_no_channel_correlation(): void
     {
         // BACKGROUND_JOB events do not carry Unique-ID
@@ -397,7 +459,7 @@ final class CorrelationContextTest extends TestCase
         return $reply;
     }
 
-    private function makeChannelCreateEvent(string $uniqueId = self::CHANNEL_UUID): \Apntalk\EslCore\Events\NormalizedEvent
+    private function makeChannelCreateEvent(string $uniqueId = self::CHANNEL_UUID): NormalizedEvent
     {
         $this->parser->reset();
         $this->parser->feed(EslFixtureBuilder::channelCreateEvent($uniqueId));

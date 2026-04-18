@@ -33,7 +33,7 @@ A `ReplayEnvelope` captures:
 | `captureSequence` | `int` | Monotonically increasing within a factory instance |
 | `capturedAtMicros` | `int` | Wall-clock capture time in microseconds |
 | `protocolSequence` | `?string` | `Event-Sequence` from the ESL protocol, if present |
-| `rawPayload` | `string` | Raw header block (replies) or frame body (events) |
+| `rawPayload` | `string` | Deterministic reconstruction payload: full reply frame shape for replies (headers, blank-line separator, and body bytes when present) or the event frame body for events |
 | `classifierContext` | `array<string, string>` | Fields needed for protocol-level reconstruction |
 | `protocolFacts` | `array<string, string>` | Protocol-native facts preserved separately from derived metadata |
 | `derivedMetadata` | `array<string, string>` | Session/correlation metadata assigned by `esl-core` |
@@ -66,9 +66,24 @@ When `fromReplyEnvelope()` / `fromEventEnvelope()` is used, replay capture prese
 - protocol-native identifiers such as `Job-UUID`, `Unique-ID`, `Event-Sequence`, and `Event-Date-Timestamp`
 - derived metadata such as `JobCorrelation` and `ChannelCorrelation`
 
+For replies, `rawPayload` is a deterministic frame-shaped export built from the
+parsed reply frame: replay header lines in their stored order, then a blank line,
+then the raw reply body bytes when the frame has a body. This means `api/response`
+replies preserve their actual command output inside the replay envelope instead of
+dropping it.
+
+This reply payload is reconstruction-friendly rather than a claim of original
+socket-byte capture provenance. It preserves the parsed frame contents faithfully,
+but it may not be byte-for-byte identical to the original transport read chunking.
+
 The direct `fromReply()` / `fromEvent()` methods remain available for narrower use cases
 where correlation metadata has not been attached yet. In that mode, sequence numbers
 increment per factory instance. Use one factory per session.
+
+For typed events, richer replay export from `fromEvent()` depends on the explicit
+normalized-substrate contract. Built-in typed event wrappers implement
+`ProvidesNormalizedSubstrateInterface`; custom wrappers must do the same
+intentionally if they want replay export to use the underlying `NormalizedEvent`.
 
 ---
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Apntalk\EslCore\Commands;
 
 use Apntalk\EslCore\Contracts\CommandInterface;
+use Apntalk\EslCore\Exceptions\SerializationException;
+use Apntalk\EslCore\Internal\Command\TypedCommandInputGuard;
 
 /**
  * ESL filter command.
@@ -17,14 +19,22 @@ use Apntalk\EslCore\Contracts\CommandInterface;
  */
 final class FilterCommand implements CommandInterface
 {
+    /**
+     * @throws SerializationException
+     */
     public function __construct(
         private readonly string $headerName,
         private readonly string $headerValue,
         private readonly bool $delete = false,
-    ) {}
+    ) {
+        TypedCommandInputGuard::assertNoCrLf($this->headerName, 'headerName');
+        TypedCommandInputGuard::assertNoCrLf($this->headerValue, 'headerValue');
+    }
 
     /**
      * Create a filter that adds an event filter.
+     *
+     * @throws SerializationException
      */
     public static function add(string $headerName, string $headerValue): self
     {
@@ -33,6 +43,8 @@ final class FilterCommand implements CommandInterface
 
     /**
      * Create a filter that removes an existing event filter.
+     *
+     * @throws SerializationException
      */
     public static function delete(string $headerName, string $headerValue): self
     {

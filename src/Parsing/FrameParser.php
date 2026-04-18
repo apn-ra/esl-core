@@ -29,6 +29,9 @@ use Apntalk\EslCore\Protocol\HeaderBag;
  *   4. If Content-Length is absent, the body is empty.
  *
  * The parser is transport-neutral: it does not own I/O, loops, or scheduling.
+ * It also does not impose a maximum Content-Length/body-size cap; callers that
+ * need memory bounds or hostile-peer protection must enforce those outside the
+ * parser before or around feed().
  *
  * @see FrameParserInterface
  */
@@ -51,6 +54,10 @@ final class FrameParser implements FrameParserInterface
      * Feed raw bytes to the parser.
      *
      * @throws ParseException if a malformed header block is encountered.
+     *
+     * Large digit-only Content-Length values are accepted as protocol input and
+     * will keep the parser in a buffered waiting state until enough bytes arrive
+     * or finish() reports truncation. This method does not apply a body-size cap.
      */
     public function feed(string $bytes): void
     {

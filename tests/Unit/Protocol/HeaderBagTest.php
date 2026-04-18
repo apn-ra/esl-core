@@ -179,6 +179,37 @@ final class HeaderBagTest extends TestCase
         $this->assertSame('auth/request', $updated->get('Content-Type'));
     }
 
+    public function test_with_rejects_empty_header_name(): void
+    {
+        $bag = HeaderBag::fromHeaderBlock("Content-Type: auth/request");
+
+        $this->expectException(ParseException::class);
+
+        $bag->with('', 'value');
+    }
+
+    public function test_with_rejects_header_name_with_surrounding_whitespace(): void
+    {
+        $bag = HeaderBag::fromHeaderBlock("Content-Type: auth/request");
+
+        $this->expectException(ParseException::class);
+
+        $bag->with(' Reply-Text ', '+OK');
+    }
+
+    public function test_with_accepts_valid_header_name_without_changing_existing_behavior(): void
+    {
+        $bag = HeaderBag::fromHeaderBlock("Content-Type: auth/request");
+        $updated = $bag->with('Reply-Text', '+OK accepted');
+
+        $this->assertSame('+OK accepted', $updated->get('reply-text'));
+        $this->assertSame(['content-type', 'reply-text'], $updated->names());
+        $this->assertSame(
+            ['Content-Type' => 'auth/request', 'Reply-Text' => '+OK accepted'],
+            $updated->toArray(),
+        );
+    }
+
     // ---------------------------------------------------------------------------
     // Value preservation
     // ---------------------------------------------------------------------------

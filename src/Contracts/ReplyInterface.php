@@ -12,7 +12,10 @@ use Apntalk\EslCore\Protocol\Frame;
 interface ReplyInterface
 {
     /**
-     * Whether this reply indicates a successful operation.
+     * Whether this reply indicates a known-success operation on its own contract.
+     *
+     * A return value of false can mean an explicit protocol error reply, or a
+     * conservative "not known-success" degradation case such as UnknownReply.
      */
     public function isSuccess(): bool;
 

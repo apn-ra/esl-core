@@ -37,6 +37,11 @@ State: ReadingBody
 ```
 
 The parser is partial-read safe: bytes may arrive in any chunk sizes.
+It does not impose a maximum `Content-Length` / body-size cap. If a digit-only
+`Content-Length` declares a large body, the parser will continue buffering until
+that many bytes arrive or `finish()` reports truncation. Memory bounds and
+hostile-peer protection belong to the embedding transport/runtime layer, not to
+`FrameParser` itself.
 
 ## Content-Type categories
 
@@ -77,10 +82,15 @@ Carries a `Reply-Text` header:
 - Has a body of exactly `Content-Length` bytes.
 - Body is the raw API command output.
 - `ApiReply::isSuccess()` is a narrow body-prefix check:
-  - `+OK ...` => `true`
-  - `-ERR ...` => `false`
-  - arbitrary non-prefixed output => `false`
+- `+OK ...` => `true`
+- `-ERR ...` => `false`
+- arbitrary non-prefixed output => `false`
 - That means a command like `api status` may return healthy operational text while `ApiReply::isSuccess()` remains `false`. Callers that care about command-specific semantics must inspect the raw body.
+
+### Unknown replies
+- Unsupported or non-reply classified inputs degrade to `UnknownReply`.
+- `UnknownReply::isSuccess()` is conservatively `false`.
+- That `false` means "not known-success" on the typed reply contract, not "this frame was positively classified as a protocol error reply."
 
 ### text/event-plain
 - Has a body of exactly `Content-Length` bytes.
