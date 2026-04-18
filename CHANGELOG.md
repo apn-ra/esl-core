@@ -12,6 +12,40 @@ See [`docs/stability-policy.md`](docs/stability-policy.md) for the full policy.
 
 ---
 
+## [0.2.13] - 2026-04-18
+
+### Added
+
+- Added `Apntalk\EslCore\Vocabulary` as the public canonical truth vocabulary
+  namespace for queue/retry/drain, recovery generation, in-flight operation,
+  replay continuity, reconstruction posture, terminal-publication schema,
+  lifecycle semantic observations, corpus-row identity, and bounded-variance
+  markers.
+- Added stable capability declarations for
+  `native-replay-adjacent-semantics`, `queue-retry-drain-vocabulary`,
+  `terminal-publication-schema`, `lifecycle-semantic-contract`,
+  `corpus-row-identity`, and `bounded-variance-markers`.
+- Added fixture-backed vocabulary examples under `tests/Fixtures/vocabulary/`
+  plus unit, contract, and integration coverage for the new public truth
+  surfaces.
+
+### Changed
+
+- Tightened `ReplayEnvelopeInterface` with explicit
+  `schemaVersion()`, `identityFacts()`, `orderingFacts()`, and
+  `causalMetadata()` truth accessors. This is a pre-`1.0.0` public contract
+  tightening for downstream reconstruction inputs, not a replay-runtime
+  promotion.
+
+### Clarified
+
+- Documented `esl-core` as the canonical protocol/core vocabulary source for
+  APNTalk FreeSWITCH substrate packages while keeping queue execution, retry
+  scheduling, drain orchestration, reconnect supervision, lifecycle projection,
+  terminal-publication dispatch, and replay execution in upper-layer packages.
+
+---
+
 ## [0.2.12] - 2026-04-18
 
 ### Fixed

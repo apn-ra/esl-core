@@ -27,6 +27,12 @@ final class CapabilityMapTest extends TestCase
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::CorrelationMetadata));
         $this->assertSame(FeatureSupportLevel::Provisional, $map->supportLevel(Capability::ReplayEnvelopeExport));
         $this->assertSame(FeatureSupportLevel::Provisional, $map->supportLevel(Capability::ReconstructionHookSupport));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::NativeReplayAdjacentSemantics));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::QueueRetryDrainVocabulary));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::TerminalPublicationSchema));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::LifecycleSemanticContract));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::CorpusRowIdentity));
+        $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::BoundedVarianceMarkers));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::InMemoryTransport));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::SocketTransportConstruction));
         $this->assertSame(FeatureSupportLevel::Stable, $map->supportLevel(Capability::InboundConnectionBootstrap));
@@ -49,6 +55,9 @@ final class CapabilityMapTest extends TestCase
         $this->assertArrayHasKey(Capability::EventJsonDecoding->value, $all);
         $this->assertArrayHasKey(Capability::EventXmlDecoding->value, $all);
         $this->assertArrayHasKey(Capability::CorrelationMetadata->value, $all);
+        $this->assertArrayHasKey(Capability::QueueRetryDrainVocabulary->value, $all);
+        $this->assertArrayHasKey(Capability::TerminalPublicationSchema->value, $all);
+        $this->assertArrayHasKey(Capability::LifecycleSemanticContract->value, $all);
         $this->assertArrayHasKey(Capability::SocketTransportConstruction->value, $all);
         $this->assertArrayHasKey(Capability::InboundConnectionBootstrap->value, $all);
     }

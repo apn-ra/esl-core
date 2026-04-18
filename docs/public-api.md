@@ -34,6 +34,7 @@ A type, interface, class, or constant is part of the public API when it lives in
 | `Apntalk\EslCore\Correlation` | Correlation and session metadata primitives |
 | `Apntalk\EslCore\Replay` | Replay envelope and capture contracts |
 | `Apntalk\EslCore\Capabilities` | Capability map and support level declarations |
+| `Apntalk\EslCore\Vocabulary` | Canonical protocol/core truth vocabulary for downstream substrate packages |
 | `Apntalk\EslCore\Exceptions` | Exception hierarchy |
 | `Apntalk\EslCore\Transport` | Minimal transport boundary intended for testing and narrow smoke-path use |
 
@@ -92,6 +93,12 @@ Contracts\TransportInterface
 Contracts\TransportFactoryInterface
 ```
 
+`ReplayEnvelopeInterface` now exposes `schemaVersion()`, `identityFacts()`,
+`orderingFacts()`, and `causalMetadata()` as stable replay-envelope truth
+groups. This is an additive pre-`1.0.0` contract tightening so downstream
+packages can compare identity, ordering, and causal metadata without parsing
+mixed arrays ad hoc.
+
 Lower-level composition contracts such as `FrameSerializerInterface`,
 `FrameParserInterface`, `CompletableFrameParserInterface`,
 `EventParserInterface`, and
@@ -145,6 +152,26 @@ Current live-backed evidence covers bridge/playback decoding in both
 used to obtain that evidence remain non-public validation tooling.
 `text/event-xml` normalization is now implemented, but remains provisional until
 it has broader evidence than the current constructed fixture corpus.
+
+### Vocabulary
+Types in `Apntalk\EslCore\Vocabulary` are public canonical vocabulary for
+downstream APNTalk substrate packages. They are stable as typed truth terms and
+fixtures pin their serialized string values.
+
+Current public vocabulary includes:
+
+- `QueueState`, `RetryPosture`, `RetryAttempt`, `DrainPosture`,
+  `InFlightOperationId`, and `RecoveryGenerationId`
+- `ReplayContinuity` and `ReconstructionPosture`
+- `TerminalPublication`, `PublicationId`, `FinalityMarker`, `TerminalCause`,
+  `PublicationSource`, `OrderingIdentity`, and `CorpusRowIdentity`
+- `LifecycleSemanticObservation`, `LifecycleTransition`, and
+  `LifecycleSemanticState`
+- `BoundedVarianceMarker`
+
+These types do not imply runtime ownership. Queue workers, retry scheduling,
+drain execution, reconnect supervision, terminal-publication dispatch, and
+lifecycle projection state machines remain outside `esl-core`.
 
 ### Inbound
 `Inbound\InboundPipeline`, `Inbound\DecodedInboundMessage`, `Inbound\InboundMessageType`, `Inbound\PreparedInboundConnection`, and `Inbound\InboundConnectionFactory` are public.

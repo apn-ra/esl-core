@@ -1,0 +1,16 @@
+{
+  "publicationId": "terminal-pub-0001",
+  "finality": "final",
+  "terminalCause": "hangup",
+  "source": "protocol-event",
+  "publishedAtMicros": 1482422205000000,
+  "orderingIdentity": {
+    "source": "event-sequence",
+    "value": "12350"
+  },
+  "corpusRowIdentity": {
+    "corpus": "tests/Fixtures/live/events",
+    "row": "channel-hangup-normal-clearing"
+  },
+  "variance": "bounded-variance"
+}

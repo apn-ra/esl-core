@@ -16,6 +16,7 @@ The ESL protocol and this package use several distinct identifier types. Underst
 | `Core-UUID` | FreeSWITCH | Identifies the FreeSWITCH process instance. Not a channel or job. |
 | `ConnectionSessionId` | esl-core | Our identity for one ESL connection session. Not a FreeSWITCH concept. |
 | `ObservationSequence` | esl-core | Our monotonic position counter within a session. Not `Event-Sequence`. |
+| `CorpusRowIdentity` | esl-core vocabulary | A corpus/row identifier for fixture or evidence comparison. Not a protocol identifier. |
 
 Never substitute one for another.
 
@@ -257,3 +258,7 @@ Those responsibilities belong in upper-layer packages (`esl-react`, `laravel-fre
 | Session binding | `ConnectionSessionId` typed | String `sessionId` |
 
 `ReplayEnvelopeFactory::withSession(ConnectionSessionId)` lets both substrates share the same session identity, and `fromReplyEnvelope()` / `fromEventEnvelope()` preserve the observation sequence and correlation metadata already assigned by `CorrelationContext`.
+When downstream packages need shared queue/retry/drain, terminal-publication,
+lifecycle, corpus-row, bounded-variance, or replay-adjacent vocabulary, they
+should import the public `Apntalk\EslCore\Vocabulary` types rather than
+inventing package-local strings.

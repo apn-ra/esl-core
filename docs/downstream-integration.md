@@ -17,6 +17,9 @@ For new downstream work, start from the stable public seams:
 2. `InboundPipeline::withDefaults()` when you need supported raw-byte ingress into typed messages
 3. `CorrelationContext` when your upper layer needs per-session ordering or derived job/channel correlation
 4. `ReplayEnvelopeFactory` only when you need replay-safe capture/export primitives
+5. `Apntalk\EslCore\Vocabulary` when your package needs shared queue, retry,
+   drain, terminal-publication, lifecycle, corpus-row, bounded-variance, or
+   replay-adjacent truth terms
 
 That is the preferred core composition story for packages such as
 `apntalk/esl-react`, `apntalk/laravel-freeswitch-esl`, and
@@ -50,6 +53,7 @@ Build on these first:
 - typed commands, replies, and events
 - `CorrelationContext`
 - `ReplayEnvelopeFactory`
+- `Vocabulary\*` canonical truth terms
 
 ### Advanced public seams
 
@@ -156,6 +160,14 @@ Replay execution responsibilities belong in replay-focused packages such as
 - replay scheduling and cursor running
 - replay execution or re-injection
 - durable replay storage engines
+
+Canonical vocabulary consumers should still keep behavior outside core:
+
+- queue execution and worker assignment
+- retry/backoff timers and scheduling
+- drain orchestration
+- lifecycle projection state machines
+- terminal publication dispatch or persistence
 
 Byte-stream resource policy also stays outside `esl-core`:
 

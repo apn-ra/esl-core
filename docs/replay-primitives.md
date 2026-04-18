@@ -38,6 +38,15 @@ A `ReplayEnvelope` captures:
 | `protocolFacts` | `array<string, string>` | Protocol-native facts preserved separately from derived metadata |
 | `derivedMetadata` | `array<string, string>` | Session/correlation metadata assigned by `esl-core` |
 
+The replay envelope also exposes stable grouped truth surfaces:
+
+| Method | Description |
+|---|---|
+| `schemaVersion()` | Current schema identifier, `replay-envelope.v1` |
+| `identityFacts()` | Captured type/name, session ID, and protocol-native identifiers useful for comparison |
+| `orderingFacts()` | Capture, observation, protocol sequence, and event timestamp ordering inputs |
+| `causalMetadata()` | Reply/event/job/channel facts useful for downstream reconstruction hooks |
+
 ---
 
 ## ReplayEnvelopeFactory
@@ -151,6 +160,9 @@ For replay to work correctly, the envelope shape must be deterministic.
 - `captureSequence` must be monotonically increasing within a session.
 - `capturedAtMicros` may vary (it's wall-clock time) — reconstruction hooks should use `protocolSequence` or `captureSequence` for ordering, not `capturedAtMicros`.
 - `protocolFacts` must remain protocol-truthful and separate from `derivedMetadata`.
+- Identity, ordering, and causal accessors are the preferred downstream truth
+  surface for replay-envelope comparison instead of ad hoc parsing of mixed
+  arrays.
 
 ---
 

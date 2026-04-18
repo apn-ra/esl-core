@@ -17,6 +17,9 @@ It provides:
 - Correlation and session metadata primitives
 - Replay-safe protocol envelopes and reconstruction-oriented hook contracts
 - Capability declaration of supported surfaces
+- Canonical protocol/core truth vocabulary for queue, retry, drain, lifecycle,
+  terminal-publication, corpus-row, bounded-variance, and replay-adjacent
+  blocker-family terms
 - A minimal transport abstraction for testing and smoke-path use
 
 It is designed to sit **below** runtime, framework, and replay packages such as
@@ -72,6 +75,8 @@ This package follows [SemVer](https://semver.org/), but it is still pre-`1.0.0`.
 - Replay envelopes and reconstruction-oriented contracts should be treated as provisional surfaces until `1.0.0`
 
 See [`docs/stability-policy.md`](docs/stability-policy.md) for full details.
+The canonical vocabulary surfaces are documented in
+[`docs/canonical-truth-vocabulary.md`](docs/canonical-truth-vocabulary.md).
 
 ---
 
@@ -84,6 +89,7 @@ The library is organized in layers:
 | Wire | Bytes, headers, body, framing, parsing, serialization |
 | Classification | Session/auth state, message category, reply vs event distinction |
 | Typed domain | Commands, replies, normalized events, correlation metadata |
+| Canonical vocabulary | Capability, queue/retry/drain, lifecycle, terminal-publication, corpus-row, bounded-variance, and replay-adjacent truth terms |
 | Replay substrate | Replay envelopes, capture policies, reconstruction hooks |
 | Transport boundary | Minimal read/write contracts, in-memory transport |
 
@@ -206,6 +212,8 @@ participate in correlation/replay substrate extraction.
 - Provisional normalized event decoding for `text/event-xml`
 - Selective typed event families: background job, channel lifecycle, bridge, hangup, playback, and custom events
 - Correlation/session metadata and replay-safe envelopes
+- Canonical truth vocabulary under `Apntalk\EslCore\Vocabulary` for
+  blocker-family terms needed by downstream runtime/replay packages
 - Minimal in-memory transport and explicit failure taxonomy
 - Stable public socket transport construction via `SocketEndpoint` + `SocketTransportFactory`
 - Internal-only stream/socket smoke-path validation over a real PHP stream resource
@@ -216,6 +224,8 @@ Still provisional or deferred from this release:
 - framework/runtime integrations
 - broader transport runtime expansion beyond the minimal socket construction seam
 - replay storage, scheduling, execution, re-injection, or orchestration
+- downstream queue execution, retry scheduling, drain orchestration, lifecycle
+  projection state machines, and terminal-publication dispatch
 
 ## Smoke check
 

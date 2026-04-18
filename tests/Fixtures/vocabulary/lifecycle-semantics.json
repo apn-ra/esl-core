@@ -1,0 +1,34 @@
+{
+  "observations": [
+    {
+      "transition": "bridge",
+      "state": "confirmed",
+      "orderingIdentity": {
+        "source": "event-sequence",
+        "value": "12347"
+      },
+      "subjectId": "a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78",
+      "variance": "none"
+    },
+    {
+      "transition": "hold",
+      "state": "ambiguous",
+      "orderingIdentity": {
+        "source": "observation-sequence",
+        "value": "9"
+      },
+      "subjectId": "a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78",
+      "variance": "bounded-variance"
+    },
+    {
+      "transition": "terminal",
+      "state": "provisional",
+      "orderingIdentity": {
+        "source": "event-sequence",
+        "value": "12350"
+      },
+      "subjectId": "a3ebbd02-f43a-4d2e-a7f5-a2a2d87f4e78",
+      "variance": "provisional"
+    }
+  ]
+}

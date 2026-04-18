@@ -14,7 +14,7 @@
 │  Internal stream-socket smoke transport               │
 ├───────────────────────────────────────────────────────┤
 │  Layer 4: Replay-safe substrate                       │
-│  ReplayEnvelope, ReplayCapturePolicy,                 │
+│  Canonical vocabulary, ReplayEnvelope, ReplayCapturePolicy, │
 │  ReplayCaptureSinkInterface, ReconstructionHookInterface │
 │  ReplayEnvelopeFactory (integrates with Correlation)  │
 ├───────────────────────────────────────────────────────┤
@@ -179,10 +179,14 @@ Key invariants:
 
 ## Layer 4 — Replay-safe substrate layer
 
-**Location:** `src/Replay/`
+**Location:** `src/Replay/`, `src/Vocabulary/`
 
-Owns replay primitives. Does NOT own a replay runtime.
+Owns replay primitives and canonical blocker-family vocabulary. Does NOT own a
+replay runtime.
 
+- `Vocabulary\*` — canonical queue/retry/drain, terminal-publication,
+  lifecycle-semantic, corpus-row, bounded-variance, and replay-adjacent truth
+  terms used by downstream packages
 - `ReplayEnvelope` — carries capture metadata + raw payload for reconstruction
 - `ReplayEnvelopeFactory` — produces envelopes from replies/events directly or from correlation envelopes when session/observation metadata already exists
 - `ReplayCapturePolicy` — controls which objects are captured
@@ -190,10 +194,15 @@ Owns replay primitives. Does NOT own a replay runtime.
 - `ReconstructionHookInterface` — called during replay to reconstruct state (implemented by upper layers)
 
 Key invariants:
+- Vocabulary terms are stable substrate truth, not runtime behavior
 - `ReplayEnvelope` is deterministic and serializable
+- `ReplayEnvelopeInterface` exposes schema, identity, ordering, and causal truth
+  accessors for downstream comparison/reconstruction inputs
 - The factory preserves `CorrelationContext` session/observation metadata when built from `ReplyEnvelope` / `EventEnvelope`
 - The factory only generates its own monotonic sequence + wall clock when no correlation metadata is supplied
 - No durable storage, scheduling, or worker lifecycle in this layer
+- No queue execution, retry scheduling, drain orchestration, terminal
+  publication dispatch, or lifecycle projection state machine in this layer
 - `ReplayEnvelopeFactory::withSession(ConnectionSessionId)` binds a factory to a session identity
   shared with `CorrelationContext`, allowing upper layers to use both substrates on the same session
 
@@ -232,6 +241,7 @@ Key invariants:
 | `Apntalk\EslCore\Correlation` | Public API |
 | `Apntalk\EslCore\Replay` | Public API (provisional) |
 | `Apntalk\EslCore\Capabilities` | Public API |
+| `Apntalk\EslCore\Vocabulary` | Public API |
 | `Apntalk\EslCore\Exceptions` | Public API |
 | `Apntalk\EslCore\Transport` | Public API |
 | `Apntalk\EslCore\Protocol` | Mixed: `Frame` and `HeaderBag` are public substrate value objects; the remaining wire-layer namespace is internal |

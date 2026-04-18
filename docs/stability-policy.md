@@ -50,7 +50,9 @@ Stability is earned incrementally:
 | `Events\BridgeEvent`, `Events\PlaybackEvent` | Stable as selective typed event families |
 | `Capability::EventXmlDecoding` / XML normalized event decoding | Provisional pending broader evidence than the current constructed-fixture corpus |
 | `Correlation\*` metadata primitives | Stable for the current protocol substrate scope |
-| `Replay\*` envelope shape | Provisional until Phase 8 complete |
+| `Vocabulary\*` canonical truth terms | Stable as fixture-backed vocabulary/schema terms; no runtime execution semantics are implied |
+| `ReplayEnvelopeInterface::schemaVersion()`, `identityFacts()`, `orderingFacts()`, `causalMetadata()` | Stable for the current fixture-backed replay-envelope truth surface |
+| Broader `Replay\*` execution-adjacent behavior | Provisional until Phase 8 complete; core still does not own replay execution, durable storage, cursor running, scheduling, or re-injection |
 | `TransportInterface`, `Contracts\TransportFactoryInterface`, `Transport\InMemoryTransport`, `Transport\SocketEndpoint`, `Transport\SocketTransportFactory` | Stable as the minimal transport boundary and supported transport-construction seam for testing, endpoint-based connect, and wrapping accepted PHP stream resources; stream-backed writes assume a blocking/writable stream or runtime-managed write readiness, not core-owned async write buffering |
 | `Protocol\Frame`, `Protocol\HeaderBag` | Stable substrate value objects because public reply/event contracts expose them directly |
 | `Internal\Transport\StreamSocketTransport` | Internal-only smoke-path support; deliberately outside the public API boundary |

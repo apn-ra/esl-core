@@ -46,10 +46,14 @@ final class ReplayEnvelopeFactoryTest extends TestCase
         $envelope = $factory->fromReplyEnvelope(new ReplyEnvelope($reply, $metadata));
 
         $this->assertSame(1, $envelope->captureSequence());
+        $this->assertSame('replay-envelope.v1', $envelope->schemaVersion());
         $this->assertSame($metadata->observedAtMicros(), $envelope->capturedAtMicros());
         $this->assertSame($sessionId->toString(), $envelope->sessionId());
         $this->assertSame(self::jobUuid(), $envelope->protocolFacts()['job-uuid']);
         $this->assertSame(self::jobUuid(), $envelope->derivedMetadata()['job-correlation.job-uuid']);
+        $this->assertSame(self::jobUuid(), $envelope->identityFacts()['job-uuid']);
+        $this->assertSame('1', $envelope->orderingFacts()['observation-sequence']);
+        $this->assertSame(self::jobUuid(), $envelope->causalMetadata()['job-correlation.job-uuid']);
     }
 
     public function test_from_event_envelope_uses_protocol_and_derived_metadata_separately(): void

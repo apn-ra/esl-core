@@ -29,6 +29,12 @@ Capabilities are backed by real tests and documentation. A capability is only de
 | `correlation-metadata` | stable | ConnectionSessionId, ObservationSequence, CorrelationContext, metadata envelopes |
 | `replay-envelope-export` | provisional | ReplayEnvelope, ReplayEnvelopeFactory, ReplayCapturePolicy |
 | `reconstruction-hook-support` | provisional | ReconstructionHookInterface defined; no registry yet |
+| `native-replay-adjacent-semantics` | stable | Public vocabulary and replay-envelope truth accessors declare replay-adjacent terms without replay execution ownership |
+| `queue-retry-drain-vocabulary` | stable | `Vocabulary\QueueState`, `RetryPosture`, `RetryAttempt`, `DrainPosture`, `InFlightOperationId`, and `RecoveryGenerationId` |
+| `terminal-publication-schema` | stable | `Vocabulary\TerminalPublication` and supporting identity/finality/cause/source/ordering/corpus/variance types |
+| `lifecycle-semantic-contract` | stable | `Vocabulary\LifecycleSemanticObservation` and transition/state markers for downstream projection |
+| `corpus-row-identity` | stable | `Vocabulary\CorpusRowIdentity` pins corpus/row identity as a public truth term |
+| `bounded-variance-markers` | stable | `Vocabulary\BoundedVarianceMarker` marks ambiguous/provisional/bounded truth explicitly |
 | `in-memory-transport` | stable | InMemoryTransport for testing |
 | `socket-transport-construction` | stable | `TransportFactoryInterface`, `SocketEndpoint`, and `SocketTransportFactory` provide the supported public seam for endpoint-based connect or wrapping accepted PHP stream resources |
 | `inbound-connection-bootstrap` | stable | `InboundConnectionFactoryInterface`, `PreparedInboundConnection`, and `InboundConnectionFactory` provide the supported public seam for preparing one accepted inbound stream into transport + pipeline + correlation context |
@@ -53,6 +59,10 @@ The same distinction applies to classified-message access: the public
 read-only `ClassifiedMessageInterface` is available for advanced composition,
 and `InboundMessageClassifierInterface` now returns that public result contract
 so advanced classifier implementations no longer need the internal carrier.
+Canonical vocabulary support is intentionally behavior-free: the declarations
+make `esl-core` the source of truth for names and schemas, while retry loops,
+drain execution, lifecycle projection, terminal publication, and replay
+execution stay downstream.
 
 ## Inspecting capabilities at runtime
 
@@ -67,4 +77,5 @@ $map->supports(Capability::Auth);              // true
 $map->supports(Capability::CorrelationMetadata); // true
 
 $map->supportLevel(Capability::ReplayEnvelopeExport); // FeatureSupportLevel::Provisional
+$map->supportLevel(Capability::QueueRetryDrainVocabulary); // FeatureSupportLevel::Stable
 ```

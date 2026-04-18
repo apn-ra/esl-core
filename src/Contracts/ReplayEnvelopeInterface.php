@@ -16,6 +16,11 @@ namespace Apntalk\EslCore\Contracts;
 interface ReplayEnvelopeInterface
 {
     /**
+     * Replay-envelope schema version for downstream compatibility checks.
+     */
+    public function schemaVersion(): string;
+
+    /**
      * The type identifier for the captured object (e.g., 'reply', 'event').
      */
     public function capturedType(): string;
@@ -73,4 +78,25 @@ interface ReplayEnvelopeInterface
      * @return array<string, string>
      */
     public function derivedMetadata(): array;
+
+    /**
+     * Identity facts stable enough for downstream comparison.
+     *
+     * @return array<string, string>
+     */
+    public function identityFacts(): array;
+
+    /**
+     * Ordering facts stable enough for deterministic reconstruction.
+     *
+     * @return array<string, string>
+     */
+    public function orderingFacts(): array;
+
+    /**
+     * Causal metadata extracted from protocol facts and derived metadata.
+     *
+     * @return array<string, string>
+     */
+    public function causalMetadata(): array;
 }

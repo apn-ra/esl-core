@@ -27,6 +27,12 @@ enum Capability: string
     case CorrelationMetadata = 'correlation-metadata';
     case ReplayEnvelopeExport = 'replay-envelope-export';
     case ReconstructionHookSupport = 'reconstruction-hook-support';
+    case NativeReplayAdjacentSemantics = 'native-replay-adjacent-semantics';
+    case QueueRetryDrainVocabulary = 'queue-retry-drain-vocabulary';
+    case TerminalPublicationSchema = 'terminal-publication-schema';
+    case LifecycleSemanticContract = 'lifecycle-semantic-contract';
+    case CorpusRowIdentity = 'corpus-row-identity';
+    case BoundedVarianceMarkers = 'bounded-variance-markers';
     case InMemoryTransport = 'in-memory-transport';
     case SocketTransportConstruction = 'socket-transport-construction';
     case InboundConnectionBootstrap = 'inbound-connection-bootstrap';

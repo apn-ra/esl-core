@@ -1,0 +1,14 @@
+{
+  "operationId": "op-bgapi-7f4db0f2",
+  "queueState": "in-flight",
+  "retry": {
+    "attempt": 2,
+    "maxAttempts": 3,
+    "posture": "retrying"
+  },
+  "drainPosture": "draining",
+  "recoveryGenerationId": "generation-4",
+  "replayContinuity": "continuous",
+  "reconstructionPosture": "hook-required",
+  "variance": "none"
+}
