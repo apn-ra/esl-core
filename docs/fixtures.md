@@ -8,6 +8,7 @@ Fixtures are deterministic protocol evidence used by tests to validate parser an
 tests/Fixtures/
 ├── EslFixtureBuilder.php  — programmatic frame builder
 ├── FixtureLoader.php      — file-based fixture loader
+├── events/                — constructed valid event frames
 ├── live/                  — curated live-backed reply/event frames promoted into tests
 ├── malformed/             — intentionally bad frames for error path tests
 ├── partial/               — truncated frames for partial-read tests
@@ -74,6 +75,7 @@ See `docs/live-fixture-provenance.md` for the current live-backed capture map.
 
 | Directory | Pattern | Contents |
 |---|---|---|
+| `events/` | `{description}.esl` | Constructed valid event frames for public contract coverage |
 | `live/` | repo-specific promoted fixture names | Curated live-backed reply and event frames used directly by contract tests |
 | `malformed/` | `{description}.esl` | Intentionally broken parser or event-parser inputs |
 | `partial/` | `{description}-partial.bin` | Truncated or fragmented frames |
@@ -108,6 +110,10 @@ remains the package-facing evidence surface.
 
 Constructed XML fixtures should explicitly remain labeled as constructed
 protocol corpus rather than implied live captures.
+
+`tests/Fixtures/events/custom-event-plain.esl` is a constructed fixture for a
+neutral `CUSTOM` event with `Event-Subclass: myapp::heartbeat`. It is public
+contract corpus, not live FreeSWITCH evidence.
 
 ## Adding new fixtures
 

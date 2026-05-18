@@ -1,0 +1,8 @@
+Content-Type: text/event-plain
+Content-Length: 110
+
+Event-Name: CUSTOM
+Event-Subclass: myapp::heartbeat
+Hyphenated-Header: kept-as-is
+Unknown-Field: preserve-me
+

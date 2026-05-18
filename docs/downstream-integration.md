@@ -187,3 +187,55 @@ release line:
 - treat advanced seams as supported but lower-level
 - treat softer classifier/parser internals as intentionally deferred rather than
   missing runtime features
+
+## Consuming CUSTOM events through public APIs
+
+Downstream packages can consume generic FreeSWITCH `CUSTOM` events without
+adding package-specific event families to core. Use the public inbound facade,
+then inspect the typed event and normalized substrate:
+
+```php
+use Apntalk\EslCore\Events\CustomEvent;
+use Apntalk\EslCore\Inbound\InboundPipeline;
+
+$raw = "Content-Type: text/event-plain\n"
+    . "Content-Length: 110\n"
+    . "\n"
+    . "Event-Name: CUSTOM\n"
+    . "Event-Subclass: myapp::heartbeat\n"
+    . "Hyphenated-Header: kept-as-is\n"
+    . "Unknown-Field: preserve-me\n"
+    . "\n";
+
+$pipeline = InboundPipeline::withDefaults();
+$pipeline->push($raw);
+
+foreach ($pipeline->drain() as $message) {
+    if (!$message->isEvent()) {
+        continue;
+    }
+
+    $event = $message->event();
+    if (!$event instanceof CustomEvent) {
+        continue;
+    }
+
+    $subclass = $event->subclass(); // myapp::heartbeat
+    $hyphenated = $event->normalized->header('Hyphenated-Header'); // kept-as-is
+    $sameHeader = $event->normalized->header('hyphenated-header'); // kept-as-is
+    $unknown = $event->normalized->header('Unknown-Field'); // preserve-me
+}
+```
+
+The important boundary is that core answers what the ESL event contained:
+event name, subclass, headers, body, and source frame truth. Package-specific
+meaning stays in the consuming package.
+
+## API reply body semantics
+
+`ApiReply::isSuccess()` is intentionally strict: it returns `true` only when
+the API response body starts with the `+OK` sentinel. Some FreeSWITCH API
+responses carry useful status or list text without that sentinel. Parsers for
+body-bearing API commands should read `body()` or `trimmedBody()` and apply
+their own command-specific result semantics instead of treating `isSuccess()`
+as a universal verdict.
